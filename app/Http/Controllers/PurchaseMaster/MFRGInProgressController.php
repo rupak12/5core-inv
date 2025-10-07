@@ -91,6 +91,9 @@ class MFRGInProgressController extends Controller
         ]);
     }
 
+    public function newMfrgView(){
+        return view('purchase-master.mfrg-progress.mfrg-new');
+    }
 
     public function convert(Request $request)
     {
@@ -120,7 +123,7 @@ class MFRGInProgressController extends Controller
         $validColumns = [
             'advance_amt', 'pay_conf_date', 'o_links', 'adv_date', 'del_date', 'total_cbm',
             'barcode_sku', 'artwork_manual_book', 'notes', 'ready_to_ship', 'rate', 'rate_currency',
-            'photo_packing', 'photo_int_sale','supplier'
+            'photo_packing', 'photo_int_sale','supplier','created_at'
         ];
 
         if (!in_array($column, $validColumns)) {

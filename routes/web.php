@@ -1024,10 +1024,12 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
     Route::get('/inventory-stages/data', [ForecastAnalysisController::class, 'invetoryStagesData']);
 
     //MFRG In Progress
-    Route::get('/mfrg-in-progress', [MFRGInProgressController::class, 'index'])->name('mfrg.in.progress');
-    Route::post('/mfrg-progresses/inline-update-by-sku', [MFRGInProgressController::class, 'inlineUpdateBySku']);
-    Route::get('/convert-currency', [MFRGInProgressController::class, 'convert']);
-    Route::post('/ready-to-ship/insert', [MFRGInProgressController::class, 'storeDataReadyToShip'])->name('ready.to.ship.insert');
+    Route::controller(MFRGInProgressController::class)->group(function () {
+        Route::get('/mfrg-in-progress', 'index')->name('mfrg.in.progress');
+        Route::post('/mfrg-progresses/inline-update-by-sku', 'inlineUpdateBySku');
+        Route::get('/convert-currency', 'convert');
+        Route::post('/ready-to-ship/insert', 'storeDataReadyToShip')->name('ready.to.ship.insert');
+    });
 
     //Ready To Ship
     Route::get('/ready-to-ship', [ReadyToShipController::class, 'index'])->name('ready.to.ship');
