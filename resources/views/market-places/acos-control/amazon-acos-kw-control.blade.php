@@ -465,7 +465,7 @@
                         }
                     },
                     {
-                        title: "Clicks L30",
+                        title: "CLK L30",
                         field: "clicks_L30",
                         hozAlign: "right",
                         formatter: function(cell) {
