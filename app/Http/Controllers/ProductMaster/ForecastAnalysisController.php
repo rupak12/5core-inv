@@ -30,7 +30,7 @@ class ForecastAnalysisController extends Controller
         $normalizeSku = fn($sku) => strtoupper(
             preg_replace('/\s+/', ' ',
                 trim(
-                    preg_replace('/[^\P{C}\s]+/u', '', $sku)
+                    str_replace(["\xC2\xA0","\xE2\x80\x8B","\r","\n","\t"], ' ', $sku)
                 )
             )
         );

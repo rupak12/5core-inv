@@ -1029,6 +1029,9 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
         Route::post('/mfrg-progresses/inline-update-by-sku', 'inlineUpdateBySku');
         Route::get('/convert-currency', 'convert');
         Route::post('/ready-to-ship/insert', 'storeDataReadyToShip')->name('ready.to.ship.insert');
+
+        Route::get('/mfrg-in-progress/new', 'newMfrgView')->name('mfrg.in.progress.new');
+        Route::get('/mfrg-in-progress/data', 'getMfrgProgressData')->name('mfrg.in.progress.data');
     });
 
     //Ready To Ship

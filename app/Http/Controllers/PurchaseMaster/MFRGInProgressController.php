@@ -95,6 +95,84 @@ class MFRGInProgressController extends Controller
         return view('purchase-master.mfrg-progress.mfrg-new');
     }
 
+    public function getMfrgProgressData()
+    {
+        $normalizeSku = fn($sku) => strtoupper(
+            preg_replace('/\s+/', ' ',
+                trim(
+                    str_replace(["\xC2\xA0","\xE2\x80\x8B","\r","\n","\t"], ' ', $sku)
+                )
+            )
+        );
+
+        $mfrgData = MfrgProgress::all();
+
+        $shopifyImages = DB::table('shopify_skus')
+            ->select('sku', 'image_src')
+            ->get()
+            ->keyBy(fn($item) => $normalizeSku($item->sku));
+
+        $productMaster = DB::table('product_master')
+            ->get()
+            ->keyBy(fn($item) => $normalizeSku($item->sku));
+
+        $supplierRows = Supplier::where('type', 'Supplier')->get();
+        $supplierMapByParent = [];
+        foreach ($supplierRows as $row) {
+            $parents = array_map('trim', explode(',', $normalizeSku($row->parent ?? '')));
+            foreach ($parents as $parent) {
+                if (!empty($parent)) {
+                    $supplierMapByParent[$parent][] = $row->name;
+                }
+            }
+        }
+
+        $processedData = [];
+
+        foreach ($mfrgData as $row) {
+            $sku = $normalizeSku($row->sku);
+            $image = null;
+            $cbm = null;
+            $parent = null;
+            $supplierNames = [];
+
+            if (isset($shopifyImages[$sku]) && !empty($shopifyImages[$sku]->image_src)) {
+                $image = $shopifyImages[$sku]->image_src;
+            }
+
+            if (isset($productMaster[$sku])) {
+                $productRow = $productMaster[$sku];
+                $values = json_decode($productRow->Values ?? '{}', true);
+
+                if (is_array($values)) {
+                    if (!empty($values['image_path'])) {
+                        $image = 'storage/' . ltrim($values['image_path'], '/');
+                    }
+                    if (isset($values['cbm'])) {
+                        $cbm = $values['cbm'];
+                    }
+                }
+
+                $parent = $normalizeSku($productRow->parent ?? '');
+            }
+
+            if (!empty($parent) && isset($supplierMapByParent[$parent])) {
+                $supplierNames = $supplierMapByParent[$parent];
+            }
+
+            $row->supplier = !empty($row->supplier) ? $row->supplier : implode(', ', $supplierNames);
+            $row->Image = $image;
+            $row->CBM = $cbm;
+
+            $processedData[] = $row;
+        }
+
+        return response()->json([
+            "data" => $processedData
+        ]);
+    }
+
+
     public function convert(Request $request)
     {
         $amount = $request->query('amount', 1);
