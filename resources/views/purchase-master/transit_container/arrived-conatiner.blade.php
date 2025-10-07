@@ -517,7 +517,9 @@ Object.entries(groupedData).forEach(([tabName, data], index) => {
                   "Rate ($)": row.rate,
                   "Amt ($)": Math.round((parseFloat(row.no_of_units || 0) * parseFloat(row.total_ctn || 0)) * parseFloat(row.rate || 0)),
                   "CBM": typeof row.Values === "string" ? JSON.parse(row.Values)?.cbm || 0 : row.Values?.cbm || 0,
-                  "Unit": row.unit
+                  "Unit": row.unit,
+                  "Changes": row.changes,
+                  "Specification": row.specification,
               };
           });
 
