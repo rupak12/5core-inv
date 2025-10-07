@@ -3081,6 +3081,8 @@
                     const price = Number(item.price) || 0;
                     const amazonAdUpdates = {{ $amazonAdUpdates ?? 0 }};
                     let l30 = Number(item.L30) || 0;
+                    let ship = Number(item.SHIP) || 0;
+                    let lp = Number(item.LP) || 0;
 
                     // Sold Amount
                     const soldAmount = aL30 * price;
@@ -3089,9 +3091,12 @@
                     const adSpend = Number(item.Spend) || 0;
                     const tacos = (spend / soldAmount) * 100;
                     const totalProfit = (aL30 * price) * rawPft / 100;
-                    let tpftTotal = (price * rawPft * l30) - spend;
-                    let tpftEach = tpftTotal / l30;
-                    let tpft = (tpftEach / price);
+                    
+                    let percentage = {{ $amazonPercentage ?? 0 }};
+                    let costPercentage = (percentage + amazonAdUpdates) / 100; 
+                    let netPft = (price * costPercentage) - ship - lp - (spend / aL30);
+                    console.log("SKU ", sku, price, costPercentage, ship, lp, spend);
+                    let tpft = (netPft / price) * 100;
 
                     // total sales 
                     $row.append($('<td>').html(
@@ -3109,10 +3114,6 @@
                     if(isNaN(tpft) || !isFinite(tpft)) {
                         tpft = 0;
                     }
-
-                    console.log( "SKU ", item['(Child) sku'], rawPft, amazonAdUpdates, tacos, tpft);
-
-                    // const newPftPercentage = tpft > 0 ? tpft : 0;
                     
                     $.ajax({
                         url: '/amazon/save-nr',

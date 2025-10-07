@@ -526,7 +526,7 @@
                                 dilColor = getDilColor(dilDecimal);
                             }
 
-                            if ((dilColor === "red" && tpftInt > 18) ||
+                            if ((dilColor === "red" && tpftInt > 10) ||
                                 (dilColor === "yellow" && tpftInt > 22) ||
                                 (dilColor === "green" && tpftInt > 26) ||
                                 (dilColor === "pink" && tpftInt > 30)) {
