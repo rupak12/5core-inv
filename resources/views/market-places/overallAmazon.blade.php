@@ -3115,7 +3115,7 @@
                         type: 'POST',
                         data: {
                             sku: item['(Child) sku'],
-                            tpft: newPftPercentage.toFixed(2),
+                            tpft: tpft.toFixed(2),
                             _token: $('meta[name="csrf-token"]').attr('content')
                         },
                         success: function(res) {
