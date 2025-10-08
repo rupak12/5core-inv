@@ -434,6 +434,12 @@
             fieldCount++;
         });
 
+        document.getElementById('addEditFieldBtn').addEventListener('click', function(){
+            let wrapper = document.getElementById('editDynamicFieldsWrapper');
+            wrapper.insertAdjacentHTML('beforeend', createFieldRow(fieldCount));
+            fieldCount++;
+        });
+
         // Remove field
         document.addEventListener('click', function(e){
             if(e.target && e.target.classList.contains('remove-field')){
@@ -530,7 +536,20 @@
             e.preventDefault();
 
             const id = document.getElementById('edit_form_id').value;
+
+            // Collect all dynamic fields properly
+            let fields = [];
+            document.querySelectorAll('#editDynamicFieldsWrapper .field-item').forEach((item, index) => {
+                const label = item.querySelector('.field-label')?.value || '';
+                const name = item.querySelector('.field-name')?.value || '';
+                const type = item.querySelector('.field-type')?.value || 'text';
+                const options = item.querySelector('[name*="[options]"]')?.value || '';
+                const required = item.querySelector('[name*="[required]"]')?.checked ? 1 : 0;
+                fields.push({ label, name, type, options, required, order: index + 1 });
+            });
+
             const formData = new FormData(this);
+            formData.append('fields_json', JSON.stringify(fields));
 
             fetch(`/rfq-form/update/${id}`, {
                 method: 'POST',

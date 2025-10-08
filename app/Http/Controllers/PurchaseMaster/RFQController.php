@@ -89,7 +89,7 @@ class RFQController extends Controller
         $request->validate([
             'rfq_form_name' => 'required|string',
             'title' => 'required|string',
-            'fields' => 'required|array',
+            'fields_json' => 'required|string',
             'main_image' => 'nullable|image|max:2048'
         ]);
 
@@ -100,10 +100,7 @@ class RFQController extends Controller
             $imagePath = $request->file('main_image')->store('rfq_forms', 'public');
         }
 
-        $fields = collect($request->fields)->map(function($field, $index) {
-            $field['order'] = $field['order'] ?? ($index + 1);
-            return $field;
-        })->toArray();
+        $fields = json_decode($request->fields_json, true) ?? [];
 
         $form->update([
             'name' => $request->rfq_form_name,
