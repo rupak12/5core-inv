@@ -2,19 +2,19 @@
 
 namespace App\Console\Commands;
 
-use App\Models\MercariWoShipSheetdata;
+use App\Models\FbMarketplaceSheetdata;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class SyncMercariWoShipSheet extends Command
+class SyncFbMarketplaceSheet extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:sync-mercari-wo-ship-sheet';
+    protected $signature = 'app:sync-fb-marketplace-sheet';
 
     /**
      * The console command description.
@@ -28,9 +28,9 @@ class SyncMercariWoShipSheet extends Command
      */
     public function handle()
     {
-        $url = 'https://script.google.com/macros/s/AKfycbxgFKe5EDpwA7alZ93xpY-_vacBxEI-gVmECWo6y5HSgFmnKdMzru5neq47dRvUPH7q9Q/exec';
+        $url = 'https://script.google.com/macros/s/AKfycbzMKE_Ri8XbcMUDv_ad0FzcCbjew04hU0u25AuHOrt7llkMoNIxRf0Arou7p4Bs354B/exec';
 
-        $this->info('Starting Mercari Wo ship sheet sync...');
+        $this->info('Starting Facebook Marketplace sheet sync...');
 
         try {
             $response = Http::get($url);
@@ -59,7 +59,7 @@ class SyncMercariWoShipSheet extends Command
                     continue;
                 }
 
-                MercariWoShipSheetdata::updateOrCreate(
+                FbMarketplaceSheetdata::updateOrCreate(
                     ['sku' => trim($sku)],
                     [
                         'l30'  => $item['l30'] ?? null,
@@ -72,9 +72,9 @@ class SyncMercariWoShipSheet extends Command
                 $savedCount++;
             }
 
-            $this->info("Mercari Wo Ship Sheet data synced successfully! Total records saved/updated: {$savedCount}");
+            $this->info("Facebook Marketplace Sheet data synced successfully! Total records saved/updated: {$savedCount}");
         } catch (\Exception $e) {
-            Log::error('Error syncing Mercari sheet: ' . $e->getMessage());
+            Log::error('Error syncing Facebook Marketplace sheet: ' . $e->getMessage());
             $this->error('Error: ' . $e->getMessage());
         }
     }

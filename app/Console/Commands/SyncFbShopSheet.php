@@ -2,19 +2,19 @@
 
 namespace App\Console\Commands;
 
-use App\Models\MercariWoShipSheetdata;
+use App\Models\FbShopSheetdata;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class SyncMercariWoShipSheet extends Command
+class SyncFbShopSheet extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:sync-mercari-wo-ship-sheet';
+    protected $signature = 'app:sync-fb-shop-sheet';
 
     /**
      * The console command description.
@@ -28,9 +28,9 @@ class SyncMercariWoShipSheet extends Command
      */
     public function handle()
     {
-        $url = 'https://script.google.com/macros/s/AKfycbxgFKe5EDpwA7alZ93xpY-_vacBxEI-gVmECWo6y5HSgFmnKdMzru5neq47dRvUPH7q9Q/exec';
+        $url = 'https://script.google.com/macros/s/AKfycbzGoyEyCk3jIQQUZtzS_stc7VImJAvEwKcMyO9654l6sV3_OGO20lLWSQLFx2Mk2PTP/exec';
 
-        $this->info('Starting Mercari Wo ship sheet sync...');
+        $this->info('Starting Facebook Shop sheet sync...');
 
         try {
             $response = Http::get($url);
@@ -59,7 +59,7 @@ class SyncMercariWoShipSheet extends Command
                     continue;
                 }
 
-                MercariWoShipSheetdata::updateOrCreate(
+                FbShopSheetdata::updateOrCreate(
                     ['sku' => trim($sku)],
                     [
                         'l30'  => $item['l30'] ?? null,
@@ -72,9 +72,9 @@ class SyncMercariWoShipSheet extends Command
                 $savedCount++;
             }
 
-            $this->info("Mercari Wo Ship Sheet data synced successfully! Total records saved/updated: {$savedCount}");
+            $this->info("Facebook Shop Sheet data synced successfully! Total records saved/updated: {$savedCount}");
         } catch (\Exception $e) {
-            Log::error('Error syncing Mercari sheet: ' . $e->getMessage());
+            Log::error('Error syncing Facebook Shop sheet: ' . $e->getMessage());
             $this->error('Error: ' . $e->getMessage());
         }
     }
