@@ -234,7 +234,14 @@ class EbayKwAdsController extends Controller
                 }
             }
             
-            if($row['price'] < 20){
+            if($row['price'] < 30){
+                if($row['price'] < 10){
+                    $row['sbid'] = 0.10;
+                }elseif($row['price'] > 10 && $row['price'] <= 20){
+                    $row['sbid'] = 0.20;
+                }elseif($row['price'] > 20 && $row['price'] <= 30){
+                    $row['sbid'] = 0.30;
+                }
                 $result[] = (object) $row;
             }
         }

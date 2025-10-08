@@ -101,7 +101,14 @@ class EbayPriceLessBidsAutoUpdate extends Command
             $row['campaign_id'] = $matchedCampaignL7->campaign_id ?? ($matchedCampaignL1->campaign_id ?? '');
             $row['sbid'] = 0.10;
 
-            if($row['price'] < 20){
+            if($row['price'] < 30){
+                if($row['price'] < 10){
+                    $row['sbid'] = 0.10;
+                }elseif($row['price'] > 10 && $row['price'] <= 20){
+                    $row['sbid'] = 0.20;
+                }elseif($row['price'] > 20 && $row['price'] <= 30){
+                    $row['sbid'] = 0.30;
+                }
                 $result[] = (object) $row;
             }
 
