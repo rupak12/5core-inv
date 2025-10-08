@@ -2,441 +2,81 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 @section('css')
-    @vite(['node_modules/admin-resources/rwd-table/rwd-table.min.css'])
-    <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css" rel="stylesheet">
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('assets/css/styles.css') }}">
     <style>
-        :root {
-            --primary-color: #4361ee;
-            --secondary-color: #3f37c9;
-            --accent-color: #4895ef;
-            --light-color: #f8f9fa;
-            --dark-color: #212529;
-            --border-radius: 12px;
-            --box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-            --transition: all 0.3s ease;
+        /* Custom styles for the Tabulator table */
+        /* Pagination styling */
+        .tabulator .tabulator-footer .tabulator-paginator .tabulator-page {
+            padding: 8px 16px;
+            margin: 0 4px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
         }
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f5f7fa !important;
-            color: var(--dark-color) !important;
+        .tabulator .tabulator-footer .tabulator-paginator .tabulator-page:hover {
+            background: #e0eaff;
+            color: #2563eb;
         }
 
-        .container {
-            max-width: 1200px !important;
-            margin-top: 30px !important;
-            margin-bottom: 50px !important;
-        }
-
-        .header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        .tabulator .tabulator-footer .tabulator-paginator .tabulator-page.active {
+            background: #2563eb;
             color: white;
-            padding: 15px 25px;
-            border-radius: var(--border-radius);
-            margin-bottom: 30px;
-            box-shadow: var(--box-shadow);
         }
 
-        .header h4 {
-            font-weight: 600;
-            margin: 0;
+        .custom-select-wrapper {
+            width: 100%;
+            cursor: pointer;
+            position: relative;
         }
 
-        .metric-value {
-            padding: 2px 6px;
-            border-radius: 4px;
-            display: inline-block;
-        }
-
-        /* Negative growth (Red) */
-        .negative-growth {
-            background-color: rgb(255, 0, 0);
-            color: rgb(0, 0, 0);
-            width: 60px;
-            text-align: center;
-        }
-
-        /* Zero growth (Yellow) */
-        .zero-growth {
-            background-color: rgb(255, 196, 0);
-            color: rgb(0, 0, 0);
-            width: 60px;
-            text-align: center;
-        }
-
-        /* EXACTLY 100% (Magenta) */
-        .exact-100 {
-            background-color: #ff00ff;
-            color: rgb(0, 0, 0);
-            width: 60px;
-            text-align: center;
-        }
-
-        .search-box {
-            max-width: 350px;
-            margin-left: auto;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 50px;
-            padding: 5px;
-            transition: var(--transition);
-        }
-
-        .dataTables_wrapper .dataTables_filter input {
-            border: none;
-            border-radius: 50px;
-            padding: 8px 15px;
-            margin-left: 10px;
-        }
-
-        .table>thead {
-            vertical-align: bottom;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        }
-
-        th.sorting {
-            color: white !important;
-            font-size: 10px;
-        }
-
-        /* Rest of your existing styles... */
-        /* Keep all your existing styles, just add these new ones below */
-
-        /* DataTables custom styling */
-        .dataTables_wrapper .dataTables_filter,
-        .dataTables_wrapper .dataTables_info,
-        .dataTables_wrapper .dataTables_processing,
-        .dataTables_wrapper .dataTables_paginate {
-            color: #333;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button {
-            padding: 0.5em 1em;
-            margin: 0 2px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button.current,
-        .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
-            background: var(--primary-color);
-            color: white !important;
-            border: 1px solid var(--primary-color);
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-            background: #e9ecef;
-            border: 1px solid #ddd;
-        }
-
-        /* Loading indicator */
-        .dataTables_processing {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            z-index: 100;
-        }
-
-        /* Responsive adjustments for DataTables */
-        @media (max-width: 768px) {
-            .dataTables_wrapper .dataTables_filter {
-                float: none;
-                text-align: left;
-            }
-
-            .dataTables_wrapper .dataTables_filter input {
-                width: 100%;
-                margin-left: 0;
-                margin-top: 10px;
-            }
-        }
-    </style>
-    <style>
-        /* Right-to-Left Modal Animation */
-        .modal.right-to-left .modal-dialog {
-            margin: 0;
-            right: 0;
-            width: 400px;
-            max-width: 80%;
-            height: 100%;
-            transform: translateX(100%);
-            transition: transform 0.3s ease-out;
-        }
-
-        .modal.right-to-left.show .modal-dialog {
-            transform: translateX(0);
-        }
-
-        .modal.right-to-left .modal-content {
-            height: 100%;
-            overflow-y: auto;
-            border-radius: 0;
-            border: none;
-        }
-
-        /* Keep your existing modal styling */
-        .modal.right-to-left .modal-header {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .modal.right-to-left .modal-footer {
-            border-top: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        /* Sticky Dashboard Cards */
-        .dashboard-header {
-            position: sticky;
-            top: 0;
-            background-color: white;
-            z-index: 1030;
-            padding-top: 10px;
-        }
-
-        /* Scrollable table */
-        .table-container {
-            overflow-x: auto;
-            max-width: 100%;
-        }
-
-        .table-responsive {
-            max-height: 500px;
-            overflow-y: auto;
-            overflow-x: auto;
-        }
-
-        /* Sticky Table Header */
-        thead.sticky-top th {
-            position: sticky;
-            top: 0;
-            z-index: 1020;
+        .custom-select-display {
             background-color: #fff;
-            box-shadow: 0 2px 2px rgba(0, 0, 0, 0.05);
+            border: 1px solid #ced4da;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
         }
 
-        /* Optional Cleanup */
-        table th,
-        table td {
-            white-space: nowrap;
+        .custom-select-options {
+            position: absolute;
+            z-index: 999;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ced4da;
+            border-top: none;
+            background-color: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
-        .dropdown-search-item {
-            padding: 6px 10px;
-            cursor: pointer;
-        }
-
-        .dropdown-search-item:hover {
-            background-color: #eee;
-        }
-
-        /* ========== PLAY/PAUSE NAVIGATION BUTTONS ========== */
-        .time-navigation-group {
-            margin-left: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 50px;
-            overflow: hidden;
-            padding: 2px;
-            background: #f8f9fa;
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .time-navigation-group button {
-            padding: 0;
-            border-radius: 50% !important;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 3px;
-            transition: all 0.2s ease;
-            border: 1px solid #dee2e6;
-            background: white;
-            cursor: pointer;
-        }
-
-        .time-navigation-group button:hover {
-            background-color: #f1f3f5 !important;
-            transform: scale(1.05);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .time-navigation-group button:active {
-            transform: scale(0.95);
-        }
-
-        .time-navigation-group button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none !important;
-            box-shadow: none !important;
-        }
-
-        .time-navigation-group button i {
-            font-size: 1.1rem;
-            transition: transform 0.2s ease;
-        }
-
-        /* Play button */
-        #play-auto {
-            color: #28a745;
-        }
-
-        #play-auto:hover {
-            background-color: #28a745 !important;
-            color: white !important;
-        }
-
-        /* Pause button */
-        #play-pause {
-            color: #ffc107;
-            display: none;
-        }
-
-        #play-pause:hover {
-            background-color: #ffc107 !important;
-            color: white !important;
-        }
-
-        /* Navigation buttons */
-        #play-backward,
-        #play-forward {
-            color: #007bff;
-        }
-
-        #play-backward:hover,
-        #play-forward:hover {
-            background-color: #007bff !important;
-            color: white !important;
-        }
-
-        /* Button state colors - must come after hover styles */
-        #play-auto.btn-success,
-        #play-pause.btn-success {
-            background-color: #28a745 !important;
-            color: white !important;
-        }
-
-        #play-auto.btn-warning,
-        #play-pause.btn-warning {
-            background-color: #ffc107 !important;
-            color: #212529 !important;
-        }
-
-        #play-auto.btn-danger,
-        #play-pause.btn-danger {
-            background-color: #dc3545 !important;
-            color: white !important;
-        }
-
-        #play-auto.btn-light,
-        #play-pause.btn-light {
-            background-color: #f8f9fa !important;
-            color: #212529 !important;
-        }
-
-        /* Ensure hover doesn't override state colors */
-        #play-auto.btn-success:hover,
-        #play-pause.btn-success:hover {
-            background-color: #28a745 !important;
-            color: white !important;
-        }
-
-        #play-auto.btn-warning:hover,
-        #play-pause.btn-warning:hover {
-            background-color: #ffc107 !important;
-            color: #212529 !important;
-        }
-
-        #play-auto.btn-danger:hover,
-        #play-pause.btn-danger:hover {
-            background-color: #dc3545 !important;
-            color: white !important;
-        }
-
-        /* Active state styling */
-        .time-navigation-group button:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .time-navigation-group button {
-                width: 36px;
-                height: 36px;
-            }
-
-            .time-navigation-group button i {
-                font-size: 1rem;
-            }
-        }
-
-        /* Add to your CSS file or style section */
-        .hide-column {
-            display: none !important;
-        }
-
-        .dataTables_length,
-        .dataTables_filter {
-            display: none;
-        }
-
-        #play-auto.green-btn {
-            background-color: green !important;
-            color: white;
-        }
-
-        #play-auto.red-btn {
-            background-color: red !important;
-            color: white;
-        }
-
-        th small.badge {
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 12px;
-        }
-
-        .dataTables_processing {
-            top: 150px !important;
-            /* Try 80–100px depending on your header height */
-            z-index: 1000 !important;
-            background: none !important;
+        .custom-select-search {
+            width: 100%;
+            padding: 0.5rem;
             border: none;
+            border-bottom: 1px solid #eee;
+            outline: none;
         }
 
-        #channelTable {
-            width: 100% !important;
-            table-layout: fixed;
+        .custom-select-option {
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
         }
 
-        #channelTable thead th {
-            color: white !important;
-            font-size: 10px !important;
+        .custom-select-option:hover {
+            background-color: #f1f1f1;
         }
 
-        #channelTable th {
-            text-transform: none !important;
-        }
     </style>
 @endsection
 
-
 @section('content')
-    @include('layouts.shared/page-title', [
+    @include('layouts.shared.page-title', [
         'page_title' => 'Account Health Master Dashboard',
         'sub_title' => 'Manage your channels and monitor their performance metrics',
     ])
@@ -448,11 +88,11 @@
                         <button id="play-backward" class="btn btn-light rounded-circle" title="Previous parent">
                             <i class="fas fa-step-backward"></i>
                         </button>
-                        <button id="play-pause" class="btn btn-light rounded-circle" title="Show all products"
+                        <button id="play-pause" class="btn btn-light rounded-circle" title="Pause playback"
                             style="display: none;">
                             <i class="fas fa-pause"></i>
                         </button>
-                        <button id="play-auto" class="btn btn-light rounded-circle" title="Show all products">
+                        <button id="play-auto" class="btn btn-light rounded-circle" title="Start auto-play">
                             <i class="fas fa-play"></i>
                         </button>
                         <button id="play-forward" class="btn btn-light rounded-circle" title="Next parent">
@@ -464,21 +104,15 @@
                         style="background: linear-gradient(135deg, #4361ee, #3f37c9); border: none;">
                         <i class="fas fa-plus-circle me-2"></i> Add Channel
                     </button>
-
-                    <!-- Import/Export Buttons -->
                     <div class="d-flex flex-wrap gap-2 align-items-center">
-                        <!-- Export Button -->
                         <a href="{{ route('account-health-master.export') }}" class="btn btn-success">
                             <i class="fas fa-file-export me-1"></i> Export Health Data
                         </a>
-
-                        <!-- Import Button -->
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                             data-bs-target="#accountHealthImportModal">
                             <i class="fas fa-file-import me-1"></i> Import Health Data
                         </button>
                     </div>
-
                 </div>
                 <div class="col-auto">
                     <div class="dropdown-search-container" style="position: relative;">
@@ -575,14 +209,11 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <!-- File Input -->
                         <div class="mb-3">
                             <label for="accountHealthExcelFile" class="form-label">Select Excel File</label>
                             <input type="file" class="form-control" id="accountHealthExcelFile" name="excel_file"
                                 accept=".xlsx,.xls,.csv" required>
                         </div>
-
-                        <!-- Import Type Selection -->
                         <div class="mb-3">
                             <label for="importType" class="form-label">Import Type</label>
                             <select class="form-control" id="importType" name="import_type" required>
@@ -592,8 +223,6 @@
                                 <option value="both">Both Channel Data & Health Rates</option>
                             </select>
                         </div>
-
-                        <!-- Update Mode -->
                         <div class="mb-3">
                             <label for="updateMode" class="form-label">Update Mode</label>
                             <select class="form-control" id="updateMode" name="update_mode" required>
@@ -602,8 +231,6 @@
                                 <option value="replace">Replace All Data</option>
                             </select>
                         </div>
-
-                        <!-- Sample File Links -->
                         <div class="alert alert-info">
                             <small>
                                 <i class="fas fa-info-circle me-1"></i>
@@ -619,14 +246,10 @@
                                     class="alert-link">Combined Sample</a>
                             </small>
                         </div>
-
-                        <!-- Progress Bar (hidden initially) -->
                         <div class="progress mb-3" id="importProgress" style="display: none;">
                             <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
                                 style="width: 0%">0%</div>
                         </div>
-
-                        <!-- Import Results (hidden initially) -->
                         <div id="importResults" class="alert alert-success" style="display: none;">
                             <h6>Import Results:</h6>
                             <ul id="importResultsList"></ul>
@@ -646,55 +269,23 @@
             <div class="spinner-border text-info" role="status">
                 <span class="sr-only">Loading...</span>
             </div>
-            <span class="ms-2">Loading datatable, please wait...</span>
+            <span class="ms-2">Loading table, please wait...</span>
         </div>
 
         <div class="mb-4">
             <div id="channelSalesChart" style="width: 100%; height: 400px;"></div>
         </div>
 
-        <!-- Table Container -->
         <div class="table-container" id="channelTableWrapper" style="display: none;">
-            <div class="table-responsive" style="max-height: 500px; overflow: auto;">
-                <table class="table table-hover table-striped mb-0" id="channelTable">
-                    <thead class="table sticky-top">
-                        <tr>
-                            <th>Channel</th>
-                            <th class="text-center align-middle">
-                                <small id="l30OrdersCountBadgeHeader" class="badge bg-dark text-white mb-1"
-                                    style="font-size: 13px;">
-                                    0
-                                </small><br>
-                                L30 Orders
-                            </th>
-                            <th>NR</th>
-                            <th>ODR Rate</th>
-                            <th>Fulfillment Rate</th>
-                            <th>Valid Tracking Rate</th>
-                            <th>On Time Delivery</th>
-                            <th>A-Z Claims</th>
-                            <th>Voilation/Compliance</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Data will be loaded via AJAX -->
-                    </tbody>
-                </table>
-            </div>
+            <div id="channelTable"></div>
         </div>
     </div>
 @endsection
 
 @section('script')
-    <!-- Load jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Load DataTables -->
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
-    <!-- Load Bootstrap -->
+    <script src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Load Google Charts -->
     <script src="https://www.gstatic.com/charts/loader.js"></script>
 
     <script>
@@ -705,7 +296,6 @@
         let currentChannelIndex = 0;
         let uniqueChannels = [];
         let uniqueChannelRows = [];
-        let tableData = [];
 
         function parseNumber(value) {
             if (value === null || value === undefined || value === '' || value === '#DIV/0!' || value === 'N/A') return 0;
@@ -714,31 +304,7 @@
             return parseFloat(cleaned) || 0;
         }
 
-        function updateL30OrdersTotal(data) {
-            let l30OrdersTotal = 0;
-
-            data.forEach(row => {
-                const l30Orders = parseNumber(row['L30 Orders'] || 0);
-                l30OrdersTotal += l30Orders;
-            });
-            console.log('Total L30 Orders:', l30OrdersTotal);
-
-            document.getElementById('l30OrdersCountBadge').textContent = Math.round(l30OrdersTotal).toLocaleString('en-US');
-            document.getElementById('l30OrdersCountBadgeHeader').textContent = Math.round(l30OrdersTotal).toLocaleString(
-                'en-US');
-        }
-
-        function initializeDataTable() {
-            if (!jq('#channelTable').length) {
-                console.error('Table element not found');
-                return null;
-            }
-
-            if (jq.fn.DataTable.isDataTable('#channelTable')) {
-                jq('#channelTable').DataTable().clear().destroy();
-                jq('#channelTable').empty();
-            }
-
+        function initializeTable() {
             const toNum = (v, def = 0) => {
                 const n = parseFloat(String(v).replace(/,/g, ''));
                 return Number.isFinite(n) ? n : def;
@@ -751,56 +317,55 @@
                 return def;
             };
 
-            table = jq('#channelTable').DataTable({
-                processing: true,
-                serverSide: false,
-                ordering: false,
-                searching: true,
-                pageLength: 50,
-                destroy: true,
-                ajax: {
-                    url: '/account-health-master/dashboard-data',
-                    type: "GET",
-                    data: function(d) {
-                        d.channel = jq('#channelSearchInput').val();
-                    },
-                    dataSrc: function(json) {
-                        // Hide loader and show table only after data is loaded
-                        jq('#customLoader').hide();
-                        jq('#channelTableWrapper').show();
-
-                        if (!json || !json.data) return [];
-                        tableData = json.data; // Store for graph
-                        drawChannelChart(tableData);
-                        return json.data.map(item => ({
-                            'Channel': pick(item, ['channel', 'Channel', 'Channel '], ''),
-                            'L30 Orders': toNum(pick(item, ['L30 Orders', 'l30_orders'], 0), 0),
-                            'NR': toNum(pick(item, ['nr', 'NR'], 0), 0),
-                            'ODR Rate': pick(item, ['ODR'], 'N/A'),
-                            'Fulfillment Rate': pick(item, ['Fulfillment Rate'], 'N/A'),
-                            'Valid Tracking Rate': pick(item, ['Valid Tracking Rate'], 'N/A'),
-                            'On Time Delivery': pick(item, ['On Time Delivery Rate'], 'N/A'),
-                            'A-Z Claims': pick(item, ['AtoZ Claims Rate'], 'N/A'),
-                            'Voilation/Compliance': pick(item, ['Voilation Rate'], 'N/A'),
-                        }));
-                    },
-                    error: function(xhr, error, thrown) {
-                        console.log("AJAX error:", error, thrown);
-                        // Hide loader on error too
-                        jq('#customLoader').hide();
-                        jq('#channelTableWrapper').show();
-                    },
-                    // Show loader when request starts
-                    beforeSend: function() {
-                        jq('#customLoader').show();
-                        jq('#channelTableWrapper').hide();
-                    }
+            table = new Tabulator("#channelTable", {
+                ajaxURL: "/account-health-master/dashboard-data",
+                ajaxConfig: "GET",
+                layout: "fitDataFill",
+                pagination: true,
+                paginationSize: 50,
+                paginationMode: "local",
+                movableColumns: false,
+                resizableColumns: true,
+                height: "550px",
+                ajaxResponse: function(url, params, response) {
+                    jq('#customLoader').hide();
+                    jq('#channelTableWrapper').show();
+                    if (!response || !response.data) return [];
+                    originalChannelData = response.data;
+                    drawChannelChart(response.data);
+                    updateL30OrdersTotal(response.data);
+                    return response.data.map(item => ({
+                        channel: pick(item, ['channel', 'Channel', 'Channel '], ''),
+                        l30_orders: toNum(pick(item, ['L30 Orders', 'l30_orders'], 0), 0),
+                        nr: toNum(pick(item, ['nr', 'NR'], 0), 0),
+                        odr_rate: pick(item, ['ODR', 'ODR Rate'], 'N/A'),
+                        fulfillment_rate: pick(item, ['Fulfillment Rate'], 'N/A'),
+                        valid_tracking_rate: pick(item, ['Valid Tracking Rate'], 'N/A'),
+                        on_time_delivery: pick(item, ['On Time Delivery Rate'], 'N/A'),
+                        atoz_claims_rate: pick(item, ['AtoZ Claims Rate'], 'N/A'),
+                        voilation_rate: pick(item, ['Voilation Rate'], 'N/A'),
+                        sheet_link: pick(item, ['sheet_link'], ''),
+                        type: pick(item, ['type'], '')
+                    }));
+                },
+                ajaxError: function(xhr, error, thrown) {
+                    console.error("AJAX error:", error, thrown);
+                    jq('#customLoader').hide();
+                    jq('#channelTableWrapper').show();
+                    alert('Failed to load data. Please try again.');
+                },
+                ajaxRequesting: function() {
+                    jq('#customLoader').show();
+                    jq('#channelTableWrapper').hide();
                 },
                 columns: [{
-                        data: 'Channel',
-                        render: function(data, type, row) {
-                            if (!data) return '';
-                            const channelName = data.trim().toLowerCase();
+                        title: "Channel",
+                        field: "channel",
+                        headerSort: true,
+                        formatter: function(cell) {
+                            const value = cell.getValue();
+                            if (!value) return "";
+                            const channelName = value.trim().toLowerCase();
                             const routeMap = {
                                 'amazon': '/overall-amazon',
                                 'amazon fba': '/overall-amazon-fba',
@@ -818,73 +383,269 @@
                             };
                             const routeUrl = routeMap[channelName];
                             return routeUrl ?
-                                `<a href="${routeUrl}" target="_blank" style="color: #007bff; text-decoration: underline;">${data}</a>` :
-                                `<div class="d-flex align-items-center"><span>${data}</span></div>`;
-                        }
+                                `<a href="${routeUrl}" target="_blank" style="color: #007bff; text-decoration: underline;">${value}</a>` :
+                                `<span style="background:#f5f5f5;color:#000;font-weight:600;padding:4px 14px;border-radius:12px;">${value}</span>`;
+                        },
+                        hozAlign: "left"
                     },
                     {
-                        data: 'L30 Orders',
-                        render: function(data, type) {
-                            const n = parseFloat(String(data).replace(/,/g, '')) || 0;
-                            if (type === 'sort' || type === 'type') return n;
-                            return `<span class="metric-value">${n.toLocaleString('en-US')}</span>`;
-                        }
+                        title: `<small id="l30OrdersCountBadgeHeader" class="badge bg-dark text-white mb-1" style="font-size: 13px;">0</small><br>L30 Orders`,
+                        field: "l30_orders",
+                        formatter: function(cell) {
+                            const value = parseFloat(cell.getValue()) || 0;
+                            return `<span class="metric-value">${value.toLocaleString('en-US')}</span>`;
+                        },
+                        hozAlign: "center"
                     },
                     {
-                        data: 'NR',
-                        render: function(v, t, row) {
-                            const checked = toNum(v) === 1 ? 'checked' : '';
-                            return `<input type="checkbox" class="checkbox-nr" data-channel="${row['Channel']}" ${checked}>`;
-                        }
+                        title: "NR",
+                        field: "nr",
+                        formatter: function(cell) {
+                            const value = toNum(cell.getValue());
+                            const checked = value === 1 ? 'checked' : '';
+                            return `<input type="checkbox" class="checkbox-nr" data-channel="${cell.getData().channel}" ${checked}>`;
+                        },
+                        hozAlign: "center"
                     },
                     {
-                        data: 'ODR Rate',
-                        render: v => `<span class="metric-value">${v}</span>`
+                        title: "ODR Rate",
+                        field: "odr_rate",
+                        editor: "number",
+                        editorParams: {
+                            min: 0,
+                            max: 100,
+                            step: 0.1
+                        },
+                        formatter: function(cell) {
+                            const value = cell.getValue();
+                            const parsed = parseFloat(value) || 0;
+                            let color = parsed > 5 ? "#dc3545" : parsed > 2 ? "#ffc107" : "#28a745";
+                            return `<div class="text-center editable-field" style="background-color:${color}; color:#ffffff; padding:4px; border-radius:4px;">
+                                        <span>${parsed.toFixed(1)}%</span>
+                                    </div>`;
+                        },
+                        cellEdited: function(cell) {
+                            const newValue = parseFloat(cell.getValue());
+                            if (isNaN(newValue) || newValue < 0 || newValue > 100) {
+                                alert('Please enter a value between 0 and 100');
+                                cell.restoreOldValue();
+                                return;
+                            }
+                            updateField(cell);
+                        },
+                        hozAlign: "center"
                     },
                     {
-                        data: 'Fulfillment Rate',
-                        render: v => `<span class="metric-value">${v}</span>`
+                        title: "Fulfillment Rate",
+                        field: "fulfillment_rate",
+                        editor: "number",
+                        editorParams: {
+                            min: 0,
+                            max: 100,
+                            step: 0.1
+                        },
+                        formatter: function(cell) {
+                            const value = cell.getValue();
+                            const parsed = parseFloat(value) || 0;
+                            let color = parsed < 95 ? "#dc3545" : parsed < 98 ? "#ffc107" : "#28a745";
+                            return `<div class="text-center editable-field" style="background-color:${color}; color:#ffffff; padding:4px; border-radius:4px;">
+                                        <span>${parsed.toFixed(1)}%</span>
+                                    </div>`;
+                        },
+                        cellEdited: function(cell) {
+                            const newValue = parseFloat(cell.getValue());
+                            if (isNaN(newValue) || newValue < 0 || newValue > 100) {
+                                alert('Please enter a value between 0 and 100');
+                                cell.restoreOldValue();
+                                return;
+                            }
+                            updateField(cell);
+                        },
+                        hozAlign: "center"
                     },
                     {
-                        data: 'Valid Tracking Rate',
-                        render: v => `<span class="metric-value">${v}</span>`
+                        title: "Valid Tracking Rate",
+                        field: "valid_tracking_rate",
+                        editor: "number",
+                        editorParams: {
+                            min: 0,
+                            max: 100,
+                            step: 0.1
+                        },
+                        formatter: function(cell) {
+                            const value = cell.getValue();
+                            const parsed = parseFloat(value) || 0;
+                            let color = parsed < 90 ? "#dc3545" : parsed < 95 ? "#ffc107" : "#28a745";
+                            return `<div class="text-center editable-field" style="background-color:${color}; color:#ffffff; padding:4px; border-radius:4px;">
+                                        <span>${parsed.toFixed(1)}%</span>
+                                    </div>`;
+                        },
+                        cellEdited: function(cell) {
+                            const newValue = parseFloat(cell.getValue());
+                            if (isNaN(newValue) || newValue < 0 || newValue > 100) {
+                                alert('Please enter a value between 0 and 100');
+                                cell.restoreOldValue();
+                                return;
+                            }
+                            updateField(cell);
+                        },
+                        hozAlign: "center"
                     },
                     {
-                        data: 'On Time Delivery',
-                        render: v => `<span class="metric-value">${v}</span>`
+                        title: "On Time Delivery",
+                        field: "on_time_delivery",
+                        editor: "number",
+                        editorParams: {
+                            min: 0,
+                            max: 100,
+                            step: 0.1
+                        },
+                        formatter: function(cell) {
+                            const value = cell.getValue();
+                            const parsed = parseFloat(value) || 0;
+                            let color = parsed < 90 ? "#dc3545" : parsed < 95 ? "#ffc107" : "#28a745";
+                            return `<div class="text-center editable-field" style="background-color:${color}; color:#ffffff; padding:4px; border-radius:4px;">
+                                        <span>${parsed.toFixed(1)}%</span>
+                                    </div>`;
+                        },
+                        cellEdited: function(cell) {
+                            const newValue = parseFloat(cell.getValue());
+                            if (isNaN(newValue) || newValue < 0 || newValue > 100) {
+                                alert('Please enter a value between 0 and 100');
+                                cell.restoreOldValue();
+                                return;
+                            }
+                            updateField(cell);
+                        },
+                        hozAlign: "center"
                     },
                     {
-                        data: 'A-Z Claims',
-                        render: v => `<span class="metric-value">${v}</span>`
+                        title: "A-Z Claims",
+                        field: "atoz_claims_rate",
+                        editor: "number",
+                        editorParams: {
+                            min: 0,
+                            max: 100,
+                            step: 0.1
+                        },
+                        formatter: function(cell) {
+                            const value = cell.getValue();
+                            const parsed = parseFloat(value) || 0;
+                            let color = parsed > 5 ? "#dc3545" : parsed > 2 ? "#ffc107" : "#28a745";
+                            return `<div class="text-center editable-field" style="background-color:${color}; color:#ffffff; padding:4px; border-radius:4px;">
+                                        <span>${parsed.toFixed(1)}%</span>
+                                    </div>`;
+                        },
+                        cellEdited: function(cell) {
+                            const newValue = parseFloat(cell.getValue());
+                            if (isNaN(newValue) || newValue < 0 || newValue > 100) {
+                                alert('Please enter a value between 0 and 100');
+                                cell.restoreOldValue();
+                                return;
+                            }
+                            updateField(cell);
+                        },
+                        hozAlign: "center"
                     },
                     {
-                        data: 'Voilation/Compliance',
-                        render: v => `<span class="metric-value">${v}</span>`
+                        title: "Violation/Compliance",
+                        field: "voilation_rate",
+                        editor: "number",
+                        editorParams: {
+                            min: 0,
+                            max: 100,
+                            step: 0.1
+                        },
+                        formatter: function(cell) {
+                            const value = cell.getValue();
+                            const parsed = parseFloat(value) || 0;
+                            let color = parsed > 5 ? "#dc3545" : parsed > 2 ? "#ffc107" : "#28a745";
+                            return `<div class="text-center editable-field" style="background-color:${color}; color:#ffffff; padding:4px; border-radius:4px;">
+                                        <span>${parsed.toFixed(1)}%</span>
+                                    </div>`;
+                        },
+                        cellEdited: function(cell) {
+                            const newValue = parseFloat(cell.getValue());
+                            if (isNaN(newValue) || newValue < 0 || newValue > 100) {
+                                alert('Please enter a value between 0 and 100');
+                                cell.restoreOldValue();
+                                return;
+                            }
+                            updateField(cell);
+                        },
+                        hozAlign: "center"
                     },
-                    // {
-                    //     data: null,
-                    //     render: function(_d, _t, row, meta) {
-                    //         return `
-                    //             <div class="d-flex justify-content-center">
-                    //                 <button class="btn btn-sm btn-outline-primary edit-btn me-1" title="Edit" data-index="${meta.row}" data-channel="${row['Channel'] || ''}">
-                    //                     <i class="fas fa-edit"></i>
-                    //                 </button>
-                    //                 <button class="btn btn-sm btn-outline-danger delete-btn" title="Archive">
-                    //                     <i class="fa fa-archive"></i>
-                    //                 </button>
-                    //             </div>`;
-                    //     }
-                    // }
-                ],
-                // responsive: true,
-                // language: {
-                //     processing: "Loading data, please wait...",
-                //     emptyTable: "",
-                //     zeroRecords: "",
-                // }
+                    {
+                        title: "Actions",
+                        field: null,
+                        formatter: function(cell) {
+                            return `
+                                <div class="d-flex justify-content-center">
+                                    <button class="btn btn-sm btn-outline-primary edit-btn me-1" title="Edit" data-channel="${cell.getData().channel}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger delete-btn" title="Archive" data-channel="${cell.getData().channel}">
+                                        <i class="fa fa-archive"></i>
+                                    </button>
+                                </div>`;
+                        },
+                        hozAlign: "center"
+                    }
+                ]
+            });
+
+            table.on("cellEdited", function(cell) {
+                // Already handled by column-specific cellEdited
             });
 
             return table;
+        }
+
+        function updateField(cell) {
+            const rowData = cell.getData();
+            const fieldName = cell.getField();
+            const newValue = cell.getValue();
+            const channel = rowData.channel;
+
+            jq.ajax({
+                url: '/account-health-master/update-field',
+                method: 'POST',
+                data: {
+                    channel: channel,
+                    field: fieldName,
+                    value: newValue,
+                    _token: jq('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(res) {
+                    if (res.success) {
+                        cell.getElement().innerHTML += '<span class="save-indicator text-success">Saved</span>';
+                        setTimeout(() => {
+                            const indicator = cell.getElement().querySelector('.save-indicator');
+                            if (indicator) indicator.remove();
+                        }, 2000);
+                        table.redraw();
+                    } else {
+                        alert('Error: ' + (res.message || 'Failed to save field'));
+                        cell.restoreOldValue();
+                    }
+                },
+                error: function() {
+                    alert('Server error while saving field');
+                    cell.restoreOldValue();
+                }
+            });
+        }
+
+        function updateL30OrdersTotal(data) {
+            let l30OrdersTotal = 0;
+            data.forEach(row => {
+                const l30Orders = parseNumber(row['l30_orders'] || row['L30 Orders'] || 0);
+                l30OrdersTotal += l30Orders;
+            });
+            const badgeElement = document.getElementById('l30OrdersCountBadgeHeader');
+            if (badgeElement) {
+                badgeElement.textContent = Math.round(l30OrdersTotal).toLocaleString('en-US');
+            }
         }
 
         function drawChannelChart(data) {
@@ -900,21 +661,23 @@
 
         function renderChart(data) {
             let chartData = [
-                ['Channel', 'L30 Orders', {
+                ['Channel', 'L30 Orders', 'ODR Rate', 'Fulfillment Rate', {
                     role: 'annotation'
                 }]
             ];
 
             data.forEach(row => {
-                let channel = row['Channel'] || row['Channel '] || '';
-                let l30Orders = parseFloat(row['L30 Orders'] || 0);
+                let channel = row['channel'] || row['Channel'] || row['Channel '] || '';
+                let l30Orders = parseFloat(row['l30_orders'] || row['L30 Orders'] || 0);
+                let odrRate = parseFloat(row['odr_rate'] || row['ODR'] || row['ODR Rate'] || 0);
+                let fulfillmentRate = parseFloat(row['fulfillment_rate'] || row['Fulfillment Rate'] || 0);
 
-                let rowData = [channel, l30Orders, l30Orders > 0 ? channel : null];
-                chartData.push(rowData);
+                chartData.push([channel, l30Orders, odrRate, fulfillmentRate, channel]);
             });
 
             let dataTable = google.visualization.arrayToDataTable(chartData);
             let options = {
+                title: 'Channel Performance Metrics',
                 curveType: 'function',
                 legend: {
                     position: 'bottom'
@@ -939,61 +702,57 @@
                     0: {
                         color: '#1E88E5',
                         lineWidth: 4
-                    }
+                    }, // L30 Orders
+                    1: {
+                        color: '#E53935',
+                        lineWidth: 2
+                    }, // ODR Rate
+                    2: {
+                        color: '#43A047',
+                        lineWidth: 2
+                    } // Fulfillment Rate
                 }
             };
             let chart = new google.visualization.LineChart(document.getElementById('channelSalesChart'));
             chart.draw(dataTable, options);
         }
 
-        function updatePlayButtonColor() {
-            if (!table || !table.rows) return;
-            const visibleRow = table.rows({
-                search: 'applied'
-            }).nodes().to$();
-            if (!visibleRow || !visibleRow.length) return;
-            const raCheckbox = visibleRow.find('.ra-checkbox');
-            if (raCheckbox.length) {
-                const isChecked = raCheckbox.prop('checked');
-                jq('#play-pause').removeClass('btn-light btn-success btn-danger').addClass(isChecked ? 'btn-success' :
-                    'btn-danger').css('color', 'white');
-            }
-        }
-
         function startPlayback() {
             if (!originalChannelData.length) return;
-            uniqueChannels = [...new Set(originalChannelData.map(item => item['Channel ']?.trim()))].filter(Boolean);
-            uniqueChannelRows = uniqueChannels.map(channel => originalChannelData.find(item => item['Channel ']?.trim() ===
-                channel));
+            uniqueChannels = [...new Set(originalChannelData.map(item => item['channel']?.trim() || item['Channel ']
+                ?.trim() || item['Channel']?.trim()))].filter(Boolean);
+            uniqueChannelRows = uniqueChannels.map(channel => originalChannelData.find(item => (item['channel']?.trim() ||
+                item['Channel ']?.trim() || item['Channel']?.trim()) === channel));
             if (!uniqueChannelRows.length) return;
 
             currentChannelIndex = 0;
             isPlaying = true;
-            table.page.len(1).draw();
-            table.search('').columns().search('').draw();
+            table.setPageSize(1);
+            table.clearFilter();
             showCurrentChannel();
 
-            document.getElementById('play-auto').style.display = 'none';
-            document.getElementById('play-pause').style.display = 'block';
+            jq('#play-auto').hide();
+            jq('#play-pause').show();
             setTimeout(() => updatePlayButtonColor(), 500);
         }
 
         function stopPlayback() {
             isPlaying = false;
-            table.clear().rows.add(originalChannelData).draw();
-            table.page.len(25).draw();
-            document.getElementById('play-auto').style.display = 'block';
-            document.getElementById('play-pause').style.display = 'none';
+            table.setData(originalChannelData);
+            table.setPageSize(50);
+            jq('#play-auto').show();
+            jq('#play-pause').hide();
         }
 
         function showCurrentChannel() {
             if (!isPlaying || !uniqueChannelRows.length) return;
             const currentRow = uniqueChannelRows[currentChannelIndex];
             if (currentRow) {
-                table.clear().rows.add([currentRow]).draw();
-                document.getElementById('channelSearchInput').value = currentRow['Channel ']?.trim() || '';
-                const tableContainer = document.getElementById('channelTable')?.parentElement;
-                if (tableContainer) tableContainer.scrollTop = 0;
+                table.setData([currentRow]);
+                jq('#channelSearchInput').val(currentRow['channel']?.trim() || currentRow['Channel ']?.trim() || currentRow[
+                    'Channel']?.trim() || '');
+                const tableContainer = jq('#channelTable').parent();
+                if (tableContainer.length) tableContainer.scrollTop(0);
                 setTimeout(() => updatePlayButtonColor(), 500);
             }
         }
@@ -1016,8 +775,21 @@
             }
         }
 
+        function updatePlayButtonColor() {
+            const rows = table.getRows();
+            if (!rows.length) return;
+            const row = rows[0];
+            const checkbox = jq(row.getElement()).find('.checkbox-nr');
+            if (checkbox.length) {
+                const isChecked = checkbox.prop('checked');
+                jq('#play-pause').removeClass('btn-light btn-success btn-danger')
+                    .addClass(isChecked ? 'btn-success' : 'btn-danger')
+                    .css('color', 'white');
+            }
+        }
+
         function populateChannelDropdown(searchTerm = '') {
-            const channelData = originalChannelData.map(row => row['Channel ']);
+            const channelData = originalChannelData.map(row => row['channel'] || row['Channel '] || row['Channel']);
             const uniqueChannels = [...new Set(channelData)].filter(ch => ch && ch.trim() !== '').sort();
             const lowerSearch = searchTerm.toLowerCase();
             const sortedChannels = uniqueChannels.sort((a, b) => {
@@ -1028,160 +800,27 @@
                 return a.localeCompare(b);
             });
 
-            const dropdown = document.getElementById('channelSearchDropdown');
-            if (!dropdown) return;
-            dropdown.innerHTML = '';
-            uniqueChannels.forEach(channel => {
-                const item = document.createElement('div');
-                item.className = 'dropdown-search-item';
-                item.dataset.value = channel;
-                item.textContent = channel;
-                dropdown.appendChild(item);
+            const dropdown = jq('#channelSearchDropdown');
+            dropdown.empty();
+            sortedChannels.forEach(channel => {
+                dropdown.append(`<div class="dropdown-search-item" data-value="${channel}">${channel}</div>`);
             });
-            dropdown.style.display = 'block';
+            dropdown.show();
         }
 
-        // Import functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const importForm = document.getElementById('accountHealthImportForm');
-            const progressBar = document.getElementById('importProgress');
-            const resultsDiv = document.getElementById('importResults');
-            const submitBtn = document.getElementById('importSubmitBtn');
-
-            if (importForm) {
-                importForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-
-                    const formData = new FormData(this);
-
-                    // Show progress bar and hide results
-                    progressBar.style.display = 'block';
-                    resultsDiv.style.display = 'none';
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Importing...';
-
-                    // Simulate progress
-                    let progress = 0;
-                    const progressInterval = setInterval(() => {
-                        progress += 10;
-                        const progressBarInner = progressBar.querySelector('.progress-bar');
-                        progressBarInner.style.width = progress + '%';
-                        progressBarInner.textContent = progress + '%';
-
-                        if (progress >= 90) {
-                            clearInterval(progressInterval);
-                        }
-                    }, 200);
-
-                    // Make AJAX request
-                    fetch(this.action, {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                    .getAttribute('content')
-                            }
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            clearInterval(progressInterval);
-
-                            // Complete progress bar
-                            const progressBarInner = progressBar.querySelector('.progress-bar');
-                            progressBarInner.style.width = '100%';
-                            progressBarInner.textContent = '100%';
-
-                            setTimeout(() => {
-                                progressBar.style.display = 'none';
-
-                                if (data.success) {
-                                    // Show results
-                                    resultsDiv.className = 'alert alert-success';
-                                    const resultsList = document.getElementById(
-                                        'importResultsList');
-                                    resultsList.innerHTML = '';
-
-                                    if (data.results) {
-                                        Object.keys(data.results).forEach(key => {
-                                            const li = document.createElement('li');
-                                            li.textContent =
-                                                `${key}: ${data.results[key]}`;
-                                            resultsList.appendChild(li);
-                                        });
-                                    }
-
-                                    resultsDiv.style.display = 'block';
-
-                                    // Reload table data
-                                    if (typeof table !== 'undefined' && table) {
-                                        table.ajax.reload();
-                                    }
-
-                                    // Auto close modal after 3 seconds
-                                    setTimeout(() => {
-                                        jq('#accountHealthImportModal').modal('hide');
-                                        location
-                                            .reload(); // Refresh the page to show updated data
-                                    }, 3000);
-
-                                } else {
-                                    resultsDiv.className = 'alert alert-danger';
-                                    resultsDiv.innerHTML =
-                                        `<strong>Error:</strong> ${data.message || 'Import failed'}`;
-                                    resultsDiv.style.display = 'block';
-                                }
-                            }, 500);
-                        })
-                        .catch(error => {
-                            clearInterval(progressInterval);
-                            progressBar.style.display = 'none';
-
-                            resultsDiv.className = 'alert alert-danger';
-                            resultsDiv.innerHTML =
-                                '<strong>Error:</strong> Network error occurred during import';
-                            resultsDiv.style.display = 'block';
-
-                            console.error('Import error:', error);
-                        })
-                        .finally(() => {
-                            submitBtn.disabled = false;
-                            submitBtn.innerHTML = '<i class="fas fa-file-import me-1"></i> Import';
-                        });
-                });
-            }
-
-            // Reset modal when closed
-            jq('#accountHealthImportModal').on('hidden.bs.modal', function() {
-                if (importForm) {
-                    importForm.reset();
-                    progressBar.style.display = 'none';
-                    resultsDiv.style.display = 'none';
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-file-import me-1"></i> Import';
-                }
-            });
-        });
-
-        window.csrfToken = '{{ csrf_token() }}';
-
         jq(document).ready(function() {
-            // Show loader initially
             jq('#customLoader').show();
             jq('#channelTableWrapper').hide();
 
-            // Initialize DataTable first
-            table = initializeDataTable();
+            table = initializeTable();
             if (!table) return;
 
-            // Load initial data separately to populate originalChannelData
             jq.ajax({
                 url: '/account-health-master/dashboard-data',
                 type: "GET",
                 success: function(json) {
                     if (json && json.data) {
                         originalChannelData = json.data;
-
-                        // Setup event handlers after data is loaded
                         setupEventHandlers();
                     }
                 },
@@ -1189,56 +828,48 @@
                     console.error('Error loading initial data:', error, thrown);
                     jq('#customLoader').hide();
                     jq('#channelTableWrapper').show();
+                    alert('Failed to load initial data. Please refresh the page.');
                 }
             });
         });
 
         function setupEventHandlers() {
-            // Play button handlers
-            document.getElementById('play-auto').addEventListener('click', startPlayback);
-            document.getElementById('play-pause').addEventListener('click', stopPlayback);
-            document.getElementById('play-forward').addEventListener('click', nextChannel);
-            document.getElementById('play-backward').addEventListener('click', previousChannel);
-            document.getElementById('play-pause').style.display = 'none';
+            // Playback controls
+            jq('#play-auto').on('click', startPlayback);
+            jq('#play-pause').on('click', stopPlayback);
+            jq('#play-forward').on('click', nextChannel);
+            jq('#play-backward').on('click', previousChannel);
 
             // Search functionality
-            const channelSearchInput = document.getElementById('channelSearchInput');
-            const channelSearchDropdown = document.getElementById('channelSearchDropdown');
+            const channelSearchInput = jq('#channelSearchInput');
+            const channelSearchDropdown = jq('#channelSearchDropdown');
 
-            if (channelSearchInput) {
-                channelSearchInput.addEventListener('focus', () => populateChannelDropdown());
-                channelSearchInput.addEventListener('input', function() {
-                    const val = this.value.trim();
-                    if (val === '') {
-                        table.column(0).search('').draw();
-                    }
-                    populateChannelDropdown(val);
-                });
-            }
+            channelSearchInput.on('focus', () => populateChannelDropdown());
+            channelSearchInput.on('input', function() {
+                const val = this.value.trim();
+                if (val === '') {
+                    table.clearFilter();
+                } else {
+                    table.setFilter("channel", "=", val);
+                }
+                populateChannelDropdown(val);
+            });
 
-            if (channelSearchDropdown) {
-                channelSearchDropdown.addEventListener('click', function(e) {
-                    if (e.target.classList.contains('dropdown-search-item')) {
-                        const selectedChannel = e.target.dataset.value;
-                        document.getElementById('channelSearchInput').value = selectedChannel;
-                        this.style.display = 'none';
-                        table.column(0).search(selectedChannel, true, false).draw();
-                    }
-                });
-            }
+            channelSearchDropdown.on('click', '.dropdown-search-item', function() {
+                const selectedChannel = jq(this).data('value');
+                channelSearchInput.val(selectedChannel);
+                channelSearchDropdown.hide();
+                table.setFilter("channel", "=", selectedChannel);
+            });
 
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function(e) {
+            jq(document).on('click', function(e) {
                 if (!e.target.closest('.dropdown-search-container')) {
-                    document.getElementById('channelSearchDropdown').style.display = 'none';
+                    channelSearchDropdown.hide();
                 }
             });
 
-            // Update L30 orders total when table is redrawn
-            table.on('draw', function() {
-                var data = table.rows({
-                    search: 'applied'
-                }).data().toArray();
+            // Update totals on data load
+            table.on("dataLoaded", function(data) {
                 updateL30OrdersTotal(data);
             });
 
@@ -1247,17 +878,58 @@
 
             // Checkbox handlers
             setupCheckboxHandlers();
+
+            // Action button handlers
+            table.on("cellClick", function(e, cell) {
+                if (jq(e.target).closest('.edit-btn').length) {
+                    const rowData = cell.getData();
+                    const channel = rowData['channel']?.trim() || '';
+                    const sheetUrl = rowData['sheet_link'] || '';
+                    const type = rowData['type']?.trim() || '';
+
+                    jq('#editChannelName').val(channel);
+                    jq('#editChannelUrl').val(sheetUrl);
+                    jq('#editType').val(type);
+                    jq('#originalChannel').val(channel);
+                    jq('#editChannelModal').modal('show');
+                }
+
+                if (jq(e.target).closest('.delete-btn').length) {
+                    const channel = cell.getData().channel;
+                    if (confirm(`Are you sure you want to archive channel "${channel}"?`)) {
+                        jq.ajax({
+                            url: '/channel_master/archive',
+                            method: 'POST',
+                            data: {
+                                channel: channel,
+                                _token: jq('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function(res) {
+                                if (res.success) {
+                                    table.deleteRow(cell.getRow());
+                                    alert('Channel archived successfully.');
+                                } else {
+                                    alert('Error: ' + (res.message || 'Failed to archive channel.'));
+                                }
+                            },
+                            error: function() {
+                                alert('Server error while archiving channel.');
+                            }
+                        });
+                    }
+                }
+            });
         }
 
         function setupModalHandlers() {
-            // Add channel modal
-            jq('#addChannelModal .btn-primary').on('click', function() {
+            // Add channel
+            jq('#saveChannelBtn').on('click', function() {
                 const channelName = jq('#channelName').val().trim();
                 const channelUrl = jq('#channelUrl').val().trim();
                 const type = jq('#type').val().trim();
 
                 if (!channelName || !channelUrl || !type) {
-                    alert("Channel Name, URL, and Type are required.");
+                    alert("Channel Name, Sheet Link, and Type are required.");
                     return;
                 }
 
@@ -1274,33 +946,19 @@
                         if (res.success) {
                             jq('#addChannelModal').modal('hide');
                             jq('#channelForm')[0].reset();
-                            location.reload();
+                            table.setData('/account-health-master/dashboard-data');
+                            alert('Channel added successfully.');
                         } else {
-                            alert("Error: " + (res.message || 'Something went wrong.'));
+                            alert("Error: " + (res.message || 'Failed to add channel.'));
                         }
                     },
                     error: function() {
-                        alert("Error submitting form.");
+                        alert("Server error while adding channel.");
                     }
                 });
             });
 
-            // Edit channel modal
-            jq(document).on('click', '.edit-btn', function() {
-                const index = jq(this).data('index');
-                const rowData = tableData[index];
-                const channel = rowData["Channel "]?.trim() || rowData["channel"] || '';
-                const sheetUrl = rowData["sheet_link"] || '';
-                const type = rowData["type"]?.trim() || '';
-
-                jq('#editChannelName').val(channel);
-                jq('#editChannelUrl').val(sheetUrl);
-                jq('#editType').val(type);
-                jq('#originalChannel').val(channel);
-                jq('#editChannelModal').modal('show');
-            });
-
-            // Edit form submission
+            // Edit channel
             jq('#editChannelForm').on('submit', function(e) {
                 e.preventDefault();
                 const channel = jq('#editChannelName').val().trim();
@@ -1308,8 +966,8 @@
                 const type = jq('#editType').val().trim();
                 const originalChannel = jq('#originalChannel').val().trim();
 
-                if (!channel || !sheetUrl) {
-                    alert("Channel Name and Sheet URL are required.");
+                if (!channel || !sheetUrl || !type) {
+                    alert("Channel Name, Sheet URL, and Type are required.");
                     return;
                 }
 
@@ -1327,20 +985,98 @@
                         if (res.success) {
                             jq('#editChannelModal').modal('hide');
                             jq('#editChannelForm')[0].reset();
-                            location.reload();
+                            table.setData('/account-health-master/dashboard-data');
+                            alert('Channel updated successfully.');
                         } else {
-                            alert("Error: " + (res.message || 'Update failed.'));
+                            alert("Error: " + (res.message || 'Failed to update channel.'));
                         }
                     },
                     error: function() {
-                        alert("Something went wrong while updating.");
+                        alert("Server error while updating channel.");
                     }
                 });
+            });
+
+            // Import form
+            const importForm = jq('#accountHealthImportForm');
+            const progressBar = jq('#importProgress');
+            const resultsDiv = jq('#importResults');
+            const submitBtn = jq('#importSubmitBtn');
+
+            importForm.on('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                progressBar.show();
+                resultsDiv.hide();
+                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Importing...');
+
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 10;
+                    progressBar.find('.progress-bar').css('width', progress + '%').text(progress + '%');
+                    if (progress >= 90) clearInterval(progressInterval);
+                }, 200);
+
+                fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': jq('meta[name="csrf-token"]').attr('content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        clearInterval(progressInterval);
+                        progressBar.find('.progress-bar').css('width', '100%').text('100%');
+                        setTimeout(() => {
+                            progressBar.hide();
+                            if (data.success) {
+                                resultsDiv.removeClass('alert-danger').addClass('alert-success');
+                                const resultsList = jq('#importResultsList').empty();
+                                if (data.results) {
+                                    Object.keys(data.results).forEach(key => {
+                                        resultsList.append(
+                                            `<li>${key}: ${data.results[key]}</li>`);
+                                    });
+                                }
+                                resultsDiv.show();
+                                table.setData('/account-health-master/dashboard-data');
+                                setTimeout(() => {
+                                    jq('#accountHealthImportModal').modal('hide');
+                                    location.reload();
+                                }, 3000);
+                            } else {
+                                resultsDiv.removeClass('alert-success').addClass('alert-danger');
+                                resultsDiv.html(
+                                    `<strong>Error:</strong> ${data.message || 'Import failed'}`);
+                                resultsDiv.show();
+                            }
+                        }, 500);
+                    })
+                    .catch(error => {
+                        clearInterval(progressInterval);
+                        progressBar.hide();
+                        resultsDiv.removeClass('alert-success').addClass('alert-danger');
+                        resultsDiv.html('<strong>Error:</strong> Network error occurred during import');
+                        resultsDiv.show();
+                        console.error('Import error:', error);
+                    })
+                    .finally(() => {
+                        submitBtn.prop('disabled', false).html(
+                            '<i class="fas fa-file-import me-1"></i> Import');
+                    });
+            });
+
+            jq('#accountHealthImportModal').on('hidden.bs.modal', function() {
+                importForm[0].reset();
+                progressBar.hide();
+                resultsDiv.hide();
+                submitBtn.prop('disabled', false).html('<i class="fas fa-file-import me-1"></i> Import');
             });
         }
 
         function setupCheckboxHandlers() {
-            jq(document).on('change', '.checkbox-nr', function() {
+            jq('#channelTable').on('change', '.checkbox-nr', function() {
                 const channel = jq(this).data('channel');
                 const value = jq(this).is(':checked') ? 1 : 0;
 
@@ -1350,18 +1086,18 @@
                     data: {
                         channel: channel,
                         field: 'nr',
-                        value: value
-                    },
-                    headers: {
-                        'X-CSRF-TOKEN': jq('meta[name="csrf-token"]').attr('content')
+                        value: value,
+                        _token: jq('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(res) {
                         if (!res.success) {
-                            alert('Failed to update: ' + res.message);
+                            alert('Failed to update NR flag: ' + (res.message || 'Unknown error'));
+                            jq(this).prop('checked', !value); // Revert checkbox
                         }
                     },
                     error: function() {
-                        alert('Server error while updating checkbox.');
+                        alert('Server error while updating NR flag.');
+                        jq(this).prop('checked', !value); // Revert checkbox
                     }
                 });
             });
