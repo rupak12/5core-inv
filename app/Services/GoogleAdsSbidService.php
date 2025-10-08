@@ -3,16 +3,16 @@
 namespace App\Services;
 
 use Google\Auth\Credentials\UserRefreshCredentials;
-use Google\Ads\GoogleAds\Lib\V20\GoogleAdsClientBuilder;
-use Google\Ads\GoogleAds\V20\Services\AdGroupOperation;
-use Google\Ads\GoogleAds\V20\Services\AdGroupCriterionOperation;
-use Google\Ads\GoogleAds\V20\Resources\AdGroup;
-use Google\Ads\GoogleAds\V20\Resources\AdGroupCriterion;
+use Google\Ads\GoogleAds\Lib\V16\GoogleAdsClientBuilder;
+use Google\Ads\GoogleAds\V16\Services\AdGroupOperation;
+use Google\Ads\GoogleAds\V16\Services\AdGroupCriterionOperation;
+use Google\Ads\GoogleAds\V16\Resources\AdGroup;
+use Google\Ads\GoogleAds\V16\Resources\AdGroupCriterion;
 use Google\Protobuf\FieldMask;
-use Google\Ads\GoogleAds\V20\Services\SearchGoogleAdsStreamRequest;
-use Google\Ads\GoogleAds\V20\Services\MutateAdGroupsRequest;
+use Google\Ads\GoogleAds\V16\Services\SearchGoogleAdsStreamRequest;
+use Google\Ads\GoogleAds\V16\Services\MutateAdGroupsRequest;
 use Illuminate\Support\Facades\Log;
-use Google\Ads\GoogleAds\V20\Services\MutateAdGroupCriteriaRequest;
+use Google\Ads\GoogleAds\V16\Services\MutateAdGroupCriteriaRequest;
 
 class GoogleAdsSbidService
 {
@@ -20,7 +20,10 @@ class GoogleAdsSbidService
 
     public function __construct()
     {
-        $this->client = $this->buildClient();
+        // Only build client if credentials are available
+        if (env('GOOGLE_ADS_DEVELOPER_TOKEN')) {
+            $this->client = $this->buildClient();
+        }
     }
 
     private function buildClient()
