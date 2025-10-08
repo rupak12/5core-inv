@@ -1817,6 +1817,7 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
         Route::get('/amazon/kw/ads/data', 'getAmazonKwAdsData');
         Route::get('/amazon-kw-ads/filter', 'filterKwAds')->name('amazonKwAds.filter');
         Route::get('/amazon/pt/ads', 'amazonPtAdsView')->name('amazon.pt.ads');
+        
         Route::get('/amazon/pt/ads/data', 'getAmazonPtAdsData');
         Route::get('/amazon-pt-ads/filter', 'filterPtAds')->name('amazonPtAds.filter');
         Route::get('/amazon/hl/ads', 'amazonHlAdsView')->name('amazon.hl.ads');
