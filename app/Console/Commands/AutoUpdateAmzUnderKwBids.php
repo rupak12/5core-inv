@@ -40,17 +40,6 @@ class AutoUpdateAmzUnderKwBids extends Command
         $campaignIds = collect($campaigns)->pluck('campaign_id')->toArray();
         $newBids = collect($campaigns)->pluck('sbid')->toArray();
 
-        // $numbered = [];
-        // foreach ($campaigns as $index => $campaign) {
-        //     $numbered[] = [
-        //         'no'   => $index + 1,  // numbering start from 1
-        //         'sku'  => $campaign->sku ?? '', // agar sku chahiye to
-        //         'data' => $campaign,
-        //     ];
-        // }
-
-        // Log::info("Response (with numbering)", $numbered);
-
         $result = $updateKwBids->updateAutoCampaignKeywordsBid($campaignIds, $newBids);
         $this->info("Update Result: " . json_encode($result));
 

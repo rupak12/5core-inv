@@ -3,19 +3,15 @@
 namespace App\Console\Commands;
 
 use App\Http\Controllers\Campaigns\AmazonSpBudgetController;
-use App\Models\AmazonDatasheet;
-use App\Models\AmazonDataView;
 use Illuminate\Console\Command;
 use App\Models\AmazonSpCampaignReport;
 use App\Models\ProductMaster;
 use App\Models\ShopifySku;
-use GuzzleHttp\Client;
-use Illuminate\Support\Facades\Log;
 
-class AutoUpdateAmazonPtBids extends Command
+class AutoUpdateAmazonFbaUnderKwBids extends Command
 {
-    protected $signature = 'amazon:auto-update-over-pt-bids';
-    protected $description = 'Automatically update Amazon campaign keyword bids';
+    protected $signature = 'amazon-fba:auto-update-under-kw-bids';
+    protected $description = 'Automatically update Amazon FBA campaign keyword bids';
 
     protected $profileId;
 
@@ -30,7 +26,7 @@ class AutoUpdateAmazonPtBids extends Command
 
         $updateKwBids = new AmazonSpBudgetController;
 
-        $campaigns = $this->getAutomateAmzUtilizedBgtPt();
+        $campaigns = $this->getAutomateAmzUtilizedBgtKw();
 
         if (empty($campaigns)) {
             $this->warn("No campaigns matched filter conditions.");
@@ -40,12 +36,12 @@ class AutoUpdateAmazonPtBids extends Command
         $campaignIds = collect($campaigns)->pluck('campaign_id')->toArray();
         $newBids = collect($campaigns)->pluck('sbid')->toArray();
 
-        $result = $updateKwBids->updateAutoCampaignTargetsBid($campaignIds, $newBids);
+        $result = $updateKwBids->updateAutoCampaignKeywordsBid($campaignIds, $newBids);
         $this->info("Update Result: " . json_encode($result));
 
     }
 
-    public function getAutomateAmzUtilizedBgtPt()
+    public function getAutomateAmzUtilizedBgtKw()
     {
         $productMasters = ProductMaster::orderBy('parent', 'asc')
             ->orderByRaw("CASE WHEN sku LIKE 'PARENT %' THEN 1 ELSE 0 END")
@@ -60,19 +56,34 @@ class AutoUpdateAmazonPtBids extends Command
             ->where('report_date_range', 'L7')
             ->where(function ($q) use ($skus) {
                 foreach ($skus as $sku) {
-                    $q->orWhere('campaignName', 'LIKE', '%' . strtoupper($sku) . '%');
+                    $q->orWhere('campaignName', 'LIKE', '%' . $sku . '%');
                 }
             })
+            ->where(function ($q) {
+                $q->where('campaignName', 'LIKE', '%FBA%')
+                ->orWhere('campaignName', 'LIKE', '%fba%')
+                ->orWhere('campaignName', 'LIKE', '%FBA.%')
+                ->orWhere('campaignName', 'LIKE', '%fba.%');
+            })
+            ->whereRaw("LOWER(TRIM(TRAILING '.' FROM campaignName)) NOT LIKE '% pt'")
             ->get();
 
         $amazonSpCampaignReportsL1 = AmazonSpCampaignReport::where('ad_type', 'SPONSORED_PRODUCTS')
             ->where('report_date_range', 'L1')
             ->where(function ($q) use ($skus) {
                 foreach ($skus as $sku) {
-                    $q->orWhere('campaignName', 'LIKE', '%' . strtoupper($sku) . '%');
+                    $q->orWhere('campaignName', 'LIKE', '%' . $sku . '%');
                 }
             })
+            ->where(function ($q) {
+                $q->where('campaignName', 'LIKE', '%FBA%')
+                ->orWhere('campaignName', 'LIKE', '%fba%')
+                ->orWhere('campaignName', 'LIKE', '%FBA.%')
+                ->orWhere('campaignName', 'LIKE', '%fba.%');
+            })
+            ->whereRaw("LOWER(TRIM(TRAILING '.' FROM campaignName)) NOT LIKE '% pt'")
             ->get();
+
 
         $result = [];
 
@@ -82,20 +93,22 @@ class AutoUpdateAmazonPtBids extends Command
             $shopify = $shopifyData[$pm->sku] ?? null;
 
             $matchedCampaignL7 = $amazonSpCampaignReportsL7->first(function ($item) use ($sku) {
-                $cleanName = strtoupper(trim($item->campaignName));
+                $cleanName = strtoupper(trim(rtrim($item->campaignName, '.')));
 
                 return (
-                    (str_ends_with($cleanName, $sku . ' PT') || str_ends_with($cleanName, $sku . ' PT.'))
-                    && strtoupper($item->campaignStatus) === 'ENABLED'
+                    (str_ends_with($cleanName, $sku . ' FBA') || str_ends_with($cleanName, $sku . ' FBA.'))
+                    && !str_ends_with($cleanName, $sku . ' PT')
+                    && !str_ends_with($cleanName, $sku . ' PT.')
                 );
             });
 
             $matchedCampaignL1 = $amazonSpCampaignReportsL1->first(function ($item) use ($sku) {
-                $cleanName = strtoupper(trim($item->campaignName));
+                $cleanName = strtoupper(trim(rtrim($item->campaignName, '.')));
 
                 return (
-                    (str_ends_with($cleanName, $sku . ' PT') || str_ends_with($cleanName, $sku . ' PT.'))
-                    && strtoupper($item->campaignStatus) === 'ENABLED'
+                    (str_ends_with($cleanName, $sku . ' FBA') || str_ends_with($cleanName, $sku . ' FBA.'))
+                    && !str_ends_with($cleanName, $sku . ' PT')
+                    && !str_ends_with($cleanName, $sku . ' PT.')
                 );
             });
 
@@ -105,28 +118,20 @@ class AutoUpdateAmazonPtBids extends Command
             $row['campaignName'] = $matchedCampaignL7->campaignName ?? ($matchedCampaignL1->campaignName ?? '');
             $row['campaignBudgetAmount'] = $matchedCampaignL7->campaignBudgetAmount ?? ($matchedCampaignL1->campaignBudgetAmount ?? '');
             $row['l7_spend'] = $matchedCampaignL7->spend ?? 0;
-            $row['l7_cpc'] = $matchedCampaignL7->costPerClick ?? 0;
-            $row['l1_spend'] = $matchedCampaignL1->spend ?? 0;
             $row['l1_cpc'] = $matchedCampaignL1->costPerClick ?? 0;
 
             $l1_cpc = floatval($row['l1_cpc']);
-            $l7_cpc = floatval($row['l7_cpc']);
-            
             $row['sbid'] = round($l1_cpc * 0.95, 2);
 
             $budget = floatval($row['campaignBudgetAmount']);
             $l7_spend = floatval($row['l7_spend']);
-            $l1_spend = floatval($row['l1_spend']);
 
             $ub7 = $budget > 0 ? ($l7_spend / ($budget * 7)) * 100 : 0;
-            $ub1 = $budget > 0 ? ($l1_spend / $budget) * 100 : 0;
 
-            if ($row['INV'] > 0 && $ub7 > 90) {
+            if($row['campaignName'] != '' && $ub7 < 70) {
                 $result[] = (object) $row;
             }
         }
-
         return $result;
     }
-
 }

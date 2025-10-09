@@ -260,10 +260,8 @@ class AmazonFbaAdsController extends Controller
                 }
             })
             ->where(function ($q) {
-                $q->where('campaignName', 'LIKE', '%FBA%')
-                ->orWhere('campaignName', 'LIKE', '%fba%')
-                ->orWhere('campaignName', 'LIKE', '%FBA.%')
-                ->orWhere('campaignName', 'LIKE', '%fba.%');
+                $q->where('campaignName', 'LIKE', '%FBA PT%')
+                ->orWhere('campaignName', 'LIKE', '%FBA PT.%');
             })
             ->get();
 
