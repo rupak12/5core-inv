@@ -2,77 +2,77 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 @section('css')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('assets/css/styles.css') }}">
-    <style>
-        /* Custom styles for the Tabulator table */
-        /* Pagination styling */
-        .tabulator .tabulator-footer .tabulator-paginator .tabulator-page {
-            padding: 8px 16px;
-            margin: 0 4px;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ asset('assets/css/styles.css') }}">
+<style>
+    /* Custom styles for the Tabulator table */
+    /* Pagination styling */
+    .tabulator .tabulator-footer .tabulator-paginator .tabulator-page {
+        padding: 8px 16px;
+        margin: 0 4px;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
 
-        .tabulator .tabulator-footer .tabulator-paginator .tabulator-page:hover {
-            background: #e0eaff;
-            color: #2563eb;
-        }
+    .tabulator .tabulator-footer .tabulator-paginator .tabulator-page:hover {
+        background: #e0eaff;
+        color: #2563eb;
+    }
 
-        .tabulator .tabulator-footer .tabulator-paginator .tabulator-page.active {
-            background: #2563eb;
-            color: white;
-        }
+    .tabulator .tabulator-footer .tabulator-paginator .tabulator-page.active {
+        background: #2563eb;
+        color: white;
+    }
 
-        .custom-select-wrapper {
-            width: 100%;
-            cursor: pointer;
-            position: relative;
-        }
+    .custom-select-wrapper {
+        width: 100%;
+        cursor: pointer;
+        position: relative;
+    }
 
-        .custom-select-display {
-            background-color: #fff;
-            border: 1px solid #ced4da;
-            padding: 0.375rem 0.75rem;
-            border-radius: 0.375rem;
-        }
+    .custom-select-display {
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.375rem;
+    }
 
-        .custom-select-options {
-            position: absolute;
-            z-index: 999;
-            top: 100%;
-            left: 0;
-            right: 0;
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #ced4da;
-            border-top: none;
-            background-color: #fff;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        }
+    .custom-select-options {
+        position: absolute;
+        z-index: 999;
+        top: 100%;
+        left: 0;
+        right: 0;
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ced4da;
+        border-top: none;
+        background-color: #fff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
 
-        .custom-select-search {
-            width: 100%;
-            padding: 0.5rem;
-            border: none;
-            border-bottom: 1px solid #eee;
-            outline: none;
-        }
+    .custom-select-search {
+        width: 100%;
+        padding: 0.5rem;
+        border: none;
+        border-bottom: 1px solid #eee;
+        outline: none;
+    }
 
-        .custom-select-option {
-            padding: 0.5rem 0.75rem;
-            cursor: pointer;
-        }
+    .custom-select-option {
+        padding: 0.5rem 0.75rem;
+        cursor: pointer;
+    }
 
-        .custom-select-option:hover {
-            background-color: #f1f1f1;
-        }
+    .custom-select-option:hover {
+        background-color: #f1f1f1;
+    }
 
-    </style>
+</style>
 @endsection
 
 @section('content')
@@ -297,6 +297,28 @@
         let uniqueChannels = [];
         let uniqueChannelRows = [];
 
+        // Mapping of fields to their update endpoints
+        const fieldUpdateEndpoints = {
+            'odr_rate': '/odr-rate/update',
+            'odr_rate_allowed': '/odr-rate/update',
+            'fulfillment_rate': '/fullfillment-rate/update',
+            'fulfillment_rate_allowed': '/fullfillment-rate/update',
+            'valid_tracking_rate': '/validtracking-rate/update',
+            'valid_tracking_rate_allowed': '/validtracking-rate/update',
+            'on_time_delivery': '/onTimeDelivery-rate/update',
+            'on_time_delivery_allowed': '/onTimeDelivery-rate/update',
+            'atoz_claims_rate': '/atozclaims-rate/update',
+            'atoz_claims_rate_allowed': '/atozclaims-rate/update',
+            'violation_rate': '/violation-rate/update',
+            'violation_rate_allowed': '/violation-rate/update',
+            'late_shipment_rate': '/lateshipment-rate/update',
+            'late_shipment_rate_allowed': '/lateshipment-rate/update',
+            'negative_seller_rate': '/negativeseller-rate/update',
+            'negative_seller_rate_allowed': '/negativeseller-rate/update',
+            'refund_rate': '/refund-rate/update',
+            'refund_rate_allowed': '/refund-rate/update'
+        };
+
         function parseNumber(value) {
             if (value === null || value === undefined || value === '' || value === '#DIV/0!' || value === 'N/A') return 0;
             if (typeof value === 'number') return value;
@@ -328,31 +350,59 @@
                 resizableColumns: true,
                 height: "550px",
                 ajaxResponse: function(url, params, response) {
+                    console.log('AJAX response:', response);
                     jq('#customLoader').hide();
                     jq('#channelTableWrapper').show();
-                    if (!response || !response.data) return [];
+                    if (!response || !response.data) {
+                        console.warn('No data in response:', response);
+                        alert('No data received from server.');
+                        return [];
+                    }
                     originalChannelData = response.data;
                     drawChannelChart(response.data);
                     updateL30OrdersTotal(response.data);
                     return response.data.map(item => ({
                         channel: pick(item, ['channel', 'Channel', 'Channel '], ''),
-                        l30_orders: toNum(pick(item, ['L30 Orders', 'l30_orders'], 0), 0),
+                        l30_orders: toNum(pick(item, ['l30_orders', 'L30 Orders'], 0), 0),
                         nr: toNum(pick(item, ['nr', 'NR'], 0), 0),
-                        odr_rate: pick(item, ['ODR', 'ODR Rate'], 'N/A'),
-                        fulfillment_rate: pick(item, ['Fulfillment Rate'], 'N/A'),
-                        valid_tracking_rate: pick(item, ['Valid Tracking Rate'], 'N/A'),
-                        on_time_delivery: pick(item, ['On Time Delivery Rate'], 'N/A'),
-                        atoz_claims_rate: pick(item, ['AtoZ Claims Rate'], 'N/A'),
-                        voilation_rate: pick(item, ['Voilation Rate'], 'N/A'),
+                        odr_rate: pick(item, ['odr_rate', 'ODR Rate', 'ODR'], 'N/A'),
+                        odr_rate_allowed: pick(item, ['odr_rate_allowed'], ''),
+                        fulfillment_rate: pick(item, ['fulfillment_rate', 'Fulfillment Rate'],
+                            'N/A'),
+                        fulfillment_rate_allowed: pick(item, ['fulfillment_rate_allowed'], ''),
+                        valid_tracking_rate: pick(item, ['valid_tracking_rate',
+                            'Valid Tracking Rate'
+                        ], 'N/A'),
+                        valid_tracking_rate_allowed: pick(item, ['valid_tracking_rate_allowed'],
+                            ''),
+                        on_time_delivery: pick(item, ['on_time_delivery_rate', 'On Time Delivery Rate'],
+                            'N/A'),
+                        on_time_delivery_allowed: pick(item, ['on_time_delivery_rate_allowed'], ''),
+                        atoz_claims_rate: pick(item, ['atoz_claims_rate', 'AtoZ Claims Rate'],
+                            'N/A'),
+                        atoz_claims_rate_allowed: pick(item, ['atoz_claims_rate_allowed'], ''),
+                        violation_rate: pick(item, ['violation_rate', 'Violation Rate'], 'N/A'),
+                        violation_rate_allowed: pick(item, ['violation_rate_allowed'], ''),
+                        late_shipment_rate: pick(item, ['late_shipment_rate', 'Late Shipment Rate'],
+                            'N/A'),
+                        late_shipment_rate_allowed: pick(item, ['late_shipment_rate_allowed'], ''),
+                        negative_seller_rate: pick(item, ['negative_seller_rate',
+                            'Negative Seller Rate'
+                        ], 'N/A'),
+                        negative_seller_rate_allowed: pick(item, ['negative_seller_rate_allowed'],
+                            ''),
+                        refund_rate: pick(item, ['refund_rate', 'Refund Rate'], 'N/A'),
+                        refund_rate_allowed: pick(item, ['refund_rate_allowed'], ''),
                         sheet_link: pick(item, ['sheet_link'], ''),
                         type: pick(item, ['type'], '')
                     }));
                 },
                 ajaxError: function(xhr, error, thrown) {
-                    console.error("AJAX error:", error, thrown);
+                    console.error("AJAX error:", error, thrown, xhr.responseText);
                     jq('#customLoader').hide();
                     jq('#channelTableWrapper').show();
-                    alert('Failed to load data. Please try again.');
+                    alert('Failed to load data: ' + (xhr.responseJSON?.message ||
+                        'Unknown error. Check console for details.'));
                 },
                 ajaxRequesting: function() {
                     jq('#customLoader').show();
@@ -410,15 +460,58 @@
                     {
                         title: "ODR Rate",
                         field: "odr_rate",
-                        editor: "number",
-                        editorParams: {
-                            min: 0,
-                            max: 100,
-                            step: 0.1
+                        editor: function(cell, onRendered, success, cancel) {
+                            const input = document.createElement("input");
+                            input.type = "number";
+                            input.min = 0;
+                            input.max = 100;
+                            input.step = 0.1;
+
+                            const currentValue = cell.getValue();
+                            let numericValue = currentValue;
+                            if (typeof currentValue === 'string' && currentValue.includes('%')) {
+                                numericValue = parseFloat(currentValue.replace('%', ''));
+                            }
+                            input.value = isNaN(numericValue) ? '' : numericValue;
+
+                            onRendered(function() {
+                                input.focus();
+                                input.style.height = "100%";
+                                input.style.width = "100%";
+                                input.style.border = "none";
+                                input.style.padding = "4px";
+                                input.style.boxSizing = "border-box";
+                            });
+
+                            function onSubmit() {
+                                let value = parseFloat(input.value);
+                                if (isNaN(value) || value < 0 || value > 100) {
+                                    cancel();
+                                    return;
+                                }
+                                success(value);
+                            }
+
+                            input.addEventListener("blur", onSubmit);
+                            input.addEventListener("keydown", function(e) {
+                                if (e.key === "Enter") {
+                                    onSubmit();
+                                }
+                                if (e.key === "Escape") {
+                                    cancel();
+                                }
+                            });
+
+                            return input;
                         },
                         formatter: function(cell) {
                             const value = cell.getValue();
-                            const parsed = parseFloat(value) || 0;
+                            if (value === 'N/A' || value === '' || isNaN(parseFloat(value))) {
+                                return `<div class="text-center editable-field" style="padding:4px; border-radius:4px;">
+                                            <span>N/A</span>
+                                        </div>`;
+                            }
+                            const parsed = parseFloat(value);
                             let color = parsed > 5 ? "#dc3545" : parsed > 2 ? "#ffc107" : "#28a745";
                             return `<div class="text-center editable-field" style="background-color:${color}; color:#ffffff; padding:4px; border-radius:4px;">
                                         <span>${parsed.toFixed(1)}%</span>
@@ -431,22 +524,84 @@
                                 cell.restoreOldValue();
                                 return;
                             }
-                            updateField(cell);
+                            updateField(cell, fieldUpdateEndpoints['odr_rate']);
+                        },
+                        hozAlign: "center"
+                    },
+                    {
+                        title: "ODR Rate Allowed",
+                        field: "odr_rate_allowed",
+                        editor: "input",
+                        editorParams: {
+                            minLength: 0,
+                            maxLength: 50
+                        },
+                        formatter: function(cell) {
+                            const value = cell.getValue() || '';
+                            return `<div class="text-center editable-field" style="padding:4px; border-radius:4px;">
+                                        <span>${value}</span>
+                                    </div>`;
+                        },
+                        cellEdited: function(cell) {
+                            updateField(cell, fieldUpdateEndpoints['odr_rate_allowed']);
                         },
                         hozAlign: "center"
                     },
                     {
                         title: "Fulfillment Rate",
                         field: "fulfillment_rate",
-                        editor: "number",
-                        editorParams: {
-                            min: 0,
-                            max: 100,
-                            step: 0.1
+                        editor: function(cell, onRendered, success, cancel) {
+                            const input = document.createElement("input");
+                            input.type = "number";
+                            input.min = 0;
+                            input.max = 100;
+                            input.step = 0.1;
+
+                            const currentValue = cell.getValue();
+                            let numericValue = currentValue;
+                            if (typeof currentValue === 'string' && currentValue.includes('%')) {
+                                numericValue = parseFloat(currentValue.replace('%', ''));
+                            }
+                            input.value = isNaN(numericValue) ? '' : numericValue;
+
+                            onRendered(function() {
+                                input.focus();
+                                input.style.height = "100%";
+                                input.style.width = "100%";
+                                input.style.border = "none";
+                                input.style.padding = "4px";
+                                input.style.boxSizing = "border-box";
+                            });
+
+                            function onSubmit() {
+                                let value = parseFloat(input.value);
+                                if (isNaN(value) || value < 0 || value > 100) {
+                                    cancel();
+                                    return;
+                                }
+                                success(value);
+                            }
+
+                            input.addEventListener("blur", onSubmit);
+                            input.addEventListener("keydown", function(e) {
+                                if (e.key === "Enter") {
+                                    onSubmit();
+                                }
+                                if (e.key === "Escape") {
+                                    cancel();
+                                }
+                            });
+
+                            return input;
                         },
                         formatter: function(cell) {
                             const value = cell.getValue();
-                            const parsed = parseFloat(value) || 0;
+                            if (value === 'N/A' || value === '' || isNaN(parseFloat(value))) {
+                                return `<div class="text-center editable-field" style="padding:4px; border-radius:4px;">
+                                            <span>N/A</span>
+                                        </div>`;
+                            }
+                            const parsed = parseFloat(value);
                             let color = parsed < 95 ? "#dc3545" : parsed < 98 ? "#ffc107" : "#28a745";
                             return `<div class="text-center editable-field" style="background-color:${color}; color:#ffffff; padding:4px; border-radius:4px;">
                                         <span>${parsed.toFixed(1)}%</span>
@@ -459,22 +614,84 @@
                                 cell.restoreOldValue();
                                 return;
                             }
-                            updateField(cell);
+                            updateField(cell, fieldUpdateEndpoints['fulfillment_rate']);
+                        },
+                        hozAlign: "center"
+                    },
+                    {
+                        title: "Fulfillment Rate Allowed",
+                        field: "fulfillment_rate_allowed",
+                        editor: "input",
+                        editorParams: {
+                            minLength: 0,
+                            maxLength: 50
+                        },
+                        formatter: function(cell) {
+                            const value = cell.getValue() || '';
+                            return `<div class="text-center editable-field" style="padding:4px; border-radius:4px;">
+                                        <span>${value}</span>
+                                    </div>`;
+                        },
+                        cellEdited: function(cell) {
+                            updateField(cell, fieldUpdateEndpoints['fulfillment_rate_allowed']);
                         },
                         hozAlign: "center"
                     },
                     {
                         title: "Valid Tracking Rate",
                         field: "valid_tracking_rate",
-                        editor: "number",
-                        editorParams: {
-                            min: 0,
-                            max: 100,
-                            step: 0.1
+                        editor: function(cell, onRendered, success, cancel) {
+                            const input = document.createElement("input");
+                            input.type = "number";
+                            input.min = 0;
+                            input.max = 100;
+                            input.step = 0.1;
+
+                            const currentValue = cell.getValue();
+                            let numericValue = currentValue;
+                            if (typeof currentValue === 'string' && currentValue.includes('%')) {
+                                numericValue = parseFloat(currentValue.replace('%', ''));
+                            }
+                            input.value = isNaN(numericValue) ? '' : numericValue;
+
+                            onRendered(function() {
+                                input.focus();
+                                input.style.height = "100%";
+                                input.style.width = "100%";
+                                input.style.border = "none";
+                                input.style.padding = "4px";
+                                input.style.boxSizing = "border-box";
+                            });
+
+                            function onSubmit() {
+                                let value = parseFloat(input.value);
+                                if (isNaN(value) || value < 0 || value > 100) {
+                                    cancel();
+                                    return;
+                                }
+                                success(value);
+                            }
+
+                            input.addEventListener("blur", onSubmit);
+                            input.addEventListener("keydown", function(e) {
+                                if (e.key === "Enter") {
+                                    onSubmit();
+                                }
+                                if (e.key === "Escape") {
+                                    cancel();
+                                }
+                            });
+
+                            return input;
                         },
                         formatter: function(cell) {
                             const value = cell.getValue();
-                            const parsed = parseFloat(value) || 0;
+                            if (value === 'N/A' || value === '' || isNaN(parseFloat(value))) {
+                                return `<div class="text-center editable-field" style="padding:4px; border-radius:4px;">
+                                            <span>N/A</span>
+                                        </div>`;
+                            }
+                            const parsed = parseFloat(value);
                             let color = parsed < 90 ? "#dc3545" : parsed < 95 ? "#ffc107" : "#28a745";
                             return `<div class="text-center editable-field" style="background-color:${color}; color:#ffffff; padding:4px; border-radius:4px;">
                                         <span>${parsed.toFixed(1)}%</span>
@@ -487,22 +704,84 @@
                                 cell.restoreOldValue();
                                 return;
                             }
-                            updateField(cell);
+                            updateField(cell, fieldUpdateEndpoints['valid_tracking_rate']);
+                        },
+                        hozAlign: "center"
+                    },
+                    {
+                        title: "Valid Tracking Rate Allowed",
+                        field: "valid_tracking_rate_allowed",
+                        editor: "input",
+                        editorParams: {
+                            minLength: 0,
+                            maxLength: 50
+                        },
+                        formatter: function(cell) {
+                            const value = cell.getValue() || '';
+                            return `<div class="text-center editable-field" style="padding:4px; border-radius:4px;">
+                                        <span>${value}</span>
+                                    </div>`;
+                        },
+                        cellEdited: function(cell) {
+                            updateField(cell, fieldUpdateEndpoints['valid_tracking_rate_allowed']);
                         },
                         hozAlign: "center"
                     },
                     {
                         title: "On Time Delivery",
                         field: "on_time_delivery",
-                        editor: "number",
-                        editorParams: {
-                            min: 0,
-                            max: 100,
-                            step: 0.1
+                        editor: function(cell, onRendered, success, cancel) {
+                            const input = document.createElement("input");
+                            input.type = "number";
+                            input.min = 0;
+                            input.max = 100;
+                            input.step = 0.1;
+
+                            const currentValue = cell.getValue();
+                            let numericValue = currentValue;
+                            if (typeof currentValue === 'string' && currentValue.includes('%')) {
+                                numericValue = parseFloat(currentValue.replace('%', ''));
+                            }
+                            input.value = isNaN(numericValue) ? '' : numericValue;
+
+                            onRendered(function() {
+                                input.focus();
+                                input.style.height = "100%";
+                                input.style.width = "100%";
+                                input.style.border = "none";
+                                input.style.padding = "4px";
+                                input.style.boxSizing = "border-box";
+                            });
+
+                            function onSubmit() {
+                                let value = parseFloat(input.value);
+                                if (isNaN(value) || value < 0 || value > 100) {
+                                    cancel();
+                                    return;
+                                }
+                                success(value);
+                            }
+
+                            input.addEventListener("blur", onSubmit);
+                            input.addEventListener("keydown", function(e) {
+                                if (e.key === "Enter") {
+                                    onSubmit();
+                                }
+                                if (e.key === "Escape") {
+                                    cancel();
+                                }
+                            });
+
+                            return input;
                         },
                         formatter: function(cell) {
                             const value = cell.getValue();
-                            const parsed = parseFloat(value) || 0;
+                            if (value === 'N/A' || value === '' || isNaN(parseFloat(value))) {
+                                return `<div class="text-center editable-field" style="padding:4px; border-radius:4px;">
+                                            <span>N/A</span>
+                                        </div>`;
+                            }
+                            const parsed = parseFloat(value);
                             let color = parsed < 90 ? "#dc3545" : parsed < 95 ? "#ffc107" : "#28a745";
                             return `<div class="text-center editable-field" style="background-color:${color}; color:#ffffff; padding:4px; border-radius:4px;">
                                         <span>${parsed.toFixed(1)}%</span>
@@ -515,22 +794,84 @@
                                 cell.restoreOldValue();
                                 return;
                             }
-                            updateField(cell);
+                            updateField(cell, fieldUpdateEndpoints['on_time_delivery']);
+                        },
+                        hozAlign: "center"
+                    },
+                    {
+                        title: "On Time Delivery Allowed",
+                        field: "on_time_delivery_allowed",
+                        editor: "input",
+                        editorParams: {
+                            minLength: 0,
+                            maxLength: 50
+                        },
+                        formatter: function(cell) {
+                            const value = cell.getValue() || '';
+                            return `<div class="text-center editable-field" style="padding:4px; border-radius:4px;">
+                                        <span>${value}</span>
+                                    </div>`;
+                        },
+                        cellEdited: function(cell) {
+                            updateField(cell, fieldUpdateEndpoints['on_time_delivery_allowed']);
                         },
                         hozAlign: "center"
                     },
                     {
                         title: "A-Z Claims",
                         field: "atoz_claims_rate",
-                        editor: "number",
-                        editorParams: {
-                            min: 0,
-                            max: 100,
-                            step: 0.1
+                        editor: function(cell, onRendered, success, cancel) {
+                            const input = document.createElement("input");
+                            input.type = "number";
+                            input.min = 0;
+                            input.max = 100;
+                            input.step = 0.1;
+
+                            const currentValue = cell.getValue();
+                            let numericValue = currentValue;
+                            if (typeof currentValue === 'string' && currentValue.includes('%')) {
+                                numericValue = parseFloat(currentValue.replace('%', ''));
+                            }
+                            input.value = isNaN(numericValue) ? '' : numericValue;
+
+                            onRendered(function() {
+                                input.focus();
+                                input.style.height = "100%";
+                                input.style.width = "100%";
+                                input.style.border = "none";
+                                input.style.padding = "4px";
+                                input.style.boxSizing = "border-box";
+                            });
+
+                            function onSubmit() {
+                                let value = parseFloat(input.value);
+                                if (isNaN(value) || value < 0 || value > 100) {
+                                    cancel();
+                                    return;
+                                }
+                                success(value);
+                            }
+
+                            input.addEventListener("blur", onSubmit);
+                            input.addEventListener("keydown", function(e) {
+                                if (e.key === "Enter") {
+                                    onSubmit();
+                                }
+                                if (e.key === "Escape") {
+                                    cancel();
+                                }
+                            });
+
+                            return input;
                         },
                         formatter: function(cell) {
                             const value = cell.getValue();
-                            const parsed = parseFloat(value) || 0;
+                            if (value === 'N/A' || value === '' || isNaN(parseFloat(value))) {
+                                return `<div class="text-center editable-field" style="padding:4px; border-radius:4px;">
+                                            <span>N/A</span>
+                                        </div>`;
+                            }
+                            const parsed = parseFloat(value);
                             let color = parsed > 5 ? "#dc3545" : parsed > 2 ? "#ffc107" : "#28a745";
                             return `<div class="text-center editable-field" style="background-color:${color}; color:#ffffff; padding:4px; border-radius:4px;">
                                         <span>${parsed.toFixed(1)}%</span>
@@ -543,22 +884,84 @@
                                 cell.restoreOldValue();
                                 return;
                             }
-                            updateField(cell);
+                            updateField(cell, fieldUpdateEndpoints['atoz_claims_rate']);
+                        },
+                        hozAlign: "center"
+                    },
+                    {
+                        title: "A-Z Claims Allowed",
+                        field: "atoz_claims_rate_allowed",
+                        editor: "input",
+                        editorParams: {
+                            minLength: 0,
+                            maxLength: 50
+                        },
+                        formatter: function(cell) {
+                            const value = cell.getValue() || '';
+                            return `<div class="text-center editable-field" style="padding:4px; border-radius:4px;">
+                                        <span>${value}</span>
+                                    </div>`;
+                        },
+                        cellEdited: function(cell) {
+                            updateField(cell, fieldUpdateEndpoints['atoz_claims_rate_allowed']);
                         },
                         hozAlign: "center"
                     },
                     {
                         title: "Violation/Compliance",
-                        field: "voilation_rate",
-                        editor: "number",
-                        editorParams: {
-                            min: 0,
-                            max: 100,
-                            step: 0.1
+                        field: "violation_rate",
+                        editor: function(cell, onRendered, success, cancel) {
+                            const input = document.createElement("input");
+                            input.type = "number";
+                            input.min = 0;
+                            input.max = 100;
+                            input.step = 0.1;
+
+                            const currentValue = cell.getValue();
+                            let numericValue = currentValue;
+                            if (typeof currentValue === 'string' && currentValue.includes('%')) {
+                                numericValue = parseFloat(currentValue.replace('%', ''));
+                            }
+                            input.value = isNaN(numericValue) ? '' : numericValue;
+
+                            onRendered(function() {
+                                input.focus();
+                                input.style.height = "100%";
+                                input.style.width = "100%";
+                                input.style.border = "none";
+                                input.style.padding = "4px";
+                                input.style.boxSizing = "border-box";
+                            });
+
+                            function onSubmit() {
+                                let value = parseFloat(input.value);
+                                if (isNaN(value) || value < 0 || value > 100) {
+                                    cancel();
+                                    return;
+                                }
+                                success(value);
+                            }
+
+                            input.addEventListener("blur", onSubmit);
+                            input.addEventListener("keydown", function(e) {
+                                if (e.key === "Enter") {
+                                    onSubmit();
+                                }
+                                if (e.key === "Escape") {
+                                    cancel();
+                                }
+                            });
+
+                            return input;
                         },
                         formatter: function(cell) {
                             const value = cell.getValue();
-                            const parsed = parseFloat(value) || 0;
+                            if (value === 'N/A' || value === '' || isNaN(parseFloat(value))) {
+                                return `<div class="text-center editable-field" style="padding:4px; border-radius:4px;">
+                                            <span>N/A</span>
+                                        </div>`;
+                            }
+                            const parsed = parseFloat(value);
                             let color = parsed > 5 ? "#dc3545" : parsed > 2 ? "#ffc107" : "#28a745";
                             return `<div class="text-center editable-field" style="background-color:${color}; color:#ffffff; padding:4px; border-radius:4px;">
                                         <span>${parsed.toFixed(1)}%</span>
@@ -571,7 +974,296 @@
                                 cell.restoreOldValue();
                                 return;
                             }
-                            updateField(cell);
+                            updateField(cell, fieldUpdateEndpoints['violation_rate']);
+                        },
+                        hozAlign: "center"
+                    },
+                    {
+                        title: "Violation/Compliance Allowed",
+                        field: "violation_rate_allowed",
+                        editor: "input",
+                        editorParams: {
+                            minLength: 0,
+                            maxLength: 50
+                        },
+                        formatter: function(cell) {
+                            const value = cell.getValue() || '';
+                            return `<div class="text-center editable-field" style="padding:4px; border-radius:4px;">
+                                        <span>${value}</span>
+                                    </div>`;
+                        },
+                        cellEdited: function(cell) {
+                            updateField(cell, fieldUpdateEndpoints['violation_rate_allowed']);
+                        },
+                        hozAlign: "center"
+                    },
+                    {
+                        title: "Late Shipment Rate",
+                        field: "late_shipment_rate",
+                        editor: function(cell, onRendered, success, cancel) {
+                            const input = document.createElement("input");
+                            input.type = "number";
+                            input.min = 0;
+                            input.max = 100;
+                            input.step = 0.1;
+
+                            const currentValue = cell.getValue();
+                            let numericValue = currentValue;
+                            if (typeof currentValue === 'string' && currentValue.includes('%')) {
+                                numericValue = parseFloat(currentValue.replace('%', ''));
+                            }
+                            input.value = isNaN(numericValue) ? '' : numericValue;
+
+                            onRendered(function() {
+                                input.focus();
+                                input.style.height = "100%";
+                                input.style.width = "100%";
+                                input.style.border = "none";
+                                input.style.padding = "4px";
+                                input.style.boxSizing = "border-box";
+                            });
+
+                            function onSubmit() {
+                                let value = parseFloat(input.value);
+                                if (isNaN(value) || value < 0 || value > 100) {
+                                    cancel();
+                                    return;
+                                }
+                                success(value);
+                            }
+
+                            input.addEventListener("blur", onSubmit);
+                            input.addEventListener("keydown", function(e) {
+                                if (e.key === "Enter") {
+                                    onSubmit();
+                                }
+                                if (e.key === "Escape") {
+                                    cancel();
+                                }
+                            });
+
+                            return input;
+                        },
+                        formatter: function(cell) {
+                            const value = cell.getValue();
+                            if (value === 'N/A' || value === '' || isNaN(parseFloat(value))) {
+                                return `<div class="text-center editable-field" style="padding:4px; border-radius:4px;">
+                                            <span>N/A</span>
+                                        </div>`;
+                            }
+                            const parsed = parseFloat(value);
+                            let color = parsed > 10 ? "#dc3545" : parsed > 5 ? "#ffc107" : "#28a745";
+                            return `<div class="text-center editable-field" style="background-color:${color}; color:#ffffff; padding:4px; border-radius:4px;">
+                                        <span>${parsed.toFixed(1)}%</span>
+                                    </div>`;
+                        },
+                        cellEdited: function(cell) {
+                            const newValue = parseFloat(cell.getValue());
+                            if (isNaN(newValue) || newValue < 0 || newValue > 100) {
+                                alert('Please enter a value between 0 and 100');
+                                cell.restoreOldValue();
+                                return;
+                            }
+                            updateField(cell, fieldUpdateEndpoints['late_shipment_rate']);
+                        },
+                        hozAlign: "center"
+                    },
+                    {
+                        title: "Late Shipment Rate Allowed",
+                        field: "late_shipment_rate_allowed",
+                        editor: "input",
+                        editorParams: {
+                            minLength: 0,
+                            maxLength: 50
+                        },
+                        formatter: function(cell) {
+                            const value = cell.getValue() || '';
+                            return `<div class="text-center editable-field" style="padding:4px; border-radius:4px;">
+                                        <span>${value}</span>
+                                    </div>`;
+                        },
+                        cellEdited: function(cell) {
+                            updateField(cell, fieldUpdateEndpoints['late_shipment_rate_allowed']);
+                        },
+                        hozAlign: "center"
+                    },
+                    {
+                        title: "Negative Seller Rate",
+                        field: "negative_seller_rate",
+                        editor: function(cell, onRendered, success, cancel) {
+                            const input = document.createElement("input");
+                            input.type = "number";
+                            input.min = 0;
+                            input.max = 100;
+                            input.step = 0.1;
+
+                            const currentValue = cell.getValue();
+                            let numericValue = currentValue;
+                            if (typeof currentValue === 'string' && currentValue.includes('%')) {
+                                numericValue = parseFloat(currentValue.replace('%', ''));
+                            }
+                            input.value = isNaN(numericValue) ? '' : numericValue;
+
+                            onRendered(function() {
+                                input.focus();
+                                input.style.height = "100%";
+                                input.style.width = "100%";
+                                input.style.border = "none";
+                                input.style.padding = "4px";
+                                input.style.boxSizing = "border-box";
+                            });
+
+                            function onSubmit() {
+                                let value = parseFloat(input.value);
+                                if (isNaN(value) || value < 0 || value > 100) {
+                                    cancel();
+                                    return;
+                                }
+                                success(value);
+                            }
+
+                            input.addEventListener("blur", onSubmit);
+                            input.addEventListener("keydown", function(e) {
+                                if (e.key === "Enter") {
+                                    onSubmit();
+                                }
+                                if (e.key === "Escape") {
+                                    cancel();
+                                }
+                            });
+
+                            return input;
+                        },
+                        formatter: function(cell) {
+                            const value = cell.getValue();
+                            if (value === 'N/A' || value === '' || isNaN(parseFloat(value))) {
+                                return `<div class="text-center editable-field" style="padding:4px; border-radius:4px;">
+                                            <span>N/A</span>
+                                        </div>`;
+                            }
+                            const parsed = parseFloat(value);
+                            let color = parsed > 3 ? "#dc3545" : parsed > 1 ? "#ffc107" : "#28a745";
+                            return `<div class="text-center editable-field" style="background-color:${color}; color:#ffffff; padding:4px; border-radius:4px;">
+                                        <span>${parsed.toFixed(1)}%</span>
+                                    </div>`;
+                        },
+                        cellEdited: function(cell) {
+                            const newValue = parseFloat(cell.getValue());
+                            if (isNaN(newValue) || newValue < 0 || newValue > 100) {
+                                alert('Please enter a value between 0 and 100');
+                                cell.restoreOldValue();
+                                return;
+                            }
+                            updateField(cell, fieldUpdateEndpoints['negative_seller_rate']);
+                        },
+                        hozAlign: "center"
+                    },
+                    {
+                        title: "Negative Seller Rate Allowed",
+                        field: "negative_seller_rate_allowed",
+                        editor: "input",
+                        editorParams: {
+                            minLength: 0,
+                            maxLength: 50
+                        },
+                        formatter: function(cell) {
+                            const value = cell.getValue() || '';
+                            return `<div class="text-center editable-field" style="padding:4px; border-radius:4px;">
+                                        <span>${value}</span>
+                                    </div>`;
+                        },
+                        cellEdited: function(cell) {
+                            updateField(cell, fieldUpdateEndpoints['negative_seller_rate_allowed']);
+                        },
+                        hozAlign: "center"
+                    },
+                    {
+                        title: "Refund Rate",
+                        field: "refund_rate",
+                        editor: function(cell, onRendered, success, cancel) {
+                            const input = document.createElement("input");
+                            input.type = "number";
+                            input.min = 0;
+                            input.max = 100;
+                            input.step = 0.1;
+
+                            const currentValue = cell.getValue();
+                            let numericValue = currentValue;
+                            if (typeof currentValue === 'string' && currentValue.includes('%')) {
+                                numericValue = parseFloat(currentValue.replace('%', ''));
+                            }
+                            input.value = isNaN(numericValue) ? '' : numericValue;
+
+                            onRendered(function() {
+                                input.focus();
+                                input.style.height = "100%";
+                                input.style.width = "100%";
+                                input.style.border = "none";
+                                input.style.padding = "4px";
+                                input.style.boxSizing = "border-box";
+                            });
+
+                            function onSubmit() {
+                                let value = parseFloat(input.value);
+                                if (isNaN(value) || value < 0 || value > 100) {
+                                    cancel();
+                                    return;
+                                }
+                                success(value);
+                            }
+
+                            input.addEventListener("blur", onSubmit);
+                            input.addEventListener("keydown", function(e) {
+                                if (e.key === "Enter") {
+                                    onSubmit();
+                                }
+                                if (e.key === "Escape") {
+                                    cancel();
+                                }
+                            });
+
+                            return input;
+                        },
+                        formatter: function(cell) {
+                            const value = cell.getValue();
+                            if (value === 'N/A' || value === '' || isNaN(parseFloat(value))) {
+                                return `<div class="text-center editable-field" style="padding:4px; border-radius:4px;">
+                                            <span>N/A</span>
+                                        </div>`;
+                            }
+                            const parsed = parseFloat(value);
+                            let color = parsed > 2 ? "#dc3545" : parsed > 1 ? "#ffc107" : "#28a745";
+                            return `<div class="text-center editable-field" style="background-color:${color}; color:#ffffff; padding:4px; border-radius:4px;">
+                                        <span>${parsed.toFixed(1)}%</span>
+                                    </div>`;
+                        },
+                        cellEdited: function(cell) {
+                            const newValue = parseFloat(cell.getValue());
+                            if (isNaN(newValue) || newValue < 0 || newValue > 100) {
+                                alert('Please enter a value between 0 and 100');
+                                cell.restoreOldValue();
+                                return;
+                            }
+                            updateField(cell, fieldUpdateEndpoints['refund_rate']);
+                        },
+                        hozAlign: "center"
+                    },
+                    {
+                        title: "Refund Rate Allowed",
+                        field: "refund_rate_allowed",
+                        editor: "input",
+                        editorParams: {
+                            minLength: 0,
+                            maxLength: 50
+                        },
+                        formatter: function(cell) {
+                            const value = cell.getValue() || '';
+                            return `<div class="text-center editable-field" style="padding:4px; border-radius:4px;">
+                                        <span>${value}</span>
+                                    </div>`;
+                        },
+                        cellEdited: function(cell) {
+                            updateField(cell, fieldUpdateEndpoints['refund_rate_allowed']);
                         },
                         hozAlign: "center"
                     },
@@ -595,45 +1287,53 @@
             });
 
             table.on("cellEdited", function(cell) {
-                // Already handled by column-specific cellEdited
+                // Handled by column-specific cellEdited
             });
 
             return table;
         }
 
-        function updateField(cell) {
+        function updateField(cell, updateUrl) {
             const rowData = cell.getData();
             const fieldName = cell.getField();
-            const newValue = cell.getValue();
-            const channel = rowData.channel;
+            const fieldValue = cell.getValue();
 
-            jq.ajax({
-                url: '/account-health-master/update-field',
-                method: 'POST',
-                data: {
-                    channel: channel,
-                    field: fieldName,
-                    value: newValue,
-                    _token: jq('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(res) {
-                    if (res.success) {
+            // Create payload with specific field data
+            const payload = {
+                channel: rowData.channel,
+                [fieldName]: fieldValue
+            };
+
+            console.log('Sending update payload:', payload);
+
+            fetch(updateUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content")
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(res => res.json())
+                .then(response => {
+                    if (response.success) {
                         cell.getElement().innerHTML += '<span class="save-indicator text-success">Saved</span>';
                         setTimeout(() => {
                             const indicator = cell.getElement().querySelector('.save-indicator');
                             if (indicator) indicator.remove();
                         }, 2000);
                         table.redraw();
+                        console.log(`Updated ${fieldName}:`, response);
                     } else {
-                        alert('Error: ' + (res.message || 'Failed to save field'));
+                        alert(`Error: ${response.message || 'Failed to save field'}`);
                         cell.restoreOldValue();
                     }
-                },
-                error: function() {
+                })
+                .catch(error => {
+                    console.error(`Update failed for ${fieldName}:`, error);
                     alert('Server error while saving field');
                     cell.restoreOldValue();
-                }
-            });
+                });
         }
 
         function updateL30OrdersTotal(data) {
@@ -649,8 +1349,11 @@
         }
 
         function drawChannelChart(data) {
-            if (!data || data.length === 0) return;
-
+            console.log('Drawing chart with data:', data);
+            if (!data || data.length === 0) {
+                console.warn('No data for chart');
+                return;
+            }
             google.charts.load('current', {
                 packages: ['corechart']
             });
@@ -660,19 +1363,66 @@
         }
 
         function renderChart(data) {
+            console.log('Rendering chart with data:', data);
             let chartData = [
-                ['Channel', 'L30 Orders', 'ODR Rate', 'Fulfillment Rate', {
-                    role: 'annotation'
-                }]
+                ['Channel', 'L30 Orders', 'ODR Rate', 'ODR Rate Allowed', 'Fulfillment Rate',
+                    'Fulfillment Rate Allowed', 'Valid Tracking Rate', 'Valid Tracking Rate Allowed',
+                    'On Time Delivery', 'On Time Delivery Allowed', 'A-to-Z Claims', 'A-to-Z Claims Allowed',
+                    'Violation/Compliance', 'Violation/Compliance Allowed', 'Late Shipment Rate',
+                    'Late Shipment Rate Allowed', 'Negative Seller Rate', 'Negative Seller Rate Allowed',
+                    'Refund Rate', 'Refund Rate Allowed', {
+                        role: 'annotation'
+                    }
+                ]
             ];
 
             data.forEach(row => {
                 let channel = row['channel'] || row['Channel'] || row['Channel '] || '';
                 let l30Orders = parseFloat(row['l30_orders'] || row['L30 Orders'] || 0);
-                let odrRate = parseFloat(row['odr_rate'] || row['ODR'] || row['ODR Rate'] || 0);
-                let fulfillmentRate = parseFloat(row['fulfillment_rate'] || row['Fulfillment Rate'] || 0);
+                let odrRate = parseNumber(row['odr_rate'] || row['ODR'] || row['ODR Rate'] || 'N/A');
+                let odrRateAllowed = parseNumber(row['odr_rate_allowed'] || 0);
+                let fulfillmentRate = parseNumber(row['fulfillment_rate'] || row['Fulfillment Rate'] || 'N/A');
+                let fulfillmentRateAllowed = parseNumber(row['fulfillment_rate_allowed'] || 0);
+                let validTrackingRate = parseNumber(row['valid_tracking_rate'] || row['Valid Tracking Rate'] ||
+                    'N/A');
+                let validTrackingRateAllowed = parseNumber(row['valid_tracking_rate_allowed'] || 0);
+                let onTimeDelivery = parseNumber(row['on_time_delivery'] || row['On Time Delivery Rate'] || 'N/A');
+                let onTimeDeliveryAllowed = parseNumber(row['on_time_delivery_allowed'] || 0);
+                let atozClaimsRate = parseNumber(row['atoz_claims_rate'] || row['AtoZ Claims Rate'] || 'N/A');
+                let atozClaimsRateAllowed = parseNumber(row['atoz_claims_rate_allowed'] || 0);
+                let violationRate = parseNumber(row['violation_rate'] || row['Violation Rate'] || 'N/A');
+                let violationRateAllowed = parseNumber(row['violation_rate_allowed'] || 0);
+                let lateShipmentRate = parseNumber(row['late_shipment_rate'] || row['Late Shipment Rate'] || 'N/A');
+                let lateShipmentRateAllowed = parseNumber(row['late_shipment_rate_allowed'] || 0);
+                let negativeSellerRate = parseNumber(row['negative_seller_rate'] || row['Negative Seller Rate'] ||
+                    'N/A');
+                let negativeSellerRateAllowed = parseNumber(row['negative_seller_rate_allowed'] || 0);
+                let refundRate = parseNumber(row['refund_rate'] || row['Refund Rate'] || 'N/A');
+                let refundRateAllowed = parseNumber(row['refund_rate_allowed'] || 0);
 
-                chartData.push([channel, l30Orders, odrRate, fulfillmentRate, channel]);
+                chartData.push([
+                    channel,
+                    l30Orders,
+                    odrRate,
+                    odrRateAllowed,
+                    fulfillmentRate,
+                    fulfillmentRateAllowed,
+                    validTrackingRate,
+                    validTrackingRateAllowed,
+                    onTimeDelivery,
+                    onTimeDeliveryAllowed,
+                    atozClaimsRate,
+                    atozClaimsRateAllowed,
+                    violationRate,
+                    violationRateAllowed,
+                    lateShipmentRate,
+                    lateShipmentRateAllowed,
+                    negativeSellerRate,
+                    negativeSellerRateAllowed,
+                    refundRate,
+                    refundRateAllowed,
+                    channel
+                ]);
             });
 
             let dataTable = google.visualization.arrayToDataTable(chartData);
@@ -708,9 +1458,82 @@
                         lineWidth: 2
                     }, // ODR Rate
                     2: {
+                        color: '#E57373',
+                        lineWidth: 2,
+                        lineDashStyle: [4, 4]
+                    }, // ODR Rate Allowed
+                    3: {
                         color: '#43A047',
                         lineWidth: 2
-                    } // Fulfillment Rate
+                    }, // Fulfillment Rate
+                    4: {
+                        color: '#81C784',
+                        lineWidth: 2,
+                        lineDashStyle: [4, 4]
+                    }, // Fulfillment Rate Allowed
+                    5: {
+                        color: '#F06292',
+                        lineWidth: 2
+                    }, // Valid Tracking Rate
+                    6: {
+                        color: '#F8BBD0',
+                        lineWidth: 2,
+                        lineDashStyle: [4, 4]
+                    }, // Valid Tracking Rate Allowed
+                    7: {
+                        color: '#FFB300',
+                        lineWidth: 2
+                    }, // On Time Delivery
+                    8: {
+                        color: '#FFCA28',
+                        lineWidth: 2,
+                        lineDashStyle: [4, 4]
+                    }, // On Time Delivery Allowed
+                    9: {
+                        color: '#8E24AA',
+                        lineWidth: 2
+                    }, // A-to-Z Claims
+                    10: {
+                        color: '#BA68C8',
+                        lineWidth: 2,
+                        lineDashStyle: [4, 4]
+                    }, // A-to-Z Claims Allowed
+                    11: {
+                        color: '#26A69A',
+                        lineWidth: 2
+                    }, // Violation/Compliance
+                    12: {
+                        color: '#4DB6AC',
+                        lineWidth: 2,
+                        lineDashStyle: [4, 4]
+                    }, // Violation/Compliance Allowed
+                    13: {
+                        color: '#D81B60',
+                        lineWidth: 2
+                    }, // Late Shipment Rate
+                    14: {
+                        color: '#F06292',
+                        lineWidth: 2,
+                        lineDashStyle: [4, 4]
+                    }, // Late Shipment Rate Allowed
+                    15: {
+                        color: '#0288D1',
+                        lineWidth: 2
+                    }, // Negative Seller Rate
+                    16: {
+                        color: '#4FC3F7',
+                        lineWidth: 2,
+                        lineDashStyle: [4, 4]
+                    }, // Negative Seller Rate Allowed
+                    17: {
+                        color: '#7CB342',
+                        lineWidth: 2
+                    }, // Refund Rate
+                    18: {
+                        color: '#AED581',
+                        lineWidth: 2,
+                        lineDashStyle: [4, 4]
+                    } // Refund Rate Allowed
                 }
             };
             let chart = new google.visualization.LineChart(document.getElementById('channelSalesChart'));
@@ -720,7 +1543,7 @@
         function startPlayback() {
             if (!originalChannelData.length) return;
             uniqueChannels = [...new Set(originalChannelData.map(item => item['channel']?.trim() || item['Channel ']
-                ?.trim() || item['Channel']?.trim()))].filter(Boolean);
+            ?.trim() || item['Channel']?.trim()))].filter(Boolean);
             uniqueChannelRows = uniqueChannels.map(channel => originalChannelData.find(item => (item['channel']?.trim() ||
                 item['Channel ']?.trim() || item['Channel']?.trim()) === channel));
             if (!uniqueChannelRows.length) return;
@@ -819,28 +1642,33 @@
                 url: '/account-health-master/dashboard-data',
                 type: "GET",
                 success: function(json) {
+                    console.log('Initial AJAX response:', json);
                     if (json && json.data) {
                         originalChannelData = json.data;
                         setupEventHandlers();
+                    } else {
+                        console.warn('No data in initial AJAX response:', json);
+                        alert('No data received from server.');
                     }
-                },
-                error: function(xhr, error, thrown) {
-                    console.error('Error loading initial data:', error, thrown);
                     jq('#customLoader').hide();
                     jq('#channelTableWrapper').show();
-                    alert('Failed to load initial data. Please refresh the page.');
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('Error loading initial data:', error, thrown, xhr.responseText);
+                    jq('#customLoader').hide();
+                    jq('#channelTableWrapper').show();
+                    alert('Failed to load initial data: ' + (xhr.responseJSON?.message ||
+                        'Unknown error. Check console for details.'));
                 }
             });
         });
 
         function setupEventHandlers() {
-            // Playback controls
             jq('#play-auto').on('click', startPlayback);
             jq('#play-pause').on('click', stopPlayback);
             jq('#play-forward').on('click', nextChannel);
             jq('#play-backward').on('click', previousChannel);
 
-            // Search functionality
             const channelSearchInput = jq('#channelSearchInput');
             const channelSearchDropdown = jq('#channelSearchDropdown');
 
@@ -868,18 +1696,13 @@
                 }
             });
 
-            // Update totals on data load
             table.on("dataLoaded", function(data) {
                 updateL30OrdersTotal(data);
             });
 
-            // Modal handlers
             setupModalHandlers();
-
-            // Checkbox handlers
             setupCheckboxHandlers();
 
-            // Action button handlers
             table.on("cellClick", function(e, cell) {
                 if (jq(e.target).closest('.edit-btn').length) {
                     const rowData = cell.getData();
@@ -922,7 +1745,6 @@
         }
 
         function setupModalHandlers() {
-            // Add channel
             jq('#saveChannelBtn').on('click', function() {
                 const channelName = jq('#channelName').val().trim();
                 const channelUrl = jq('#channelUrl').val().trim();
@@ -958,7 +1780,6 @@
                 });
             });
 
-            // Edit channel
             jq('#editChannelForm').on('submit', function(e) {
                 e.preventDefault();
                 const channel = jq('#editChannelName').val().trim();
@@ -997,7 +1818,6 @@
                 });
             });
 
-            // Import form
             const importForm = jq('#accountHealthImportForm');
             const progressBar = jq('#importProgress');
             const resultsDiv = jq('#importResults');
@@ -1063,7 +1883,7 @@
                     })
                     .finally(() => {
                         submitBtn.prop('disabled', false).html(
-                            '<i class="fas fa-file-import me-1"></i> Import');
+                        '<i class="fas fa-file-import me-1"></i> Import');
                     });
             });
 
@@ -1092,12 +1912,12 @@
                     success: function(res) {
                         if (!res.success) {
                             alert('Failed to update NR flag: ' + (res.message || 'Unknown error'));
-                            jq(this).prop('checked', !value); // Revert checkbox
+                            jq(this).prop('checked', !value);
                         }
                     },
                     error: function() {
                         alert('Server error while updating NR flag.');
-                        jq(this).prop('checked', !value); // Revert checkbox
+                        jq(this).prop('checked', !value);
                     }
                 });
             });
