@@ -1,4 +1,4 @@
-@extends('layouts.vertical', ['title' => 'Amazon - UTILIZED BGT KW', 'mode' => $mode ?? '', 'demo' => $demo ?? ''])
+@extends('layouts.vertical', ['title' => 'Amazon FBA - Over Utilized BGT KW', 'mode' => $mode ?? '', 'demo' => $demo ?? ''])
 @section('css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
@@ -130,8 +130,8 @@
 @endsection
 @section('content')
     @include('layouts.shared.page-title', [
-        'page_title' => 'Amazon - Budget',
-        'sub_title' => 'Amazon - Budget',
+        'page_title' => 'Amazon FBA',
+        'sub_title' => 'Amazon FBA',
     ])
     <div class="row">
         <div class="col-12">
@@ -141,7 +141,7 @@
                         <!-- Title -->
                         <h4 class="fw-bold text-primary mb-3 d-flex align-items-center">
                             <i class="fa-solid fa-chart-line me-2"></i>
-                            Utilized BGT KW
+                            Over Utilized BGT KW
                         </h4>
 
                         <!-- Filters Row -->
@@ -260,7 +260,7 @@
 
             var table = new Tabulator("#budget-under-table", {
                 index: "Sku",
-                ajaxURL: "/amazon-sp/get-amz-utilized-bgt-kw",
+                ajaxURL: "/amazon/fba/kw/ads/data",
                 layout: "fitData",
                 movableColumns: true,
                 resizableColumns: true,
@@ -453,8 +453,9 @@
                         field: "acos_L30",
                         hozAlign: "right",
                         formatter: function(cell) {
+                            const value = cell.getRow().getData().acos_L30 || 0;
                             return `
-                                <span>${cell.getValue().toFixed(0) + "%"}</span>
+                                <span>${value.toFixed(0) + "%"}</span>
                                 <i class="fa fa-info-circle text-primary toggle-acos-cols-btn"
                                 style="cursor:pointer; margin-left:8px;"></i>
                             `;
@@ -584,14 +585,7 @@
                             var l1_cpc = parseFloat(row.l1_cpc) || 0;
                             var l7_cpc = parseFloat(row.l7_cpc) || 0;
                             var sbid;
-
                             sbid = (l1_cpc * 0.95).toFixed(2);
-
-                            // if(l1_cpc > l7_cpc) {
-                            //     sbid = (l1_cpc * 0.95).toFixed(2);
-                            // }else{
-                            //     sbid = (l7_cpc * 0.95).toFixed(2);
-                            // }
                             return sbid;
                         },
                     },
@@ -613,9 +607,7 @@
                                 var l1_cpc = parseFloat(row.l1_cpc) || 0;
                                 var l7_cpc = parseFloat(row.l7_cpc) || 0;
                                 var sbid;
-                                
                                 sbid = (l1_cpc * 0.95).toFixed(2);
-                                
                                 updateBid(sbid, row.campaign_id);
                             }
                         }
@@ -741,7 +733,7 @@
 
                     let invFilterVal = $("#inv-filter").val();
                     if (!invFilterVal) {
-                        if (parseFloat(data.INV) === 0) return false;
+                        // if (parseFloat(data.INV) === 0) return false;
                     } else if (invFilterVal === "INV_0") {
                         if (parseFloat(data.INV) !== 0) return false;
                     } else if (invFilterVal === "OTHERS") {
@@ -870,7 +862,6 @@
                         var l1_cpc = parseFloat(rowData.l1_cpc) || 0;
                         var l7_cpc = parseFloat(rowData.l7_cpc) || 0;
                         var sbid;
-
                         sbid = (l1_cpc * 0.95).toFixed(2);
 
                         campaignIds.push(rowData.campaign_id);

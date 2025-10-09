@@ -1101,7 +1101,13 @@
             </li>
 
             {{-- Inventory Management --}}
-
+              <li class="side-nav-item">
+                <a href="{{ route('view.stock.mapping') }}" class="side-nav-link">
+                    <i class="ri-dashboard-3-line"></i>
+                    <span> Stock Mapping </span>
+                </a>
+            </li>
+            
             <li class="side-nav-item">
                 <a data-bs-toggle="collapse" href="#invsidebarPages" aria-expanded="false"
                     aria-controls="sidebarPages" class="side-nav-link">
@@ -1383,15 +1389,6 @@
                                         </a>
                                         <div class="collapse" id="amazonBudget">
                                             <ul class="side-nav-fourth-level">
-                                                {{-- <li>
-                                                    <a href="{{ url('campaign') }}">Utilization</a>
-                                                </li>
-                                                <li>
-                                                    <a href="{{ route('campaign.under') }} ">Under utilised</a>
-                                                </li>
-                                                <li>
-                                                    <a href=" {{ route('campaign.over') }} ">Over utilised</a>
-                                                </li> --}}
                                                 <li>
                                                     <a href=" {{ route('amazon-sp.amz-utilized-bgt-kw') }} ">AMZ >
                                                         UTILIZED BGT KW</a>
@@ -1427,6 +1424,35 @@
                                                 <li>
                                                     <a href="{{ route('amazon.amz-correctly-utilized-bgt-pt') }}">CORRECTLY
                                                         UTILIZED PT</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <a data-bs-toggle="collapse" href="#amazonFbaBudget" aria-expanded="false"
+                                            aria-controls="amazonFbaBudget">
+                                            <span>Amazon FBA Budget</span>
+                                            <span class="menu-arrow"></span>
+                                        </a>
+                                        <div class="collapse" id="amazonFbaBudget">
+                                            <ul class="side-nav-fourth-level">
+                                                <li>
+                                                    <a href=" {{ route('amazon.fba.over.kw.ads') }} ">Over Util. BGT KW</a>
+                                                </li>
+                                                <li>
+                                                    <a href=" {{ route('amazon.fba.over.pt.ads') }} ">Over Util. BGT PT</a>
+                                                </li>
+                                                <li>
+                                                    <a href=" {{ route('amazon.fba.under.kw.ads') }} ">Under Util. BGT KW</a>
+                                                </li>
+                                                <li>
+                                                    <a href=" {{ route('amazon.fba.under.pt.ads') }} ">Under Util. BGT PT</a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('amazon.fba.correct.kw.ads') }}">Correctly Utilized KW</a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('amazon.fba.correct.pt.ads') }}">Correctly Utilized PT</a>
                                                 </li>
                                             </ul>
                                         </div>
@@ -1479,7 +1505,6 @@
                                     <li>
                                         <a href="{{ url('ebay-pricing-cvr') }}">Ebay Pricing - CVR</a>
                                     </li>
-
                                     <li>
                                         <a href="{{ url('ebay-pricing-decrease') }}">Ebay Pricing
                                             Decrease </a>

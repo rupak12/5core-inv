@@ -3,19 +3,15 @@
 namespace App\Console\Commands;
 
 use App\Http\Controllers\Campaigns\AmazonSpBudgetController;
-use App\Models\AmazonDatasheet;
-use App\Models\AmazonDataView;
 use Illuminate\Console\Command;
 use App\Models\AmazonSpCampaignReport;
 use App\Models\ProductMaster;
 use App\Models\ShopifySku;
-use GuzzleHttp\Client;
-use Illuminate\Support\Facades\Log;
 
-class AutoUpdateAmzUnderKwBids extends Command
+class AutoUpdateAmazonFbaUnderKwBids extends Command
 {
-    protected $signature = 'amazon:auto-update-under-kw-bids';
-    protected $description = 'Automatically update Amazon campaign keyword bids';
+    protected $signature = 'amazon-fba:auto-update-under-kw-bids';
+    protected $description = 'Automatically update Amazon FBA campaign keyword bids';
 
     protected $profileId;
 
@@ -63,8 +59,13 @@ class AutoUpdateAmzUnderKwBids extends Command
                     $q->orWhere('campaignName', 'LIKE', '%' . $sku . '%');
                 }
             })
-            ->where('campaignName', 'NOT LIKE', '%PT')
-            ->where('campaignName', 'NOT LIKE', '%PT.')
+            ->where(function ($q) {
+                $q->where('campaignName', 'LIKE', '%FBA%')
+                ->orWhere('campaignName', 'LIKE', '%fba%')
+                ->orWhere('campaignName', 'LIKE', '%FBA.%')
+                ->orWhere('campaignName', 'LIKE', '%fba.%');
+            })
+            ->whereRaw("LOWER(TRIM(TRAILING '.' FROM campaignName)) NOT LIKE '% pt'")
             ->get();
 
         $amazonSpCampaignReportsL1 = AmazonSpCampaignReport::where('ad_type', 'SPONSORED_PRODUCTS')
@@ -74,9 +75,15 @@ class AutoUpdateAmzUnderKwBids extends Command
                     $q->orWhere('campaignName', 'LIKE', '%' . $sku . '%');
                 }
             })
-            ->where('campaignName', 'NOT LIKE', '%PT')
-            ->where('campaignName', 'NOT LIKE', '%PT.')
+            ->where(function ($q) {
+                $q->where('campaignName', 'LIKE', '%FBA%')
+                ->orWhere('campaignName', 'LIKE', '%fba%')
+                ->orWhere('campaignName', 'LIKE', '%FBA.%')
+                ->orWhere('campaignName', 'LIKE', '%fba.%');
+            })
+            ->whereRaw("LOWER(TRIM(TRAILING '.' FROM campaignName)) NOT LIKE '% pt'")
             ->get();
+
 
         $result = [];
 
@@ -86,21 +93,30 @@ class AutoUpdateAmzUnderKwBids extends Command
             $shopify = $shopifyData[$pm->sku] ?? null;
 
             $matchedCampaignL7 = $amazonSpCampaignReportsL7->first(function ($item) use ($sku) {
-                return strcasecmp(trim($item->campaignName), $sku) === 0;
+                $cleanName = strtoupper(trim(rtrim($item->campaignName, '.')));
+
+                return (
+                    (str_ends_with($cleanName, $sku . ' FBA') || str_ends_with($cleanName, $sku . ' FBA.'))
+                    && !str_ends_with($cleanName, $sku . ' PT')
+                    && !str_ends_with($cleanName, $sku . ' PT.')
+                );
             });
 
             $matchedCampaignL1 = $amazonSpCampaignReportsL1->first(function ($item) use ($sku) {
-                return strcasecmp(trim($item->campaignName), $sku) === 0;
-            });
+                $cleanName = strtoupper(trim(rtrim($item->campaignName, '.')));
 
-            if (!$matchedCampaignL7 && !$matchedCampaignL1) {
-                continue;
-            }
+                return (
+                    (str_ends_with($cleanName, $sku . ' FBA') || str_ends_with($cleanName, $sku . ' FBA.'))
+                    && !str_ends_with($cleanName, $sku . ' PT')
+                    && !str_ends_with($cleanName, $sku . ' PT.')
+                );
+            });
 
             $row = [];
             $row['INV']    = $shopify->inv ?? 0;
             $row['campaign_id'] = $matchedCampaignL7->campaign_id ?? ($matchedCampaignL1->campaign_id ?? '');
-            $row['campaignBudgetAmount'] = $matchedCampaignL7->campaignBudgetAmount ?? ($matchedCampaignL1->campaignBudgetAmount ?? 0);
+            $row['campaignName'] = $matchedCampaignL7->campaignName ?? ($matchedCampaignL1->campaignName ?? '');
+            $row['campaignBudgetAmount'] = $matchedCampaignL7->campaignBudgetAmount ?? ($matchedCampaignL1->campaignBudgetAmount ?? '');
             $row['l7_spend'] = $matchedCampaignL7->spend ?? 0;
             $row['l7_cpc'] = $matchedCampaignL7->costPerClick ?? 0;
             $row['l1_spend'] = $matchedCampaignL1->spend ?? 0;
@@ -116,17 +132,13 @@ class AutoUpdateAmzUnderKwBids extends Command
 
             $budget = floatval($row['campaignBudgetAmount']);
             $l7_spend = floatval($row['l7_spend']);
-            $l1_spend = floatval($row['l1_spend']);
 
             $ub7 = $budget > 0 ? ($l7_spend / ($budget * 7)) * 100 : 0;
-            // $ub1 = $budget > 0 ? ($l1_spend / $budget) * 100 : 0;
 
-            if ($row['INV'] > 0 && $ub7 < 70) {
+            if($row['campaignName'] != '' && $ub7 < 70) {
                 $result[] = (object) $row;
             }
         }
-
         return $result;
     }
-
 }

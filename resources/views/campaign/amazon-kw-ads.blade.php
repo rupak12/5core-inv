@@ -322,6 +322,9 @@
                                 </div>
                             </div>
                             <div class="col-md-6 d-flex justify-content-end gap-2">
+                                <a href="javascript:void(0)" id="export-btn" class="btn btn-sm btn-success d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-file-export me-1"></i> Export Excel/CSV
+                                </a>
                                 <button class="btn btn-success btn-md d-flex align-items-center">
                                     <span>Total Campaigns: <span id="total-campaigns" class="fw-bold ms-1 fs-5">0</span></span>
                                 </button>
@@ -369,6 +372,8 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             document.body.style.zoom = "85%";
@@ -1209,7 +1214,7 @@
 
                     let invFilterVal = $("#inv-filter").val();
                     if (!invFilterVal) {
-                        if (parseFloat(data.INV) === 0) return false;
+                        // if (parseFloat(data.INV) === 0) return false;
                     } else if (invFilterVal === "INV_0") {
                         if (parseFloat(data.INV) !== 0) return false;
                     } else if (invFilterVal === "OTHERS") {
@@ -1397,6 +1402,23 @@
                         }
                     });
                 }
+            });
+
+            document.getElementById("export-btn").addEventListener("click", function () {
+                let allData = table.getData("active"); 
+
+                if (allData.length === 0) {
+                    alert("No data available to export!");
+                    return;
+                }
+
+                let exportData = allData.map(row => ({ ...row }));
+
+                let ws = XLSX.utils.json_to_sheet(exportData);
+                let wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Campaigns");
+
+                XLSX.writeFile(wb, "amazon_kw_ads_report.xlsx");
             });
         });
     </script>

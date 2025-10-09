@@ -1,4 +1,4 @@
-@extends('layouts.vertical', ['title' => 'verification-adjustment', 'mode' => $mode ?? '', 'demo' => $demo ?? ''])
+@extends('layouts.vertical', ['title' => 'View Stock Mapping', 'mode' => $mode ?? '', 'demo' => $demo ?? ''])
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 @section('css')
@@ -155,7 +155,7 @@
 
         /* ========== PARENT ROWS ========== */
         .parent-row {
-            /* background-color: rgba(69, 233, 255, 0.1) !important; */
+            background-color: rgba(69, 233, 255, 0.1) !important;
         }
 
         /* ========== SKU TOOLTIPS ========== */
@@ -899,48 +899,76 @@
 
         /*popup modal style end */
 
-        /* set up table  */
-        #ebay-table th,
-        #ebay-table td {
-            padding: 4px 6px !important;
-            font-size: 12px;
-            white-space: nowrap;
+        
+
+        #ebay-table thead tr#summaryRow th {
+            position: sticky;
+            top: 0;
+            background: #f8f9fa;
+            z-index: 11;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
 
-         #ebay-table thead tr#summaryRow th {
-        position: sticky;
-        top: 0;
-        background: #f8f9fa;
-        z-index: 11;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    }
+        /* Make the main header row stick below summary row */
+        #ebay-table thead tr:nth-child(2) th {
+            position: sticky;
+            top: 36px; /* height of summary row */
+            background: #ffffff;
+            z-index: 10;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
 
-    /* Make the main header row stick below summary row */
-    #ebay-table thead tr:nth-child(2) th {
-        position: sticky;
-        top: 36px; /* height of summary row */
-        background: #ffffff;
-        z-index: 10;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    }
-
-    /* Optional: ensure headers are tall enough */
-    #ebay-table thead th {
-        height: 36px;
-        text-align: center;
-        vertical-align: middle;
-    }
-
-    #ebay-table {
+        /* Optional: ensure headers are tall enough */
+        #ebay-table thead th {
+            height: 36px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        #ebay-table {
         color: #000 !important; /* Force dark black font */
+
+        .img-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .thumbnail-img {
+            width: 30px;
+            height: auto;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .popup-img {
+            display: none;
+            position: absolute;
+            top: -10px;
+            left: 30px;
+            z-index: 999;
+            border: 1px solid #ccc;
+            background: #fff;
+            padding: 4px;
+            box-shadow: 0 0 6px rgba(0,0,0,0.2);
+        }
+
+        .popup-img img {
+            width: 300px;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .img-wrapper:hover .popup-img {
+            display: block;
+        }
+
     }
-    
 
     </style>
 @endsection
 
 @section('content')
-    @include('layouts.shared/page-title', ['page_title' => 'Inventory Management', 'sub_title' => 'Verification & Adjustment'])
+    @include('layouts.shared/page-title', ['page_title' => 'Inventory Management', 'sub_title' => 'View Inventory'])
     <!-- <div class="row">
         <div class="col-12">
             <div class="card">
@@ -957,46 +985,42 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="header-title">verification & Adjustment</h4>
+                    <h4 class="header-title">View Inventory</h4>
 
-                    <div class="d-flex justify-content-between align-items-center mb-3 w-100">
-                        <!-- Left Side: Play Controls + Activity Log -->
-                        <div class="d-flex align-items-center">
-                            <div class="btn-group time-navigation-group mr-2" role="group" aria-label="Parent navigation">
-                                <button id="play-backward" class="btn btn-light rounded-circle" title="Previous parent">
-                                    <i class="fas fa-step-backward"></i>
-                                </button>
-                                <button id="play-pause" class="btn btn-light rounded-circle" title="Pause" style="display: none;">
-                                    <i class="fas fa-pause"></i>
-                                </button>
-                                <button id="play-auto" class="btn btn-light rounded-circle" title="Play">
-                                    <i class="fas fa-play"></i>
-                                </button>
-                                <button id="play-forward" class="btn btn-light rounded-circle" title="Next parent">
-                                    <i class="fas fa-step-forward"></i>
-                                </button>
-                            </div>
+                    <!-- <div id="zeroInvWrapper" style="margin-bottom: 10px;">
+                        <span id="zeroInvLabel" style="
+                            background-color: #d0e7ff;
+                            color: #004080;
+                            padding: 6px 12px;
+                            border-radius: 4px;
+                            font-weight: 600;
+                            font-size: 14px;
+                            display: inline-block;
+                        ">
+                            Loading INV count...
+                        </span>
+                    </div> -->
 
-                            <button id="activity-log-btn" class="btn btn-primary ml-2 me-2" data-toggle="modal" data-target="#activityLogModal">
-                                <i class="fas fa-history"></i> Activity Log
-                            </button>
-
-                            <button id="exportExcel" class="btn btn-success ml-2">
-                                <i class="fas fa-file-excel"></i> Export
-                            </button>
-
-                            <!-- <button id="viewHiddenRows" class="btn btn-primary ml-2 ms-2" data-toggle="modal">
-                                <i class="fa-regular fa-eye-slash"></i> Hide Rows
-                            </button> -->
-                        </div>
-
-                        <!-- Right Side: Search Bar -->
-                        <div class="d-flex align-items-center">
-                            <label for="search-input" class="mr-2 mb-0">Search:</label>
-                            <input type="text" id="search-input" class="form-control form-control-sm" placeholder="Search all columns">
-                        </div>
-                    </div>
-
+                    <!-- play backward forwad  -->
+                    <!-- <div class="btn-group time-navigation-group" role="group" aria-label="Parent navigation">
+                        <button id="play-backward" class="btn btn-light rounded-circle" title="Previous parent">
+                            <i class="fas fa-step-backward"></i>
+                        </button>
+                        <button id="play-pause" class="btn btn-light rounded-circle" title="Show all products"
+                            style="display: none;">
+                            <i class="fas fa-pause"></i>
+                        </button>
+                        <button id="play-auto" class="btn btn-light rounded-circle" title="Show all products">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button id="play-forward" class="btn btn-light rounded-circle" title="Next parent">
+                            <i class="fas fa-step-forward"></i>
+                        </button>
+                    </div> -->
+                    
+                    <!-- <button id="activity-log-btn" class="btn btn-primary ml-2" data-toggle="modal" data-target="#activityLogModal" title="Activity Log">
+                        <i class="fas fa-history"></i> Activity Log
+                    </button> -->
 
                      <!-- Activity Log Modal -->
                     <div class="modal fade" id="activityLogModal" tabindex="-1" role="dialog" aria-labelledby="activityLogModalLabel" aria-hidden="true">
@@ -1011,23 +1035,17 @@
                             </div>
                             <div class="modal-body">
                                 <div class="mb-3">
-                                    <input type="text" id="activityLogSearch" class="form-control" placeholder="Search all columns">
+                                    <input type="text" id="activityLogSearch" class="form-control" placeholder="Search by SKU">
                                 </div>
                                 <table class="table table-bordered" id="activityLogTable">
                                 <thead>
                                     <tr>
-                                    <th>Parent</th>
                                     <th>SKU</th>
                                     <th>Verified Stock</th>
-                                    <th>Adjusted</th>
-                                    <th>
-                                        <span id="activityLossGainTotal" class="badge bg-primary fs-4"> 0 </span><br>
-                                        Loss/Gain 
-                                    </th>
+                                    <th>To Adjust</th>
                                     <th>Reason</th>
                                     <th>Approved By</th>
                                     <th>Approved At (Ohio)</th>
-                                    <th>Remarks</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1041,7 +1059,7 @@
 
                     <!-- History modal  -->
                     <div class="modal fade" id="skuHistoryModal" tabindex="-1" aria-labelledby="skuHistoryModalLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-xl">
+                        <div class="modal-dialog modal-lg">
                             <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title" id="skuHistoryModalLabel">Adjustment History</h5>
@@ -1054,48 +1072,6 @@
                         </div>
                     </div>
 
-
-                    <div class="modal fade" id="hiddenRowsModal" tabindex="-1" aria-labelledby="hideRowsModalLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-xl">
-                            <div class="modal-content">
-                            <div class="modal-header d-flex justify-content-between align-items-center">
-                                <h5 class="modal-title" id="hideRowsModalLabel">Hidden Rows</h5>
-
-                                <div class="d-flex align-items-center ms-auto">
-                                    <input type="text" id="hiddenRowsSearch" 
-                                        class="form-control me-2" 
-                                        placeholder="Search..." 
-                                        style="max-width: 250px;">
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                    {{-- <input type="text" id="hiddenRowsSearch" class="form-control ms-auto me-2" placeholder="Search..." style="max-width: 250px;"> --}}
-                                    {{-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button> --}}
-                            </div>
-                            <div class="modal-body">
-                                <table class="table" id="hiddenRowsTable">
-                                <thead>
-                                    <tr>
-                                    <th><input type="checkbox" id="selectAllHidden"></th>
-                                    <!-- <th>Parent</th> -->
-                                    <th>SKU</th>
-                                    <th>Verified Stock</th>
-                                    <th>Adjusted</th>
-                                    <th>Loss/Gain</th>
-                                    <th>Reason</th>
-                                    <th>Approved By</th>
-                                    <th>Approved At(Ohio)</th>
-                                    <th>Remarks</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                                </table>
-                                <button id="clearSelectedHiddenRows" class="btn btn-success">Unverified Selected Rows</button>
-                            </div>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- <button id="openActivityLogBtn" class="btn btn-outline-dark rounded-circle ml-2" 
                             data-toggle="modal" data-target="#activityLogModal" title="Activity Log">
@@ -1115,25 +1091,16 @@
                                 </select>
                             </div>
                         </div>
-
-                        <button id="viewHiddenRows" class="btn btn-primary ml-2 ms-2" data-toggle="modal">
-                                <i class="fa-regular fa-eye-slash"></i> Verified Rows
-                        </button>
-
-                        <!-- <div id="zeroInvLabel" style="background-color: #d0e7ff; color: #004080; font-size: 14px; font-weight: 600; padding: 6px 12px; border-radius: 6px; display: inline-block; margin-bottom: 10px;"> -->
-                            <!-- Will be filled by JS -->
-                        <!-- </div> -->
-
-                            <!-- <div class="form-inline">
-                                <div class="form-group mr-2">
-                                    <label for="row-data-type" class="mr-2">Data Type:</label>
-                                    <select id="row-data-type" class="form-control form-control-sm">
-                                        <option value="all">All</option>
-                                        <option value="sku">SKU (Child)</option>
-                                        <option value="parent">Parent</option>
-                                    </select>
-                                </div>
-                            </div> -->
+                        <!-- <div class="form-inline">
+                            <div class="form-group mr-2">
+                                <label for="row-data-type" class="mr-2">Data Type:</label>
+                                <select id="row-data-type" class="form-control form-control-sm">
+                                    <option value="all">All</option>
+                                    <option value="sku">SKU (Child)</option>
+                                    <option value="parent">Parent</option>
+                                </select>
+                            </div>
+                        </div> -->
                         <!-- <div>
                             <div class="form-group mr-2 custom-dropdown">
                                 <button id="hideColumnsBtn" class="btn btn-sm btn-outline-secondary">
@@ -1149,23 +1116,28 @@
                             </div>
                         </div> -->
 
-                        <!-- Search on right -->
-                        <!-- <div class="form-inline">
+                        <div id="zeroInvLabel" style="background-color: #d0e7ff; color: #004080; font-size: 14px; font-weight: 600;         padding:5px 10px; border-radius: 6px; display:inline-block;">
+                        <!-- Will be filled by JS -->
+                        </div>
+
+                        <!-- <div id="invValue" style="background-color: #d0e7ff; color: #004080; font-size: 14px; font-weight: 600;         padding:5px 10px; border-radius: 6px; display:inline-block;">
+                        </div> -->
+
+                    <!-- Search on right -->
+                        <div class="form-inline">
                             <div class="form-group">
                                 <label for="search-input" class="mr-2">Search:</label>
                                 <input type="text" id="search-input" class="form-control form-control-sm"
                                     placeholder="Search all columns">
                             </div>
-                        </div> -->
+                        </div>
                     </div>
-
-                   
 
                     <div class="table-container">
                         <table class="custom-resizable-table" id="ebay-table">
                             <thead>
                                 <tr id="summaryRow">
-                                    <th colspan="3"></th> <!-- Skip SL No., Parent, SKU, R&A -->
+                                    <th colspan="4"></th> <!-- Skip SL No., Parent, SKU, R&A. Images -->
                                     <th>
                                         <div class="metric-total" id="inv-total" style="font-weight: bold; color: #007bff;">0</div>
                                     </th>
@@ -1177,28 +1149,37 @@
                                     </th>
                                     <th>
                                         <div class="metric-total" id="onhand-total" style="font-weight: bold; color: #007bff;">0</div>
-                                    </th> 
+                                    </th>
                                     <th>
                                         <div class="metric-total" id="committed-total" style="font-weight: bold; color: #007bff;">0</div>
-                                    </th> 
+                                    </th>
                                     <th>
                                         <div class="metric-total" id="avltosell-total" style="font-weight: bold; color: #007bff;">0</div>
-                                    </th> 
-                                    <th colspan="7"></th> <!-- Skipping columns between verified stock and LOSS/GAIN -->
-                                    <th>
-                                        <!-- <div class="metric-total" id="lossGainTotalText" class="text-success" style="font-weight: bold; color: #007bff;">$ 0</div> -->
                                     </th>
-                                    <th></th> <!-- For APPR-AT -->
-                                    <th></th> 
-                                    <th></th> 
+                                    <th></th>
                                 </tr>
                                 <tr>
-                                    <th data-field="sl_no">IMAGES <span class="sort-arrow">↓</span></th>
-                                    <th data-field="Parent" style="vertical-align: middle; white-space: nowrap;">
+
+                                    <th data-field="sl_no">SL No. <span class="sort-arrow">↓</span></th>
+
+                                     <th data-field="images" style="vertical-align: middle; white-space: nowrap;">
+                                        <div class="d-flex flex-column align-items-center">
+                                            <div class="d-flex align-items-center sortable-header">
+                                                IMAGES <span class="sort-arrow">↓</span>
+                                            </div>
+                                           
+                                        </div>
+                                    </th>
+
+
+
+
+                                    <th data-field="parent" style="vertical-align: middle; white-space: nowrap;">
                                         <div class="d-flex flex-column align-items-center">
                                             <div class="d-flex align-items-center sortable-header">
                                                 PARENT <span class="sort-arrow">↓</span>
                                             </div>
+                                        
                                             <div class="mt-1 dropdown-search-container">
                                                 <input type="text" class="form-control form-control-sm parent-search"
                                                     placeholder="Search parent..." id="parentSearch">
@@ -1206,7 +1187,7 @@
                                             </div>
                                         </div>
                                     </th>
-                                    <th data-field="SKU" style="vertical-align: middle; white-space: nowrap;">
+                                    <th data-field="sku" style="vertical-align: middle; white-space: nowrap;">
                                         <div class="d-flex flex-column align-items-center sortable">
                                             <div class="d-flex align-items-left">
                                                 SKU <span class="sort-arrow">↓</span>
@@ -1215,6 +1196,9 @@
                                                 <input type="text" class="form-control form-control-sm sku-search"
                                                     placeholder="Search SKU..." id="skuSearch">
                                                 <div class="dropdown-search-results" id="skuSearchResults"></div>
+                                            </div>
+                                            
+                                            
                                             </div>
                                         </div>
                                     </th>
@@ -1226,7 +1210,7 @@
                                             </div>
                                         </div>
                                     </th>
-                                    <th data-field="INV" style="vertical-align: middle; white-space: nowrap;">
+                                    <th data-field="inv" style="vertical-align: middle; white-space: nowrap;">
                                         <div class="d-flex flex-column align-items-center">
                                             <div class="d-flex align-items-center">
                                                 INV <span class="sort-arrow">↓</span>
@@ -1234,7 +1218,7 @@
                                             <!-- <div class="metric-total" id="inv-total">0</div> -->
                                         </div>
                                     </th>
-                                    <th data-field="L30" style="vertical-align: middle; white-space: nowrap;">
+                                    <th data-field="ov_l30" style="vertical-align: middle; white-space: nowrap;">
                                         <div class="d-flex flex-column align-items-center">
                                             <div class="d-flex align-items-center">
                                                 L30 <span class="sort-arrow">↓</span>
@@ -1242,7 +1226,7 @@
                                             <!-- <div class="metric-total" id="ovl30-total">0</div> -->
                                         </div>
                                     </th>
-                                    <th data-field="DIL" style="vertical-align: middle; white-space: nowrap;">
+                                    <th data-field="ov_dil" style="vertical-align: middle; white-space: nowrap;">
                                         <div class="d-flex flex-column align-items-center">
                                             <div class="d-flex align-items-center">
                                                 DIL <span class="sort-arrow">↓</span>
@@ -1250,15 +1234,15 @@
                                             <!-- <div class="metric-total" id="ovdil-total">0%</div> -->
                                         </div>
                                     </th>
-                                    <th data-field="AVAILABLE_TO_SELL" style="vertical-align: middle; white-space: nowrap;">
+                                    <th data-field="el_30" style="vertical-align: middle; white-space: nowrap;">
                                         <div class="d-flex flex-column align-items-center">
                                             <div class="d-flex align-items-center">
-                                            AVL TO SELL<span class="sort-arrow">↓</span>
+                                            ON HAND<span class="sort-arrow">↓</span>
                                             </div>
                                             <!-- <div class="metric-total" id="el30-total">0</div> -->
                                         </div>
                                     </th>
-                                    <th data-field="COMMITTED" style="vertical-align: middle; white-space: nowrap;">
+                                    <th data-field="e_dil" style="vertical-align: middle; white-space: nowrap;">
                                         <div class="d-flex flex-column align-items-center">
                                             <div class="d-flex align-items-center">
                                                 COMMITTED <span class="sort-arrow">↓</span>
@@ -1266,107 +1250,22 @@
                                             <!-- <div class="metric-total" id="eDil-total">0%</div> -->
                                         </div>
                                     </th>
-                                    <th data-field="ON_HAND" style="vertical-align: middle; white-space: nowrap;">
+                                    <th data-field="views" style="vertical-align: middle; white-space: nowrap;">
                                         <div class="d-flex flex-column align-items-center">
                                             <div class="d-flex align-items-center">
-                                            ON HAND <span class="sort-arrow">↓</span>
+                                                AVL TO SELL <span class="sort-arrow">↓</span>
                                             </div>
                                             <!-- <div class="metric-total" id="views-total">0</div> -->
                                         </div>
                                     </th>
-                                    <th data-field="price"
-                                        style="vertical-align: middle; white-space: nowrap; padding-right: 4px; width: 80px;">
+                                    <th data-field="views" style="vertical-align: middle; white-space: nowrap;">
                                         <div class="d-flex flex-column align-items-center">
                                             <div class="d-flex align-items-center">
-                                                VERIFIED STOCK <span class="sort-arrow"></span>
+                                                HISTORY<span class="sort-arrow">↓</span>
                                             </div>
                                         </div>
                                     </th>
-                                    <th data-field="pft" style="vertical-align: middle; white-space: nowrap;">
-                                        <div class="d-flex flex-column align-items-center">
-                                            <div class="d-flex align-items-center">
-                                                TO ADJUST <span class="sort-arrow"></span>      
-                                            </div>
-                                            <!-- <div class="metric-total" id="pft-total">0%</div> -->
-                                        </div>
-                                    </th>
-                                    <th data-field="roi" style="vertical-align: middle; white-space: nowrap;">
-                                        <div class="d-flex flex-column align-items-center">
-                                            <div class="d-flex align-items-center">
-                                                REASON <span class="sort-arrow"></span>
-                                            </div>
-                                            <!-- <div class="metric-total" id="roi-total">0%</div> -->
-                                        </div>
-                                    </th>
-                                    <th data-field="tacos" style="vertical-align: middle; white-space: nowrap;">
-                                        <div class="d-flex flex-column align-items-center">
-                                            <div class="d-flex align-items-center">
-                                                APPR-WM <span class="sort-arrow"></span>
-                                            </div>
-                                            <!-- <div class="metric-total" id="tacos-total">0%</div> -->
-                                        </div>
-                                    </th>
-                                    <th data-field="tacos" style="vertical-align: middle; white-space: nowrap;">
-                                        <div class="d-flex flex-column align-items-center">
-                                            <div class="d-flex align-items-center">
-                                                ADJ HISTORY<span class="sort-arrow"></span>
-                                            </div>
-                                        </div>
-                                    </th>
-                                    <!-- <th data-field="tacos" style="vertical-align: middle; white-space: nowrap;">
-                                        <div class="d-flex flex-column align-items-center">
-                                            <div class="d-flex align-items-center">
-                                                APPR-IH <span class="sort-arrow">↓</span>
-                                            </div>
-                                        </div>
-                                    </th> -->
-                                    <th data-field="cvr" style="vertical-align: middle; white-space: nowrap;">
-                                        <div class="d-flex flex-column align-items-center">
-                                            <div class="d-flex align-items-center">
-                                                ADJ QTY <span class="sort-arrow"></span>
-                                            </div>
-                                            <!-- <div class="metric-total" id="cvr-total">0%</div> -->
-                                        </div>
-                                    </th>
-                                    <th data-field="ad cost/ pc" style="vertical-align: middle; white-space: nowrap;">
-                                        <div class="d-flex flex-column align-items-center">
-                                            <!-- <small id="lossGainTotalText" class="badge bg-success mb-1" style="font-size: 13px;">
-                                                $ 0
-                                            </small> -->
-                                            <div class="d-flex align-items-center" id="lossGainHeader">
-                                                LOSS/GAIN<span class="sort-arrow "></span>
-                                            </div>
-                                            <!-- <small id="lossGainTotalText" class="text-success"></small> -->
-                                        </div>
-                                    </th>
-                                    <th data-field="ad cost/ pc" style="vertical-align: middle; white-space: nowrap;">
-                                        <div class="d-flex flex-column align-items-center">
-                                            <div class="d-flex align-items-center">
-                                                APPR-AT<span class="sort-arrow"></span>
-                                            </div>
-                                        </div>
-                                    </th>
-                                    <th data-field="ad cost/ pc" style="vertical-align: middle; white-space: nowrap;">
-                                        <div class="d-flex flex-column align-items-center">
-                                            <div class="d-flex align-items-center">
-                                                VERIFIED<span class="sort-arrow"></span>
-                                            </div>
-                                        </div>
-                                    </th>
-                                    <th data-field="remark" style="vertical-align: middle; white-space: nowrap;">
-                                        <div class="d-flex flex-column align-items-center remarks-input">
-                                            <div class="d-flex align-items-center">
-                                                REMARK<span class="sort-arrow"></span>
-                                            </div>
-                                        </div>
-                                    </th>
-                                    <th data-field="ad cost/ pc" style="vertical-align: middle; white-space: nowrap;">
-                                        <div class="d-flex flex-column align-items-center">
-                                            <div class="d-flex align-items-center">
-                                                LAST APPR-AT<span class="sort-arrow"></span>
-                                            </div>
-                                        </div>
-                                    </th>
+                                    
                                 </tr>
                             </thead>
                             <tbody>
@@ -1381,6 +1280,7 @@
                             <span id="visible-rows" class="badge badge-light" style="color: #dc3545;">Showing 1-25 of
                                 150</span>
                         </div>
+                        
                         <button id="first-page" class="btn btn-sm btn-outline-secondary mr-1">First</button>
                         <button id="prev-page" class="btn btn-sm btn-outline-secondary mr-1">Previous</button>
                         <span id="page-info" class="mx-2">Page 1 of 6</span>
@@ -1406,9 +1306,6 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
     <!--for popup modal script-->
     <script>
         flatpickr("#duration", {
@@ -1416,6 +1313,60 @@
             mode: "range",
             dateFormat: "M d, Y h:i K"
         });
+
+        
+    </script>
+    <script>
+        // load data on modal
+        $('#activity-log-btn').on('click', function () {
+            $.ajax({
+                url: '/verified-stock-activity-log',
+                method: 'GET',
+                success: function (res) {
+                    const tableBody = $('#activityLogTable tbody'); 
+                    tableBody.empty();
+
+                    if (res.data.length === 0) {
+                        tableBody.append('<tr><td colspan="5" class="text-center">No activity found.</td></tr>');
+                    } else {
+                        res.data.forEach(item => {
+                            tableBody.append(`
+                                <tr>
+                                    <td>${item.sku}</td>
+                                    <td>${item.verified_stock}</td>
+                                    <td>${item.to_adjust}</td>
+                                    <td>${item.reason}</td>
+                                    <td>${item.approved_by}</td>
+                                    <td>${item.approved_at}</td>
+                                </tr>
+                            `);
+                        });
+                    }
+
+                    $('#activityLogModal').modal('show'); // Show the modal
+                },
+                error: function () {
+                    alert('Failed to load activity log.');
+                }
+            });
+        });
+
+
+        //close modal
+        $('.close').on('click', function () {
+            $('#activityLogModal').modal('hide');
+        });
+
+        //search by sku
+         $('#activityLogSearch').on('keyup', function () {
+            const value = $(this).val().toLowerCase();
+
+            $('#activityLogTable tbody tr').filter(function () {
+                const sku = $(this).find('td:first').text().toLowerCase();
+                $(this).toggle(sku.indexOf(value) > -1);
+            });
+        });
+
     </script>
 
     <!--for popup modal script-->
@@ -1516,8 +1467,6 @@
             let currentParentIndex = -1; // -1 means showing all products
             let uniqueParents = [];
             let isPlaying = false;
-            let hiddenRows = [];
-            let allData = []; 
 
             // Define status indicator fields for different modal types
             // const statusIndicatorFields = {
@@ -1694,7 +1643,7 @@
                 },
 
                 cleanupDragHandlers(modalElement) {
-                    if (!modalElement || !modalElement._dragHandlers) return;
+
 
                     const {
                         downHandler,
@@ -2005,520 +1954,209 @@
                 });
             }
 
-            
-
             // $(document).ready(function () {
             //     loadData().then((data) => {
             //         renderTable(data); 
             //     });
             // });
 
-            function formatApprovedAt(rawDate) {
-                if (!rawDate) return '-';
-
-                const dateObj = new Date(rawDate);
-                if (isNaN(dateObj)) return '-';
-
-                const day = dateObj.getDate().toString().padStart(2, '0'); 
-                const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                const month = monthNames[dateObj.getMonth()];
-                const year = dateObj.getFullYear();
-
-                let hours = dateObj.getHours();
-                const minutes = dateObj.getMinutes().toString().padStart(2, '0');
-                const ampm = hours >= 12 ? 'PM' : 'AM';
-                hours = hours % 12 || 12;
-
-                const datePart = `${day} ${month} ${year}`;
-                const timePart = `${hours}:${minutes} ${ampm}`;
-
-                return `<div style="line-height:1.3">${datePart}<br><small>${timePart}</small></div>`;
-            }
-
-
             // Load data from server
+            // function loadData() {
+            //     showLoader();
+                
+            //     return $.ajax({
+            //         url: '/verification-adjustment-data-view',
+            //         type: 'GET',
+            //         dataType: 'json',
+            //         success: function(response) {
+            //             if (response && response.data) {
+            //                 console.log('FULL API RESPONSE:', response);
+            //                 tableData = response.data.map((item, index) => {
+            //                     const INV = parseFloat(item.INV) || 0;
+            //                     const L30 = parseFloat(item.L30) || 0;
+            //                     let DIL = 0;
+
+            //                     if (INV !== 0) {
+            //                         DIL = (L30 / INV).toFixed(2);
+            //                     }
+            //                     return {
+            //                         sl_no: index + 1, // Serial number
+            //                         Parent: item.Parent || item.parent || item.parent_asin || item.Parent_ASIN || '(No Parent)',
+            //                         SKU: item['SKU'] || '', // Normalize SKU field
+            //                         TITLE: item['TITLE'] || '', // Title field from the sheet
+
+            //                         INV: INV, // Inventory
+            //                         L30: L30, // Last 30 Days 
+            //                         DIL: DIL, 
+            //                         ON_HAND: item.ON_HAND || 0,
+            //                         COMMITTED: item.COMMITTED || 0,
+            //                         AVAILABLE_TO_SELL: item.AVAILABLE_TO_SELL || 0,
+            //                         VERIFIED_STOCK: item.verified_stock || '', // User input
+            //                         TO_ADJUST: item.to_adjust || '', // Auto-calculated
+            //                         REASON: item.reason || '', // Dropdown
+            //                         APPROVED: item.APPROVED === true, // Checkbox state
+            //                         APPROVED_BY:  item.approved_by || '',
+
+            //                         raw_data: item || {} // Full original row, in case needed later
+            //                     };
+            //                 });
+
+            //                 // filteredData = [...tableData];
+            //                 filteredData = tableData.filter(row => row.ON_HAND !== "N/A");
+
+            //                 renderTable(filteredData);
+            //             }
+            //         },
+            //         error: function(xhr, status, error) {
+            //             console.error('Error loading data:', error);
+            //             showNotification('danger', 'Failed to load data. Please try again.');
+            //         },
+            //         complete: function() {
+            //             hideLoader();
+            //         }
+            //     });
+            // }
+
             function loadData() {
                 showLoader();
-                
-                return $.ajax({
-                    url: '/verification-adjustment-data-view',
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response && response.data) {
-                            console.log('FULL API RESPONSE:', response);
-                            tableData = response.data.map((item, index) => {
-                                const INV = parseFloat(item.INV) || 0;
-                                const L30 = parseFloat(item.L30) || 0;
-                                let DIL = 0;
 
-                                if (INV !== 0) {
-                                    DIL = (L30 / INV).toFixed(2);
-                                }
-                                return {
-                                    // sl_no: index + 1, // Serial number
-                                    IMAGE_URL: item.IMAGE_URL || '',
-                                    Parent: item.Parent || item.parent || item.parent_asin || item.Parent_ASIN || '(No Parent)',
-                                    // SKU: item['SKU'] || '', // Normalize SKU field
-                                    SKU: item.sku || '', // Normalize SKU field
-                                    TITLE: item['TITLE'] || '', // Title field from the sheet
+                    // Fetch first dataset (sheet + Shopify data)
+                    const sheetAjax = $.ajax({
+                        url: '/verification-adjustment-data-view',
+                        type: 'GET',
+                        dataType: 'json'
+                    });
 
-                                    INV: INV, // Inventory
-                                    L30: L30, // Last 30 Days 
-                                    DIL: DIL, 
-                                    ON_HAND: item.ON_HAND || 0,
-                                    COMMITTED: item.COMMITTED || 0,
-                                    AVAILABLE_TO_SELL: item.AVAILABLE_TO_SELL || 0,
-                                    VERIFIED_STOCK: item.verified_stock || '', // User input
-                                    TO_ADJUST: item.to_adjust || '', // Auto-calculated
-                                    REASON: item.reason || '', // Dropdown
-                                    APPROVED: item.APPROVED === true, // Checkbox state
-                                    APPROVED_BY:  item.approved_by || '',
-                                    // LOSS_GAIN: item.LOSS_GAIN && !isNaN(item.LOSS_GAIN) ? parseFloat(item.LOSS_GAIN) : '',
-                                    LOSS_GAIN: (item.APPROVED === true && !item.approved_at) ? item.LOSS_GAIN : '',
+                    // Fetch second dataset (inventory DB)
+                    const inventoryAjax = $.ajax({
+                        url: '/get-verified-stock',
+                        type: 'GET',
+                        dataType: 'json'
+                    });
 
-                                    APPROVED_AT: item.approved_at ? formatOhioTime(item.approved_at) : '',
-                                    LAST_APPROVED_AT: formatApprovedAt(item.APPROVED_AT),
+                    //  When both done, merge data and render
+                    return $.when(sheetAjax, inventoryAjax).done(function(sheetRes, inventoryRes) {
+                        const sheetDataRaw = sheetRes[0].data || [];
+                        const inventoryDataRaw = inventoryRes[0].data || [];
 
-                                    is_parent: (() => {
+                        // Create a map for quick SKU lookup from inventory DB
+                        const inventoryMap = {};
+                        inventoryDataRaw.forEach(item => {
+                            if (item.sku) {
+                                inventoryMap[item.sku.toUpperCase().trim()] = item;
+                            }
+                        });
+
+                        // Map over sheet data and merge fields from inventory data if SKU matches
+                        tableData = sheetDataRaw.map((item, index) => {
+                            const sku = (item.SKU || '').toUpperCase().trim();
+                            const invItem = inventoryMap[sku] || {};
+
+                            // Parse inventory and L30 values as floats (like your original)
+                            const INV = parseFloat(item.INV) || 0;
+                            const L30 = parseFloat(item.L30) || 0;
+                            let DIL = 0;
+                            if (INV !== 0) DIL = (L30 / INV).toFixed(2);
+                            // if (INV !== 0) DIL = `${((L30 / INV) * 100).toFixed(0)}%`;
+                            function formatOhioTime(approvedAtStr) {
+                                if (!approvedAtStr) return '';
+
+                                const [datePart, timePart] = approvedAtStr.split(' ');
+                                if (!datePart || !timePart) return approvedAtStr;
+
+                                const [year, month, day] = datePart.split('-');
+                                const [hour, minute] = timePart.split(':');
+
+                                // Convert hour to 12-hour format with AM/PM
+                                let h = parseInt(hour);
+                                const ampm = h >= 12 ? 'PM' : 'AM';
+                                h = h % 12 || 12; // Convert 0 or 12 to 12
+
+                                const formattedDate = `${day} ${getMonthName(month)} ${year}`;
+                                const formattedTime = `${h.toString().padStart(2, '0')}:${minute} ${ampm}`;
+
+                                return `${formattedDate}, ${formattedTime}`;
+                            }
+
+                            function getMonthName(monthNumStr) {
+                                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                                                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                                const index = parseInt(monthNumStr, 10) - 1;
+                                return months[index] || '';
+                            }
+
+                            // Compose merged row object
+                            return {
+                                sl_no: index + 1,
+                                Parent: item.Parent || item.parent || item.parent_asin || item.Parent_ASIN || '(No Parent)',
+                                SKU: item.SKU || '',
+                                'R&A': invItem['R&A'] !== undefined ? invItem['R&A'] : (item['R&A'] !== undefined ? item['R&A'] : ''),
+                                TITLE: item.TITLE || '',
+                                IMAGE_URL: invItem.IMAGE_URL || item.IMAGE_URL || 'https://skala.or.id/wp-content/uploads/2024/01/dummy-post-square-1-1.jpg',
+
+                                INV: INV,
+                                L30: L30,
+                                DIL: DIL,
+                                ON_HAND:  isNaN(item.ON_HAND) ? 0 : parseFloat(item.ON_HAND),
+                                COMMITTED: isNaN(item.COMMITTED) ? 0 : parseFloat(item.COMMITTED),
+                                AVAILABLE_TO_SELL: isNaN(item.AVAILABLE_TO_SELL) ? 0 : parseFloat(item.AVAILABLE_TO_SELL),
+
+                                // Here merge: if invItem has verified_stock, reason, etc. use that, else fall back to original item
+                                VERIFIED_STOCK: invItem.verified_stock !== undefined ? invItem.verified_stock : (item.verified_stock || ''),
+                                TO_ADJUST: invItem.to_adjust !== undefined ? invItem.to_adjust : (item.to_adjust || ''),
+                                REASON: invItem.reason !== undefined ? invItem.reason : (item.reason || ''),
+                                APPROVED: invItem.is_approved !== undefined ? invItem.is_approved : (item.APPROVED === true),
+                                APPROVED_BY: invItem.approved_by !== undefined ? invItem.approved_by : (item.approved_by || ''),
+                                APPROVED_BY_IH: invItem.approved_by_ih !== undefined ? !!invItem.approved_by_ih : false,
+                                LOSS_GAIN: item.LOSS_GAIN !== undefined ? Math.trunc(item.LOSS_GAIN) : null,
+                                APPROVED_AT: invItem.approved_at ? formatOhioTime(invItem.approved_at) : '',
+                                is_parent: (() => {
                                         const sku = (item.SKU || '').toUpperCase();
                                         const parent = (item.Parent || '').toUpperCase();
                                         return sku.startsWith('PARENT') || sku === parent;
                                     })(),
 
-                                    raw_data: item || {} // Full original row, in case needed later
-                                };
-                            });
+                                raw_data: item
+                            };
+                        });
 
-                            // filteredData = [...tableData];
-                            filteredData = tableData.filter(row => row.ON_HAND !== "N/A");
+                        // Optional: filter if needed (your original filteredData logic)
+                        filteredData = tableData.filter(row => row.ON_HAND !== "N/A");
 
-                            renderTable(filteredData);
-                           
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error loading data:', error);
-                        showNotification('danger', 'Failed to load data. Please try again.');
-                    },
-                    complete: function() {
+                        renderTable(filteredData);
                         hideLoader();
-                    }
-                });
+                    }).fail(function(xhr, status, error) {
+                        console.error('Error loading combined data:', error);
+                        showNotification('danger', 'Failed to load data from both sources.');
+                        hideLoader();
+                    });
             }
 
-            // function loadData() {
-            //     showLoader();
-
-            //         // Fetch first dataset (sheet + Shopify data)
-            //         const sheetAjax = $.ajax({
-            //             url: '/verification-adjustment-data-view',
-            //             type: 'GET',
-            //             dataType: 'json'
-            //         });
-
-            //         // Fetch second dataset (inventory DB)
-            //         const inventoryAjax = $.ajax({
-            //             url: '/get-verified-stock',
-            //             type: 'GET',
-            //             dataType: 'json'
-            //         });
-
-            //         //  When both done, merge data and render
-            //         return $.when(sheetAjax, inventoryAjax).done(function(sheetRes, inventoryRes) {
-            //             const sheetDataRaw = sheetRes[0].data || [];
-            //             const inventoryDataRaw = inventoryRes[0].data || [];
-
-            //             // Create a map for quick SKU lookup from inventory DB
-            //             const inventoryMap = {};
-            //             inventoryDataRaw.forEach(item => {
-            //                 if (item.sku) {
-            //                     inventoryMap[item.sku.toUpperCase().trim()] = item;
-            //                 }
-            //             });
-
-            //             // Map over sheet data and merge fields from inventory data if SKU matches
-            //             tableData = sheetDataRaw.map((item, index) => {
-            //                 const sku = (item.SKU || '').toUpperCase().trim();
-            //                 const invItem = inventoryMap[sku] || {};
-
-            //                 // Parse inventory and L30 values as floats (like your original)
-            //                 const INV = parseFloat(item.INV) || 0;
-            //                 const L30 = parseFloat(item.L30) || 0;
-            //                 let DIL = 0;
-            //                 if (INV !== 0) DIL = (L30 / INV).toFixed(2);
-            //                 // if (INV !== 0) DIL = `${((L30 / INV) * 100).toFixed(0)}%`;
-            //                 function formatOhioTime(approvedAtStr) {
-            //                     if (!approvedAtStr) return '';
-
-            //                     const [datePart, timePart] = approvedAtStr.split(' ');
-            //                     if (!datePart || !timePart) return approvedAtStr;
-
-            //                     const [year, month, day] = datePart.split('-');
-            //                     const [hour, minute] = timePart.split(':');
-
-            //                     // Convert hour to 12-hour format with AM/PM
-            //                     let h = parseInt(hour);
-            //                     const ampm = h >= 12 ? 'PM' : 'AM';
-            //                     h = h % 12 || 12; // Convert 0 or 12 to 12
-
-            //                     const formattedDate = `${day} ${getMonthName(month)} ${year}`;
-            //                     const formattedTime = `${h.toString().padStart(2, '0')}:${minute} ${ampm}`;
-
-            //                     return `${formattedDate}, ${formattedTime}`;
-            //                 }
-
-            //                 function getMonthName(monthNumStr) {
-            //                     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-            //                                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            //                     const index = parseInt(monthNumStr, 10) - 1;
-            //                     return months[index] || '';
-            //                 }
-
-            //                 // Compose merged row object
-            //                 return {
-            //                     sl_no: index + 1,
-            //                     Parent: item.Parent || item.parent || item.parent_asin || item.Parent_ASIN || '(No Parent)',
-            //                     SKU: item.SKU || '',
-            //                     'R&A': invItem['R&A'] !== undefined ? invItem['R&A'] : (item['R&A'] !== undefined ? item['R&A'] : ''),
-            //                     TITLE: item.TITLE || '',
-
-            //                     INV: INV,
-            //                     L30: L30,
-            //                     DIL: DIL,
-            //                     ON_HAND:  isNaN(item.ON_HAND) ? 0 : parseFloat(item.ON_HAND),
-            //                     COMMITTED: isNaN(item.COMMITTED) ? 0 : parseFloat(item.COMMITTED),
-            //                     AVAILABLE_TO_SELL: isNaN(item.AVAILABLE_TO_SELL) ? 0 : parseFloat(item.AVAILABLE_TO_SELL),
-
-            //                     // Here merge: if invItem has verified_stock, reason, etc. use that, else fall back to original item
-            //                     VERIFIED_STOCK: invItem.verified_stock !== undefined ? invItem.verified_stock : (item.verified_stock || ''),
-            //                     TO_ADJUST: invItem.to_adjust !== undefined ? invItem.to_adjust : (item.to_adjust || ''),
-            //                     REASON: invItem.reason !== undefined ? invItem.reason : (item.reason || ''),
-            //                     APPROVED: invItem.is_approved !== undefined ? invItem.is_approved : (item.APPROVED === true),
-            //                     APPROVED_BY: invItem.approved_by !== undefined ? invItem.approved_by : (item.approved_by || ''),
-            //                     // APPROVED_BY_IH: invItem.approved_by_ih !== undefined ? !!invItem.approved_by_ih : false,
-            //                     LOSS_GAIN: item.LOSS_GAIN !== undefined ? Math.trunc(item.LOSS_GAIN) : null,
-            //                     APPROVED_AT: invItem.approved_at ? formatOhioTime(invItem.approved_at) : '',
-
-            //                     raw_data: item
-            //                 };
-            //             });
-
-            //             // Optional: filter if needed (your original filteredData logic)
-            //             filteredData = tableData.filter(row => row.ON_HAND !== "N/A");
-
-            //             renderTable(filteredData);
-            //             hideLoader();
-            //         }).fail(function(xhr, status, error) {
-            //             console.error('Error loading combined data:', error);
-            //             showNotification('danger', 'Failed to load data from both sources.');
-            //             hideLoader();
-            //         });
-            // }
-
-
-            // Render table with current data - without parent total row
-            // function renderTable() {
-            //     const $tbody = $('#ebay-table tbody');
-            //     $tbody.empty(); 
-
-            //     if (isLoading) {
-            //         $tbody.append('<tr><td colspan="15" class="text-center">Loading data...</td></tr>');
-            //         return;
-            //     }
-
-            //     if (filteredData.length === 0) {
-            //         $tbody.append('<tr><td colspan="15" class="text-center">No matching records found</td></tr>');
-            //         return;
-            //     }
-
-            //     filteredData.forEach((item, rowIndex) => {
-            //         const $row = $('<tr>');
-
-            //         if (item.SKU && item.SKU.toUpperCase().startsWith('PARENT')) {
-            //             $row.css({
-            //                 backgroundColor: 'rgba(13, 110, 253, 0.2)',
-            //                 fontWeight: '500'
-            //             });
-            //         }
-
-            //         if (item.is_parent) {
-            //             $row.addClass('parent-row');
-            //         }
-
-            //         // Helper functions for color coding
-            //         const getDilColor = (value) => {
-            //             const percent = parseFloat(value) * 100;
-            //             if (percent < 16.66) return 'red';
-            //             if (percent >= 16.66 && percent < 25) return 'yellow';
-            //             if (percent >= 25 && percent < 50) return 'green';
-            //             return 'pink'; // 50 and above
-            //         };
-
-            //         $row.append($('<td>').text(item.sl_no));
-            //         $row.append($('<td>').text(item.Parent));
-
-            //         // SKU with hover content for links
-            //         const $skuCell = $('<td>').addClass('skuColumn').css('position', 'static');
-            //         const sku = item.SKU || '';
-
-            //         if (item.is_parent) {
-            //             $skuCell.html(`<strong>${sku}</strong><input type="hidden" class="sku-hidden" value="${sku}" />`);
-            //         } else {
-            //             const buyerLink = item.raw_data['B Link'] || '';
-            //             const sellerLink = item.raw_data['AMZ LINK SL'] || '';
-
-            //             if (buyerLink || sellerLink) {
-            //                 $skuCell.html(`
-            //                     <div class="sku-tooltip-container">
-            //                         <span class="sku-text">${sku}</span>
-            //                         <div class="sku-tooltip">
-            //                             ${buyerLink ? `<div class="sku-link"><a href="${buyerLink}" target="_blank" rel="noopener noreferrer">Buyer link</a></div>` : ''}
-            //                             ${sellerLink ? `<div class="sku-link"><a href="${sellerLink}" target="_blank" rel="noopener noreferrer">Seller link</a></div>` : ''}
-            //                         </div>
-            //                     </div>
-            //                     <input type="hidden" class="sku-hidden" value="${sku}" />
-            //                 `);
-            //             } else {
-            //                 $skuCell.html(`${sku}<input type="hidden" class="sku-hidden" value="${sku}" />`);
-            //             }
-            //         }
-            //         $row.append($skuCell); 
-
-            //          // Only create the checkbox cell if navigation is active
-            //         if (isNavigationActive) {
-            //             const $raCell = $('<td>').addClass('ra-cell');
-
-            //             if (item.hasOwnProperty('R&A')) {
-            //                 const $container = $('<div>').addClass(
-            //                     'ra-edit-container d-flex align-items-center');
-
-            //                 const isChecked = item['R&A'] === true || item['R&A'] === '1' || item['R&A'] === 1;
-
-            //                 // Checkbox with proper boolean value
-            //                 const $checkbox = $('<input>', {
-            //                     type: 'checkbox',
-            //                     checked: isChecked,
-            //                     class: 'ra-checkbox',
-            //                     'data-sku': item['SKU'],
-            //                     disabled: isChecked 
-            //                 }).data('original-value', item['R&A'])
-            //                 .data('sku', item.SKU); // Store original value
-
-            //                 // Edit/Save icon
-            //                 const $editIcon = $('<i>').addClass('fas fa-pen edit-icon ml-2 text-primary')
-            //                     .css('cursor', 'pointer')
-            //                     .attr('title', 'Edit R&A');
-
-            //                 $container.append($checkbox, $editIcon);
-            //                 $raCell.append($container);
-            //             } else {
-            //                 $raCell.html('&nbsp;');
-            //             }
-
-            //             $row.append($raCell);
-            //         }
-
-            //         $row.append($('<td>').text(item.AVAILABLE_TO_SELL));
-            //         $row.append($('<td>').text(item.L30));   
-            //         // $row.append($('<td>').text(item.DIL));
-            //         // const dilValue = parseFloat(item.DIL) || 0;
-            //         // const dilPercent = dilValue === 0 ? '-' : `${Math.round(dilValue * 100)}%`;
-            //         // const dilClass = getDilColor(dilValue); 
-
-            //         // $row.append(
-            //         //     $('<td>').html(`<span class="dil-percent-value ${dilClass}">${dilPercent}%</span>`)
-            //         // );
-            //         const dilValue = parseFloat(item.DIL) || 0;
-
-            //         let dilContent;
-            //         if (dilValue <= 0) {
-            //             dilContent = `<span>-</span>`; // No color class, no percent symbol
-            //         } else {
-            //             const dilPercent = Math.round(dilValue * 100);
-            //             const dilClass = getDilColor(dilValue);
-            //             dilContent = `<span class="dil-percent-value ${dilClass}">${dilPercent}%</span>`;
-            //         }
-
-            //         $row.append(
-            //             $('<td>').html(dilContent)
-            //         );
-            //         $row.append($('<td>').text(item.AVAILABLE_TO_SELL));
-
-            //         // $row.append($('<td>').addClass('on-hand').text(item.ON_HAND));
-            //         $row.append($('<td>').text(item.COMMITTED));
-            //         // $row.append($('<td>').text(item.AVAILABLE_TO_SELL));
-            //         $row.append($('<td>').addClass('on-hand').text(item.ON_HAND));
-
-
-            //         // const isApproved = item.APPROVED ? 'disabled' : ''; 
-
-            //         $row.append($('<td>').html(`
-            //             <input type="number" class="form-control verified-stock-input" 
-            //                 data-sku="${item.SKU}" data-index="${rowIndex}" value="${item.VERIFIED_STOCK ?? ''}" />
-            //         `));
-
-            //         const toAdjust = item.VERIFIED_STOCK !== '' ? parseInt(item.VERIFIED_STOCK) - parseInt(item.ON_HAND || 0) : '';
-            //         item.TO_ADJUST = toAdjust;
-            //         $row.append($('<td>').addClass('to-adjust').text(toAdjust));
-
-            //         $row.append($('<td>').html(`
-            //             <select class="form-control reason-select" data-sku="${item.SKU}" data-index="${rowIndex}">
-            //                 <option value="">Select</option>
-            //                 <option value="Count" ${item.REASON === 'Count' ? 'selected' : ''}>Count</option>
-            //                 <option value="Received" ${item.REASON === 'Received' ? 'selected' : ''}>Received</option>
-            //                 <option value="Return Restock" ${item.REASON === 'Return Restock' ? 'selected' : ''}>Return Restock</option>
-            //                 <option value="Damaged" ${item.REASON === 'Damaged' ? 'selected' : ''}>Damaged</option>
-            //                 <option value="Theft or Loss" ${item.REASON === 'Theft or Loss' ? 'selected' : ''}>Theft or Loss</option>
-            //                 <option value="Promotion" ${item.REASON === 'Promotion' ? 'selected' : ''}>Promotion</option>
-            //                 <option value="Suspense" ${item.REASON === 'Suspense' ? 'selected' : ''}>Suspense</option>
-            //                 <option value="Unknown" ${item.REASON === 'Unknown' ? 'selected' : ''}>Unknown</option>
-            //             </select>
-            //         `));
-
-            //         $row.append($('<td>').html(`
-            //             <div class="d-flex flex-column align-items-center">
-            //                 <input type="checkbox" class="form-check-input approve-checkbox" 
-            //                     data-index="${rowIndex}" ${item.APPROVED ? 'checked' : ''}/>
-            //                 <small class="approved-by text-success">${item.APPROVED_BY || ''}</small>
-                            
-            //             </div>
-            //         `));
-
-            //         const $historyIcon = $(`
-            //             <td class="text-center">
-            //                 <i class="fas fa-external-link-alt text-primary view-history-icon" 
-            //                 data-sku="${item.SKU}" 
-            //                 title="View History" 
-            //                 style="cursor: pointer;"></i>
-            //             </td>
-            //         `);
-
-            //         $row.append($historyIcon); 
-
-            //         // $row.append($('<td>').html(`
-            //         //     <div class="d-flex flex-column align-items-center">
-            //         //         <input type="checkbox" class="form-check-input ih-approve-checkbox" 
-            //         //             data-index="${rowIndex}" ${item.APPROVED_BY_IH  ? 'checked' : ''}/>
-                            
-            //         //     </div>
-            //         // `));
-
-            //         $row.append($('<td>').addClass('adjusted-qty').text(toAdjust));
-
-            //         // const lossGain = item.LOSS_GAIN !== undefined && item.LOSS_GAIN !== null ? item.LOSS_GAIN.toFixed(2) : '-';
-            //         // $row.append($('<td>').addClass('loss-gain').text(lossGain ? Math.trunc(item.LOSS_GAIN) : '0'));
-            //         const lossGain = item.LOSS_GAIN;
-            //         $row.append(
-            //             $('<td>').addClass('loss-gain').text(lossGain === '' ? '' : Math.trunc(lossGain))
-            //         );
-
-
-            //         // $row.append($('<td>').addClass('approved-at').text(item.APPROVED_AT || '-'));
-            //         let approvedAtHTML = '-';
-                    
-            //         // if (item.APPROVED_AT && item.APPROVED_AT.includes(',')) {
-            //         //     const [datePart, timePart] = item.APPROVED_AT.split(', ');
-            //         //     approvedAtHTML = `${datePart}<br><small>${timePart}</small>`;
-            //         // }
-            //         if (item.APPROVED_AT && item.APPROVED_AT.includes(', ')) {
-            //             const [datePart, timePart] = item.APPROVED_AT.split(', ');
-            //             approvedAtHTML = `<div style="line-height:1.3">${datePart}<br><small>${timePart}</small></div>`;
-            //         }
-            //         $row.append($('<td>').addClass('approved-at').html(approvedAtHTML));
-
-            //         $tbody.append($row);
-            //     });
-
-            //     let totalLossGain = filteredData.reduce((sum, item) => {
-            //         const value = parseFloat(item.LOSS_GAIN);
-            //         return !isNaN(value) ? sum + value : sum;
-            //     }, 0);
-
-            //     const badge = $('#lossGainTotalText');
-            //     badge
-            //     // .removeClass('bg-success bg-danger')
-            //     // .addClass(totalLossGain >= 0 ? 'bg-success' : 'bg-danger')
-            //     // .addClass('bg-primary')
-            //     .text(`$ ${Math.trunc(totalLossGain)}`);
-
-            //     $('#lossGainTotalText').text(`$ ${Math.trunc(totalLossGain)}`);
-
-                
-
-            //     updatePaginationInfo();
-            //     $('#visible-rows').text(`Showing all ${filteredData.length} rows`);
-            //     // Initialize tooltips
-            //     initTooltips();
-            // }
-
- 
+            // Render table with current data
             function renderTable() {
                 const $tbody = $('#ebay-table tbody');
-                $tbody.empty();
+                $tbody.empty(); 
+
+                let zeroInvCount = 0;
 
                 if (isLoading) {
                     $tbody.append('<tr><td colspan="15" class="text-center">Loading data...</td></tr>');
                     return;
                 }
 
-                // const visibleRows = filteredData.filter(item => !item.IS_HIDE);
-                filteredData = filteredData.filter(item => item && item.IS_HIDE !== 1);
-
                 if (filteredData.length === 0) {
                     $tbody.append('<tr><td colspan="15" class="text-center">No matching records found</td></tr>');
                     return;
                 }
 
-                // NEW: Group children rows by parent and calculate totals
-                const parentTotalsMap = {};
-                filteredData.forEach(item => {
-                    const parentName = item.Parent;
-                    const isParentRow = item.SKU && item.SKU.toUpperCase().startsWith('PARENT');
-
-                    if (!isParentRow) {
-                        if (!parentTotalsMap[parentName]) {
-                            parentTotalsMap[parentName] = {
-                                INV: 0,
-                                L30: 0,
-                                ON_HAND: 0,
-                                COMMITTED: 0,
-                                AVAILABLE_TO_SELL: 0,
-                                count: 0
-                            };
-                        }
-
-                        parentTotalsMap[parentName].INV += parseFloat(item.AVAILABLE_TO_SELL) || 0;
-                        parentTotalsMap[parentName].L30 += parseFloat(item.L30) || 0;
-                        parentTotalsMap[parentName].ON_HAND += parseFloat(item.ON_HAND) || 0;
-                        parentTotalsMap[parentName].COMMITTED += parseFloat(item.COMMITTED) || 0;
-                        parentTotalsMap[parentName].AVAILABLE_TO_SELL += parseFloat(item.AVAILABLE_TO_SELL) || 0;
-                        parentTotalsMap[parentName].count += 1;
-                    }
-                });
-
                 filteredData.forEach((item, rowIndex) => {
                     const $row = $('<tr>');
 
-                    const isParentRow = item.SKU && item.SKU.toUpperCase().startsWith('PARENT');
-                    if (isParentRow) {
+                    if (item.SKU && item.SKU.toUpperCase().startsWith('PARENT')) {
                         $row.css({
-                            // backgroundColor: 'rgba(13, 110, 253, 0.2)',
-                            backgroundColor: 'rgba(69, 233, 255, 0.1)',
+                            backgroundColor: 'rgba(13, 110, 253, 0.2)',
                             fontWeight: '500'
                         });
-
-                        // Inject totals into parent row
-                        const totals = parentTotalsMap[item.Parent];
-                        if (totals) {
-                            item.INV = totals.INV;
-                            item.L30 = totals.L30;
-                            item.ON_HAND = totals.ON_HAND;
-                            item.COMMITTED = totals.COMMITTED;
-                            item.AVAILABLE_TO_SELL = totals.AVAILABLE_TO_SELL;
-                            item.DIL = totals.INV > 0 ? (totals.L30 / totals.INV).toFixed(2) : 0;
-                        }
                     }
 
                     if (item.is_parent) {
@@ -2529,29 +2167,48 @@
                     const zeroInvCount = filteredData.filter(item => parseFloat(item.AVAILABLE_TO_SELL) === 0).length;
                     $('#zeroInvLabel').text(`0 Inv SKUs: ${zeroInvCount}`);
 
+                    // Helper functions for color coding
                     const getDilColor = (value) => {
                         const percent = parseFloat(value) * 100;
                         if (percent < 16.66) return 'red';
                         if (percent >= 16.66 && percent < 25) return 'yellow';
                         if (percent >= 25 && percent < 50) return 'green';
-                        return 'pink';
+                        return 'pink'; // 50 and above
                     };
 
-                    const imgTd = $('<td>').html(
-                        item.IMAGE_URL ? `<img src="${item.IMAGE_URL}" style="width:40px;height:auto;">` : ''
-                    );
-                    $row.append(imgTd);
+                    $row.append($('<td>').text(item.sl_no));
+                    
 
-                    // $row.append($('<td>').text(item.sl_no));
+                    // $row.append($('<td>').html(`
+                    //     <img src="${item.IMAGE_URL || 'https://skala.or.id/wp-content/uploads/2024/01/dummy-post-square-1-1.jpg'}" 
+                    //         alt="Product Image" 
+                    //         style="width: 20px; height: auto; border-radius: 4px;">
+                    // `));
+
+                    $row.append($('<td>').html(`
+                        <div class="img-wrapper">
+                            <img src="${item.IMAGE_URL || 'https://skala.or.id/wp-content/uploads/2024/01/dummy-post-square-1-1.jpg'}" 
+                                alt="Product Image" 
+                                class="thumbnail-img">
+                            <div class="popup-img">
+                                <img src="${item.IMAGE_URL || 'https://skala.or.id/wp-content/uploads/2024/01/dummy-post-square-1-1.jpg'}" 
+                                    alt="Popup Image">
+                            </div>
+                        </div>
+                    `));
+
                     $row.append($('<td>').text(item.Parent));
 
+                    // SKU with hover content for links
                     const $skuCell = $('<td>').addClass('skuColumn').css('position', 'static');
                     const sku = item.SKU || '';
-                    if (isParentRow) {
+
+                    if (item.is_parent) {
                         $skuCell.html(`<strong>${sku}</strong><input type="hidden" class="sku-hidden" value="${sku}" />`);
                     } else {
-                        const buyerLink = item.raw_data?.['B Link'] || '';
-                        const sellerLink = item.raw_data?.['AMZ LINK SL'] || '';
+                        const buyerLink = item.raw_data['B Link'] || '';
+                        const sellerLink = item.raw_data['AMZ LINK SL'] || '';
+
                         if (buyerLink || sellerLink) {
                             $skuCell.html(`
                                 <div class="sku-tooltip-container">
@@ -2567,79 +2224,70 @@
                             $skuCell.html(`${sku}<input type="hidden" class="sku-hidden" value="${sku}" />`);
                         }
                     }
-                    $row.append($skuCell);
+                    $row.append($skuCell); 
 
+                     // Only create the checkbox cell if navigation is active
                     if (isNavigationActive) {
                         const $raCell = $('<td>').addClass('ra-cell');
+
                         if (item.hasOwnProperty('R&A')) {
-                            const $container = $('<div>').addClass('ra-edit-container d-flex align-items-center');
+                            const $container = $('<div>').addClass(
+                                'ra-edit-container d-flex align-items-center');
+
                             const isChecked = item['R&A'] === true || item['R&A'] === '1' || item['R&A'] === 1;
+
+                            // Checkbox with proper boolean value
                             const $checkbox = $('<input>', {
                                 type: 'checkbox',
                                 checked: isChecked,
                                 class: 'ra-checkbox',
                                 'data-sku': item['SKU'],
-                                disabled: isChecked
-                            }).data('original-value', item['R&A']).data('sku', item.SKU);
+                                disabled: isChecked 
+                            }).data('original-value', item['R&A'])
+                            .data('sku', item.SKU); // Store original value
+
+                            // Edit/Save icon
                             const $editIcon = $('<i>').addClass('fas fa-pen edit-icon ml-2 text-primary')
                                 .css('cursor', 'pointer')
                                 .attr('title', 'Edit R&A');
+
                             $container.append($checkbox, $editIcon);
                             $raCell.append($container);
                         } else {
                             $raCell.html('&nbsp;');
                         }
+
                         $row.append($raCell);
                     }
 
                     $row.append($('<td>').text(item.AVAILABLE_TO_SELL));
-                    $row.append($('<td>').text(item.L30));
+                    $row.append($('<td>').text(item.L30));   
+                    // $row.append($('<td>').text(item.DIL));
+                    // const dilValue = parseFloat(item.DIL) || 0;
+                    // const dilPercent = dilValue === 0 ? '-' : `${Math.round(dilValue * 100)}%`;
+                    // const dilClass = getDilColor(dilValue); 
 
+                    // $row.append(
+                    //     $('<td>').html(`<span class="dil-percent-value ${dilClass}">${dilPercent}%</span>`)
+                    // );
                     const dilValue = parseFloat(item.DIL) || 0;
+
                     let dilContent;
-                    if (dilValue <= 0) {
-                        dilContent = `<span>-</span>`;
-                    } else {
+                    // if (dilValue <= 0) {
+                    //     dilContent = `<span>-</span>`; // No color class, no percent symbol
+                    // } else {
                         const dilPercent = Math.round(dilValue * 100);
                         const dilClass = getDilColor(dilValue);
                         dilContent = `<span class="dil-percent-value ${dilClass}">${dilPercent}%</span>`;
-                    }
-                    $row.append($('<td>').html(dilContent));
+                    // }
 
-                    $row.append($('<td>').text(item.AVAILABLE_TO_SELL));
-                    $row.append($('<td>').text(item.COMMITTED));
+                    $row.append(
+                        $('<td>').html(dilContent)
+                    );
+
                     $row.append($('<td>').addClass('on-hand').text(item.ON_HAND));
-
-                    $row.append($('<td>').html(`
-                        <input type="number" class="form-control verified-stock-input" 
-                            data-sku="${item.SKU}" data-index="${rowIndex}" value="${item.VERIFIED_STOCK ?? ''}" />
-                    `));
-
-                    const toAdjust = item.VERIFIED_STOCK !== '' ? parseInt(item.VERIFIED_STOCK) - parseInt(item.ON_HAND || 0) : '';
-                    item.TO_ADJUST = toAdjust;
-                    $row.append($('<td>').addClass('to-adjust').text(toAdjust));
-
-                    $row.append($('<td>').html(`
-                        <select class="form-control reason-select" data-sku="${item.SKU}" data-index="${rowIndex}">
-                            <option value="">Select</option>
-                            <option value="Count" ${item.REASON === 'Count' ? 'selected' : ''}>Count</option>
-                            <option value="Received" ${item.REASON === 'Received' ? 'selected' : ''}>Received</option>
-                            <option value="Return Restock" ${item.REASON === 'Return Restock' ? 'selected' : ''}>Return Restock</option>
-                            <option value="Damaged" ${item.REASON === 'Damaged' ? 'selected' : ''}>Damaged</option>
-                            <option value="Theft or Loss" ${item.REASON === 'Theft or Loss' ? 'selected' : ''}>Theft or Loss</option>
-                            <option value="Promotion" ${item.REASON === 'Promotion' ? 'selected' : ''}>Promotion</option>
-                            <option value="Suspense" ${item.REASON === 'Suspense' ? 'selected' : ''}>Suspense</option>
-                            <option value="Unknown" ${item.REASON === 'Unknown' ? 'selected' : ''}>Unknown</option>
-                        </select>
-                    `));
-
-                    $row.append($('<td>').html(`
-                        <div class="d-flex flex-column align-items-center">
-                            <input type="checkbox" class="form-check-input approve-checkbox" 
-                                data-index="${rowIndex}" ${item.APPROVED ? 'checked' : ''}/>
-                            <small class="approved-by text-success">${item.APPROVED_BY || ''}</small>
-                        </div>
-                    `));
+                    $row.append($('<td>').text(item.COMMITTED));
+                    $row.append($('<td>').text(item.AVAILABLE_TO_SELL));
 
                     const $historyIcon = $(`
                         <td class="text-center">
@@ -2649,183 +2297,94 @@
                             style="cursor: pointer;"></i>
                         </td>
                     `);
-                    $row.append($historyIcon);
 
-                    $row.append($('<td>').addClass('adjusted-qty').text(toAdjust));
+                    $row.append($historyIcon); 
 
-                    const lossGain = item.LOSS_GAIN;
-                    $row.append($('<td>').addClass('loss-gain').text(lossGain === '' ? '' : Math.trunc(lossGain)));
+                    // const isApproved = item.APPROVED ? 'disabled' : ''; 
 
-                    let approvedAtHTML = '-';
-                    if (item.APPROVED_AT && item.APPROVED_AT.includes(', ')) {
-                        const [datePart, timePart] = item.APPROVED_AT.split(', ');
-                        approvedAtHTML = `<div style="line-height:1.3">${datePart}<br><small>${timePart}</small></div>`;
-                    }
-                    $row.append($('<td>').addClass('approved-at').html(approvedAtHTML));
+                    // $row.append($('<td>').html(`
+                    //     <input type="number" class="form-control verified-stock-input" 
+                    //         data-sku="${item.SKU}" data-index="${rowIndex}" value="${item.VERIFIED_STOCK ?? ''}" />
+                    // `));
 
-                    // $row.append(`<td><input type="checkbox" class="form-check-input hide-checkbox" data-index="${rowIndex}" />
-                    // </td>`);
-                    $row.append(`<td><input type="checkbox" class="form-check-input hide-row-checkbox" data-sku="${item.SKU}" ${item.IS_HIDE ? 'checked' : ''}></td>`);
+                    // const toAdjust = item.VERIFIED_STOCK !== '' ? parseInt(item.VERIFIED_STOCK) - parseInt(item.ON_HAND || 0) : '';
+                    // item.TO_ADJUST = toAdjust;
+                    // $row.append($('<td>').addClass('to-adjust').text(toAdjust));
 
-                    $row.append(`<td><input type="text" class="form-control remarks-input" data-sku="${item.SKU}" value="${item.REMARK || ''}" /></td>`);
+                    // $row.append($('<td>').html(`
+                    //     <select class="form-control reason-select" data-sku="${item.SKU}" data-index="${rowIndex}">
+                    //         <option value="">Select</option>
+                    //         <option value="Count" ${item.REASON === 'Count' ? 'selected' : ''}>Count</option>
+                    //         <option value="Received" ${item.REASON === 'Received' ? 'selected' : ''}>Received</option>
+                    //         <option value="Return Restock" ${item.REASON === 'Return Restock' ? 'selected' : ''}>Return Restock</option>
+                    //         <option value="Damaged" ${item.REASON === 'Damaged' ? 'selected' : ''}>Damaged</option>
+                    //         <option value="Theft or Loss" ${item.REASON === 'Theft or Loss' ? 'selected' : ''}>Theft or Loss</option>
+                    //         <option value="Promotion or Donation" ${item.REASON === 'Promotion or Donation' ? 'selected' : ''}>Promotion or Donation</option>
+                    //         <option value="Suspense" ${item.REASON === 'Suspense' ? 'selected' : ''}>Suspense</option>
+                    //         <option value="Unknown" ${item.REASON === 'Unknown' ? 'selected' : ''}>Unknown</option>
+                    //     </select>
+                    // `));
 
-                    // $row.append($('<td>').addClass('last-approved-at').text(item.LAST_APPROVED_AT || '-'));
-                    $row.append($('<td>').addClass('last-approved-at').html(item.LAST_APPROVED_AT || '-'));
- 
-                    // $row.append($('<td>').text(item.LAST_APPROVED_AT || '-'));
+                    // $row.append($('<td>').html(`
+                    //     <div class="d-flex flex-column align-items-center">
+                    //         <input type="checkbox" class="form-check-input approve-checkbox" 
+                    //             data-index="${rowIndex}" ${item.APPROVED ? 'checked' : ''}/>
+                    //         <small class="approved-by text-success">${item.APPROVED_BY || ''}</small>
+                            
+                    //     </div>
+                    // `));
 
+                    // $row.append($('<td>').html(`
+                    //     <div class="d-flex flex-column align-items-center">
+                    //         <input type="checkbox" class="form-check-input ih-approve-checkbox" 
+                    //             data-index="${rowIndex}" ${item.APPROVED_BY_IH  ? 'checked' : ''}/>
+                            
+                    //     </div>
+                    // `));
 
-                    // let lastApprovedAtHTML = '-';
-                    // if (item.LAST_APPROVED_AT && item.LAST_APPROVED_AT.includes(', ')) {
-                    //     const [datePart, timePart] = item.LAST_APPROVED_AT.split(', ');
-                    //     lastApprovedAtHTML = `<div style="line-height:1.3">${datePart}<br><small>${timePart}</small></div>`;
+                    // $row.append($('<td>').addClass('adjusted-qty').text(toAdjust));
+
+                    // const lossGain = item.LOSS_GAIN !== undefined && item.LOSS_GAIN !== null ? item.LOSS_GAIN.toFixed(2) : '-';
+                    // $row.append($('<td>').addClass('loss-gain').text(lossGain ? Math.trunc(item.LOSS_GAIN) : '0'));
+
+                    // // $row.append($('<td>').addClass('approved-at').text(item.APPROVED_AT || '-'));
+                    // let approvedAtHTML = '-';
+                    
+                    // // if (item.APPROVED_AT && item.APPROVED_AT.includes(',')) {
+                    // //     const [datePart, timePart] = item.APPROVED_AT.split(', ');
+                    // //     approvedAtHTML = `${datePart}<br><small>${timePart}</small>`;
+                    // // }
+                    // if (item.APPROVED_AT && item.APPROVED_AT.includes(', ')) {
+                    //     const [datePart, timePart] = item.APPROVED_AT.split(', ');
+                    //     approvedAtHTML = `<div style="line-height:1.3">${datePart}<br><small>${timePart}</small></div>`;
                     // }
-                    // $row.append($('<td>').addClass('last-approved-at').html(lastApprovedAtHTML));
+                    // $row.append($('<td>').addClass('approved-at').html(approvedAtHTML));
 
                     $tbody.append($row);
                 });
 
-                let totalLossGain = filteredData.reduce((sum, item) => {
-                    const value = parseFloat(item.LOSS_GAIN);
-                    return !isNaN(value) ? sum + value : sum;
-                }, 0);
+                // let totalLossGain = filteredData.reduce((sum, item) => {
+                //     const value = parseFloat(item.LOSS_GAIN);
+                //     return !isNaN(value) ? sum + value : sum;
+                // }, 0);
 
-                $('#lossGainTotalText').text(`$ ${Math.trunc(totalLossGain)}`);
+                // const badge = $('#lossGainTotalText');
+                // badge
+                // .removeClass('bg-success bg-danger')
+                // .addClass(totalLossGain >= 0 ? 'bg-success' : 'bg-danger')
+                // .addClass('bg-primary')
+                // .text(`$ ${Math.trunc(totalLossGain)}`);
+
+                // $('#lossGainTotalText').text(`$ ${Math.trunc(totalLossGain)}`);
+
+                
+
                 updatePaginationInfo();
                 $('#visible-rows').text(`Showing all ${filteredData.length} rows`);
+                // Initialize tooltips
                 initTooltips();
             }
 
-
-            //for update Adjusted qty
-            $('#ebay-table').on('input', '.verified-stock-input', function () {
-                const $input = $(this);
-                const $row = $input.closest('tr');
-                const index = parseInt($input.data('index'));
-                const inputVal = $input.val().trim();
-
-                const verifiedStock = parseInt(inputVal);
-                const onHand = parseInt($row.find('.on-hand').text().trim()) || 0;
-
-                let toAdjust = '';
-
-                // Only calculate if input is a valid number
-                if (!isNaN(verifiedStock)) {
-                    toAdjust = verifiedStock - onHand;
-                }
-
-                // Update Adjusted Qty cell
-                $row.find('.to-adjust').text(toAdjust);
-
-                // Update in-memory tableData
-                if (!isNaN(index) && tableData[index]) {
-                    tableData[index].VERIFIED_STOCK = isNaN(verifiedStock) ? '' : verifiedStock;
-                    tableData[index].TO_ADJUST = toAdjust;
-                }
-            });
-
-            
-            //call after checked the appr-WH checkbox
-            $('#ebay-table').on('change', '.approve-checkbox', function () {
-                const $checkbox = $(this);
-                const $row = $checkbox.closest('tr');
-                const sku = $row.find('.sku-hidden').val();
-                const verifiedStock = parseInt($row.find('.verified-stock-input').val().trim()) || 0;
-                const onHand = parseInt($row.find('.on-hand').text().trim()) || 0;
-                const toAdjust = verifiedStock - onHand;
-                const reason = $row.find('.reason-select').val();
-                const isApproved = $checkbox.is(':checked') ? 1 : 0;
-                const index = parseInt($checkbox.data('index'));
-                const remarks = $row.find('.remarks-input').val() || ''; 
-                console.log("Remarks for SKU", sku, ":", remarks);
-
-
-                $row.find('.to-adjust').text(toAdjust);
-
-                if (isApproved && $row.find('.verified-stock-input').val().trim() === '') {
-                    alert('Please enter Verified Stock before approving.');
-                    $checkbox.prop('checked', false);
-                    return;
-                }
-
-                $.ajax({
-                    url: '/update-verified-stock',
-                    method: 'POST',
-                    data: {
-                        sku: sku,
-                        on_hand: onHand,
-                        verified_stock: verifiedStock,
-                        to_adjust: toAdjust,
-                        reason: reason,
-                        remarks: remarks,
-                        is_approved: isApproved,
-                        _token: $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function (res) {
-                        if (res.success) {
-                            const approvedAt = res.data.approved_at;
-                            const approvedBy = res.data.approved_by;
-                            const lossGain = res.data.loss_gain ?? 0;
-
-                            // Format approved_at visually only (do NOT change timezone)
-                            let approvedAtFormatted = '-';
-                            if (approvedAt) {
-                                const dateObj = new Date(approvedAt);
-                                const day = dateObj.getUTCDate().toString().padStart(2, '0');
-                                const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-                                                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                                const month = monthNames[dateObj.getUTCMonth()];
-                                const year = dateObj.getUTCFullYear();
-
-                                let hours = dateObj.getUTCHours();
-                                const minutes = dateObj.getUTCMinutes().toString().padStart(2, '0');
-                                const ampm = hours >= 12 ? 'PM' : 'AM';
-                                hours = hours % 12;
-                                hours = hours ? hours : 12; // 0 becomes 12
-
-                                approvedAtFormatted = `${day} ${month} ${year}<br><small>${hours}:${minutes} ${ampm}</small>`;
-
-                            }
-
-                            if (!isNaN(index)) {
-                                filteredData[index].APPROVED = !!isApproved;
-                                filteredData[index].APPROVED_BY = isApproved ? approvedBy : '-';
-                                filteredData[index].APPROVED_AT = isApproved ? approvedAt : '-';
-                                filteredData[index].TO_ADJUST = toAdjust;
-                                filteredData[index].ADJUSTED_QTY = isApproved ? toAdjust : 0;
-                                filteredData[index].LOSS_GAIN = isApproved ? lossGain : 0;
-                            }
-
-                            $row.find('.approved-by').text(isApproved ? approvedBy : '-');
-
-                            $row.find('.approved-at').html(isApproved ? approvedAtFormatted : '-');
-
-                            $row.find('.adjusted-qty').text(isApproved ? toAdjust : '-');
-                            $row.find('.loss-gain').text(isApproved ? Math.trunc(lossGain) : '0');
-
-                            let totalLossGain = filteredData.reduce((sum, item) => {
-                                const val = parseFloat(item.LOSS_GAIN);
-                                return !isNaN(val) ? sum + val : sum;
-                            }, 0);
-
-                            $('#lossGainTotalText')
-                                // .addClass('bg-primary')
-                                .text(`$ ${Math.trunc(totalLossGain)}`);
-
-                            showNotification('success', isApproved ? 'Approved successfully' : 'Approval removed');
-                        } else {
-                            $checkbox.prop('checked', !isApproved);
-                            showNotification('danger', res.message || 'Something went wrong.');
-                        }
-                    },
-                    error: function () {
-                        $checkbox.prop('checked', !isApproved);
-                        showNotification('danger', 'Failed to update data. Please try again.');
-                    }
-                });
-            });
-
-            // call after click history icon 
             $(document).on('click', '.view-history-icon', function () {
                 const sku = $(this).data('sku');
 
@@ -2878,294 +2437,172 @@
                 });
             });
 
-            //  call after click hide checkbox
-            $(document).on('change', '.hide-row-checkbox', function () {
-                const sku = $(this).data('sku');
-                const $row = $(this).closest('tr');
-
-                $.post('/row-hide-toggle', {
-                    sku: sku,
-                    _token: $('meta[name="csrf-token"]').attr('content')
-                }, function (res) {
-                    if (res.success) {
-                    $row.remove();
-                    }
-                });
-            });
-
-            // Step 5: Button to open hidden modal
-            $('#viewHiddenRows').on('click', function () {
-                $.get('/get-hidden-rows', function (res) {
-                    const $tbody = $('#hiddenRowsTable tbody');
-                    $tbody.empty();
-
-                    if (res.data.length === 0) {
-                    $tbody.append('<tr><td colspan="8">No hidden rows available.</td></tr>');
-                    } else {
-                    res.data.forEach(row => {
-                        $tbody.append(`
-                        <tr>
-                            <td><input type="checkbox" class="hidden-row-select" value="${row.sku}"></td>
-                            <td>${row.sku}</td>
-                            <td>${row.verified_stock}</td>
-                            <td>${row.to_adjust}</td>
-                            <td>${row.loss_gain}</td>
-                            <td>${row.reason || ''}</td>
-                            <td>${row.approved_by}</td>
-                            <td>${row.approved_at}</td>
-                            <td>${row.remarks || '-'}</td>
-                        </tr>
-                        `);
-                    });
-                    }
-
-                    $('#hiddenRowsModal').modal('show');
-                });
-            });
-
-            // Step 6: Select all checkbox logic
-            $(document).on('change', '#selectAllHidden', function () {
-                $('.hidden-row-select').prop('checked', this.checked);
-            });
-
-            // Step 7: Unhide selected rows
-            $('#clearSelectedHiddenRows').on('click', function () {
-                const skus = $('.hidden-row-select:checked').map(function () {
-                    return $(this).val();
-                }).get();
-
-                if (skus.length === 0) {
-                    alert('Please select at least one row to unhide.');
-                    return;
-                }
-
-                $.post('/unhide-multiple-rows', {
-                    skus: skus,
-                    _token: $('meta[name="csrf-token"]').attr('content')
-                }, function (res) {
-                    if (res.success) {
-                        $('#hiddenRowsModal').modal('hide');
-                        //Refresh only filteredData and rerender (not full loadData)
-                        filteredData = filteredData.concat(res.unhiddenRows);
-                        renderTable();
-                    }
-                });
-            }); 
-
-            // Search filter for hidden rows
-            $(document).on('keyup', '#hiddenRowsSearch', function () {
-                let value = $(this).val().toLowerCase();
-                $("#hiddenRowsTable tbody tr").filter(function () {
-                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
-                });
-            });
-
-            // Export to Excel (SheetJS)
-            $("#exportExcel").on("click", function () {
-                if (!filteredData || filteredData.length === 0) {
-                    alert("No data to export!");
-                    return;
-                }
-
-                // const visibleData = filteredData.filter(item => item.is_hide != 1);
-
-                // if (visibleData.length === 0) {
-                //     alert("No visible data to export!");
-                //     return;
-                // }
-
-                // Convert filteredData to flat JSON
-                const rows = filteredData.map(item => ({
-                    Parent: item.Parent,
-                    SKU: item.SKU,
-                    INV: item.INV,
-                    L30: item.L30,
-                    DIL: item.DIL,
-                    ON_HAND: item.ON_HAND,
-                    COMMITTED: item.COMMITTED,
-                    AVAILABLE_TO_SELL: item.AVAILABLE_TO_SELL,
-                    // VERIFIED_STOCK: item.VERIFIED_STOCK,
-                    // TO_ADJUST: item.TO_ADJUST,
-                    // REASON: item.REASON,
-                    // APPROVED: item.APPROVED ? "Yes" : "No",
-                    // APPROVED_BY: item.APPROVED_BY,
-                    // APPROVED_AT: item.APPROVED_AT,
-                    // LOSS_GAIN: item.LOSS_GAIN,
-                    // REMARK: item.REMARK || '',
-                    // LAST_APPROVED_AT: item.LAST_APPROVED_AT
-                }));
-
-                const ws = XLSX.utils.json_to_sheet(rows);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "VerificationData");
-
-                XLSX.writeFile(wb, "verification_data.xlsx");
-            });
 
             
+            //call after checked the appr-WH checkbox
+            // $('#ebay-table').on('change', '.approve-checkbox', function () {
+            //     const $checkbox = $(this);
+            //     const $row = $checkbox.closest('tr');
+            //     const sku = $row.find('.sku-hidden').val();
+            //     const verifiedStock = parseInt($row.find('.verified-stock-input').val().trim()) || 0;
+            //     const onHand = parseInt($row.find('.on-hand').text().trim()) || 0;
+            //     const toAdjust = verifiedStock - onHand;
+            //     const reason = $row.find('.reason-select').val();
+            //     const isApproved = $checkbox.is(':checked') ? 1 : 0;
+            //     const index = parseInt($checkbox.data('index'));
 
-            function getParentBySku(sku) {
-                sku = sku.trim().toUpperCase();
-                const row = tableData.find(item => item.SKU.trim().toUpperCase() === sku);
-                return row ? row.Parent : '(No Parent)';
-            }
+            //     $row.find('.to-adjust').text(toAdjust);
 
-            function getLPBySku(sku) {
-                const row = tableData.find(item => item.SKU.trim().toUpperCase() === sku.trim().toUpperCase());
-                return row ? parseFloat(row.raw_data?.LP || 0) : 0;
-            }
+            //     if (isApproved && !verifiedStock) {
+            //         alert('Please enter Verified Stock before approving.');
+            //         $checkbox.prop('checked', false);
+            //         return;
+            //     }
 
-             // load data on Activity modal
-            $('#activity-log-btn').on('click', function () {
-                $.ajax({
-                    url: '/verified-stock-activity-log',
-                    method: 'GET',
-                    success: function (res) {
-                        const tableBody = $('#activityLogTable tbody');
-                        tableBody.empty();
+            //     $.ajax({
+            //         url: '/update-verified-stock',
+            //         method: 'POST',
+            //         data: {
+            //             sku: sku,
+            //             on_hand: onHand,
+            //             verified_stock: verifiedStock,
+            //             to_adjust: toAdjust,
+            //             reason: reason,
+            //             is_approved: isApproved,
+            //             _token: $('meta[name="csrf-token"]').attr('content')
+            //         },
+            //         success: function (res) {
+            //             if (res.success) {
+            //                 const approvedAt = res.data.approved_at;
+            //                 const approvedBy = res.data.approved_by;
+            //                 const lossGain = res.data.loss_gain ?? 0;
 
-                        let totalLossGain = 0;
+            //                 // Format approved_at visually only (do NOT change timezone)
+            //                 let approvedAtFormatted = '-';
+            //                 if (approvedAt) {
+            //                     const dateObj = new Date(approvedAt);
+            //                     const day = dateObj.getUTCDate().toString().padStart(2, '0');
+            //                     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+            //                                         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            //                     const month = monthNames[dateObj.getUTCMonth()];
+            //                     const year = dateObj.getUTCFullYear();
 
-                        if (!res.data || res.data.length === 0) {
-                            tableBody.append('<tr><td colspan="8" class="text-center">No activity found.</td></tr>');
-                        } else {
-                            res.data.forEach(item => {
-                                const parentTitle = getParentBySku(item.sku);
-                                const toAdjust = parseFloat(item.to_adjust) || 0;
-                                const lp = getLPBySku(item.sku);
+            //                     let hours = dateObj.getUTCHours();
+            //                     const minutes = dateObj.getUTCMinutes().toString().padStart(2, '0');
+            //                     const ampm = hours >= 12 ? 'PM' : 'AM';
+            //                     hours = hours % 12;
+            //                     hours = hours ? hours : 12; // 0 becomes 12
 
-                                let lossGainValue;
+            //                     approvedAtFormatted = `${day} ${month} ${year}<br><small>${hours}:${minutes} ${ampm}</small>`;
+            //                 }
 
-                                if (item.loss_gain !== null && item.loss_gain !== undefined) {
-                                    lossGainValue = parseFloat(item.loss_gain);
-                                } else {
-                                    lossGainValue = lp ? toAdjust * lp : 0;
-                                }
+            //                 if (!isNaN(index)) {
+            //                     filteredData[index].APPROVED = !!isApproved;
+            //                     filteredData[index].APPROVED_BY = isApproved ? approvedBy : '-';
+            //                     filteredData[index].APPROVED_AT = isApproved ? approvedAt : '-';
+            //                     filteredData[index].TO_ADJUST = toAdjust;
+            //                     filteredData[index].ADJUSTED_QTY = isApproved ? toAdjust : 0;
+            //                     filteredData[index].LOSS_GAIN = isApproved ? lossGain : 0;
+            //                 }
 
-                                totalLossGain += lossGainValue;
+            //                 $row.find('.approved-by').text(isApproved ? approvedBy : '-');
 
-                                const formattedLossGain = lossGainValue !== 0 ? `${lossGainValue.toFixed(2)}` : '-';
+            //                 $row.find('.approved-at').html(isApproved ? approvedAtFormatted : '-');
 
-                                tableBody.append(`
-                                    <tr>
-                                        <td>${parentTitle}</td>
-                                        <td>${item.sku}</td>
-                                        <td>${item.verified_stock ?? '-'}</td>
-                                        <td>${item.to_adjust ?? '-'}</td>
-                                        <td>${formattedLossGain}</td>
-                                        <td>${item.reason ?? '-'}</td>
-                                        <td>${item.approved_by ?? '-'}</td>
-                                        <td>${item.approved_at ?? '-'}</td>
-                                        <td>${item.remarks ?? '-'}</td>
-                                    </tr>
-                                `);
-                            });
-                        }
+            //                 $row.find('.adjusted-qty').text(isApproved ? toAdjust : '-');
+            //                 $row.find('.loss-gain').text(isApproved ? Math.trunc(lossGain) : '0');
 
-                        // Set total Loss/Gain in header badge
-                        $('#activityLossGainTotal').text(`${Math.trunc(totalLossGain)}`);
+            //                 let totalLossGain = filteredData.reduce((sum, item) => {
+            //                     const val = parseFloat(item.LOSS_GAIN);
+            //                     return !isNaN(val) ? sum + val : sum;
+            //                 }, 0);
 
-                        $('#activityLogModal').modal('show');
-                    },
-                    error: function () {
-                        alert('Failed to load activity log.');
-                    }
-                });
-            });
+            //                 $('#lossGainTotalText')
+            //                     .addClass('bg-primary')
+            //                     .text(`$ ${Math.trunc(totalLossGain)}`);
 
-
-
-                //close modal
-            $('.close').on('click', function () {
-                $('#activityLogModal').modal('hide');
-            });
-
-                //search by sku
-            $('#activityLogSearch').on('keyup', function () {
-                const value = $(this).val().toLowerCase();
-
-                $('#activityLogTable tbody tr').filter(function () {
-                const rowText = $(this).text().toLowerCase();
-                $(this).toggle(rowText.indexOf(value) > -1);
-                    // const sku = $(this).find('td:first').text().toLowerCase();
-                    // $(this).toggle(sku.indexOf(value) > -1);
-                });
-            });
+            //                 showNotification('success', isApproved ? 'Approved successfully' : 'Approval removed');
+            //             } else {
+            //                 $checkbox.prop('checked', !isApproved);
+            //                 showNotification('danger', res.message || 'Something went wrong.');
+            //             }
+            //         },
+            //         error: function () {
+            //             $checkbox.prop('checked', !isApproved);
+            //             showNotification('danger', 'Failed to update data. Please try again.');
+            //         }
+            //     });
+            // });
 
 
             //call after checked the appr-IH checkbox
-            $('#ebay-table').on('change', '.ih-approve-checkbox', function () {
-                const $checkbox = $(this);
-                const $row = $(this).closest('tr');
-                const sku = $row.find('.sku-hidden').val();
-                const approvedByIH = $checkbox.is(':checked') ? 1 : 0;
-                const index = parseInt($checkbox.data('index'));
+            // $('#ebay-table').on('change', '.ih-approve-checkbox', function () {
+            //     const $checkbox = $(this);
+            //     const $row = $(this).closest('tr');
+            //     const sku = $row.find('.sku-hidden').val();
+            //     const approvedByIH = $checkbox.is(':checked') ? 1 : 0;
+            //     const index = parseInt($checkbox.data('index'));
 
-                $.ajax({
-                    url: '/update-approved-by-ih',  
-                    method: 'POST',
-                    data: {
-                        sku: sku,
-                        approved_by_ih: approvedByIH,
-                        _token: $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function (res) {
-                        if (res.success) {
-                            if (!isNaN(index)) {
-                                tableData[index].APPROVED_BY_IH = approvedByIH;
-                            }
+            //     $.ajax({
+            //         url: '/update-approved-by-ih',  
+            //         method: 'POST',
+            //         data: {
+            //             sku: sku,
+            //             approved_by_ih: approvedByIH,
+            //             _token: $('meta[name="csrf-token"]').attr('content')
+            //         },
+            //         success: function (res) {
+            //             if (res.success) {
+            //                 if (!isNaN(index)) {
+            //                     tableData[index].APPROVED_BY_IH = approvedByIH;
+            //                 }
 
-                            // $checkbox.prop('disabled', true); // Optional: disable after check
-                            showNotification('success', 'IH approval saved.');
-                        } else {
-                            $checkbox.prop('checked', false);
-                            showNotification('danger', res.message || 'Failed to save IH approval.');
-                        }
-                    },
-                    error: function () {
-                        $checkbox.prop('checked', false);
-                        showNotification('danger', 'Server error. Could not save IH approval.');
-                    }
-                });
-            });
+            //                 // $checkbox.prop('disabled', true); // Optional: disable after check
+            //                 showNotification('success', 'IH approval saved.');
+            //             } else {
+            //                 $checkbox.prop('checked', false);
+            //                 showNotification('danger', res.message || 'Failed to save IH approval.');
+            //             }
+            //         },
+            //         error: function () {
+            //             $checkbox.prop('checked', false);
+            //             showNotification('danger', 'Server error. Could not save IH approval.');
+            //         }
+            //     });
+            // });
 
 
             //call after checked the  R&A field checkbox
-            $('#ebay-table').on('change', '.ra-checkbox', function () {
-                const $checkbox = $(this);
-                const sku = $checkbox.data('sku');
-                const isChecked = $checkbox.is(':checked') ? 1 : 0;
+            // $('#ebay-table').on('change', '.ra-checkbox', function () {
+            //     const $checkbox = $(this);
+            //     const sku = $checkbox.data('sku');
+            //     const isChecked = $checkbox.is(':checked') ? 1 : 0;
                 
-                $.ajax({
-                    url: '/update-ra-status',
-                    method: 'POST',
-                    data: {
-                        sku: sku,
-                        is_ra_checked: isChecked,
-                        _token: $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function (res) {
-                    if (res.success) {
-                        showNotification('success', `R&A updated for SKU: ${sku}`);
-                    } else {
-                        $checkbox.prop('checked', !$checkbox.is(':checked')); // revert change
-                        showNotification('danger', `Failed to update R&A for SKU: ${sku}`);
-                    }
-                    },
-                    error: function (xhr) {
-                        $checkbox.prop('checked', !$checkbox.is(':checked'));
-                        console.error(xhr.responseText); // to inspect what went wrong
-                        showNotification('danger', `Error updating R&A for SKU: ${sku}`);
-                    }
-                });
-            });
+            //     $.ajax({
+            //         url: '/update-ra-status',
+            //         method: 'POST',
+            //         data: {
+            //             sku: sku,
+            //             is_ra_checked: isChecked,
+            //             _token: $('meta[name="csrf-token"]').attr('content')
+            //         },
+            //         success: function (res) {
+            //         if (res.success) {
+            //             showNotification('success', `R&A updated for SKU: ${sku}`);
+            //         } else {
+            //             $checkbox.prop('checked', !$checkbox.is(':checked')); // revert change
+            //             showNotification('danger', `Failed to update R&A for SKU: ${sku}`);
+            //         }
+            //         },
+            //         error: function (xhr) {
+            //             $checkbox.prop('checked', !$checkbox.is(':checked'));
+            //             console.error(xhr.responseText); // to inspect what went wrong
+            //             showNotification('danger', `Error updating R&A for SKU: ${sku}`);
+            //         }
+            //     });
+            // });
 
            
-
-
-
-
-
             function initRAEditHandlers() {
                 $(document).on('click', '.edit-icon', function(e) {
                     e.stopPropagation();
@@ -3367,103 +2804,6 @@
                     'PmtCvrL7',
                     'Pmt%', 'TacosL30'
                 ];
-
-                // const getIndicatorColor = (fieldTitle, fieldValue) => {
-                //     const value = (fieldValue * 100).toFixed(2) || 0;
-
-                //     if (type === 'price view') {
-                //         if (['PFT %', 'Spft%'].includes(fieldTitle)) {
-                //             if (value < 10) return 'red';
-                //             if (value >= 10 && value < 15) return 'yellow';
-                //             if (value >= 15 && value < 20) return 'blue';
-                //             if (value >= 20 && value < 40) return 'green';
-                //             if (value >= 40) return 'pink';
-                //         }
-
-                //         if (fieldTitle === 'ROI%') {
-                //             if (value < 50) return 'red';
-                //             if (value >= 50 && value < 75) return 'yellow';
-                //             if (value >= 75 && value < 125) return 'green';
-                //             if (value >= 125) return 'pink';
-                //         }
-
-                //         if (['a+spft', 'a+ROI'].includes(fieldTitle)) {
-                //             return 'gray'; // Missing in sheet
-                //         }
-
-                //         return 'gray';
-                //     }
-
-                //     if (type === 'visibility view') {
-                //         if (['KwCtrL60', 'KwCtrL30', 'KwCtrL7', 'PmtCtrL30', 'PmtCtrL7'].includes(fieldTitle)) {
-                //             return 'gray'; // Marked as missing
-                //         }
-
-                //         return 'gray';
-                //     }
-
-                //     if (type === 'advertisement view') {
-                //         if (['KwAcosL60', 'KwAcosL30', 'KwAcosL7', 'TacosL30'].includes(fieldTitle)) {
-                //             if (value == 0 || value == 100) return 'red';
-                //             if (value > 0 && value <= 7) return 'pink';
-                //             if (value > 7 && value <= 14) return 'green';
-                //             if (value > 14 && value <= 21) return 'yellow';
-                //             if (value > 21) return 'red';
-                //         }
-
-                //         if (['KwCvrL30', 'KwCvrL7'].includes(fieldTitle)) {
-                //             if (value < 7) return 'red';
-                //             if (value > 7 && value <= 13) return 'green';
-                //             if (value > 13) return 'pink';
-                //         }
-
-                //         if (['Ub 7', 'Ub yes'].includes(fieldTitle)) {
-                //             if (value < 50) return 'red';
-                //             if (value >= 50 && value <= 90) return 'green';
-                //             if (value > 90) return 'pink';
-                //         }
-
-                //         if (['PmtAcosL30', 'PmtAcosL7'].includes(fieldTitle)) {
-                //             if (value == 0) return 'red';
-                //             if (value > 0 && value <= 10) return 'pink';
-                //             if (value > 10 && value <= 20) return 'green';
-                //             if (value > 20) return 'red';
-                //         }
-
-                //         if (fieldTitle === 'PmtCvrL30') {
-                //             if (value < 7) return 'red';
-                //             if (value > 7 && value < 13) return 'green';
-                //             if (value >= 13) return 'pink';
-                //         }
-
-                //         if (fieldTitle === 'PmtCvrL7') {
-                //             if (value < 7) return 'red';
-                //             if (value > 7 && value < 14) return 'green';
-                //             if (value >= 14) return 'pink';
-                //         }
-
-                //         if (['KwCtrL60', 'KwCtrL30', 'KwCtrL7', 'PmtCtrL30', 'PmtCtrL7', 'Pmt%'].includes(
-                //                 fieldTitle)) {
-                //             return 'gray'; // Missing in sheet
-                //         }
-
-                //         return 'gray';
-                //     }
-
-                //     if (type === 'conversion view') {
-                //         if (['Scvr', 'KwCvr60', 'KwCvr30', 'PtCvr60', 'PtCvr30', 'DspCvr60', 'DspCvr30',
-                //                 'HdCvr60',
-                //                 'HdCvr30', 'TCvr60', 'TCvr30'
-                //             ].includes(fieldTitle)) {
-                //             if (value <= 7) return 'red';
-                //             if (value > 7 && value <= 13) return 'green';
-                //             if (value > 13) return 'pink';
-                //         }
-                //         return 'gray';
-                //     }
-
-                //     return 'gray';
-                // };
 
                 let content = field.content === null || field.content === undefined || field.content === '' ? ' ' :
                     field.content;
@@ -3908,107 +3248,54 @@
             }
 
             // Initialize sorting functionality
-            // function initSorting() {
-            //     $('th[data-field]').addClass('sortable').on('click', function(e) {
-            //         if (isResizing) {
-            //             e.stopPropagation();
-            //             return;
-            //         }
-
-            //         // Prevent sorting when clicking on search inputs
-            //         if ($(e.target).is('input') || $(e.target).closest('.position-relative').length) {
-            //             return;
-            //         }
-
-            //         const th = $(this).closest('th');
-            //         const thField = th.data('field');
-            //         const dataField = thField === 'parent' ? 'Parent' : thField;
-
-            //         // Toggle direction if clicking same column, otherwise reset to ascending
-            //         if (currentSort.field === dataField) {
-            //             currentSort.direction *= -1;
-            //         } else {
-            //             currentSort.field = dataField;
-            //             currentSort.direction = 1;
-            //         }
-
-            //         // Update UI arrows
-            //         $('.sort-arrow').html('↓');
-            //         $(this).find('.sort-arrow').html(currentSort.direction === 1 ? '↑' : '↓');
-
-            //         // Sort with fresh data
-            //         const freshData = [...tableData];
-            //         freshData.sort((a, b) => {
-            //             const valA = a[dataField] || '';
-            //             const valB = b[dataField] || '';
-
-            //             // Numeric comparison for numeric fields
-            //             if (dataField === 'sl_no' || dataField === 'INV' || dataField === 'L30') {
-            //                 return (parseFloat(valA) - parseFloat(valB)) * currentSort.direction;
-            //             }
-
-            //             // String comparison for other fields
-            //             return String(valA).localeCompare(String(valB)) * currentSort.direction;
-            //         });
-
-            //         filteredData = freshData;
-            //         currentPage = 1;
-            //         renderTable();
-            //     });
-            // }
-
             function initSorting() {
-                $('th[data-field]').addClass('sortable').off('click').on('click', function (e) {
+                $('th[data-field]').addClass('sortable').on('click', function(e) {
                     if (isResizing) {
                         e.stopPropagation();
                         return;
                     }
 
-                    // Prevent sorting when clicking inside inputs/selects
-                    if ($(e.target).is('input, select') || $(e.target).closest('.position-relative').length) {
+                    // Prevent sorting when clicking on search inputs
+                    if ($(e.target).is('input') || $(e.target).closest('.position-relative').length) {
                         return;
                     }
 
-                    const $th = $(this);
-                    const dataField = $th.data('field');
+                    const th = $(this).closest('th');
+                    const thField = th.data('field');
+                    const dataField = thField === 'parent' ? 'Parent' : thField;
 
-                    if (!dataField) return;
-
-                    const sortField = dataField === 'parent' ? 'Parent' : dataField;
-
-                    // Toggle sort direction
-                    if (currentSort.field === sortField) {
+                    // Toggle direction if clicking same column, otherwise reset to ascending
+                    if (currentSort.field === dataField) {
                         currentSort.direction *= -1;
                     } else {
-                        currentSort.field = sortField;
+                        currentSort.field = dataField;
                         currentSort.direction = 1;
                     }
 
                     // Update UI arrows
-                    $('th .sort-arrow').html('↓'); // reset all
-                    $th.find('.sort-arrow').html(currentSort.direction === 1 ? '↑' : '↓');
+                    $('.sort-arrow').html('↓');
+                    $(this).find('.sort-arrow').html(currentSort.direction === 1 ? '↑' : '↓');
 
-                    // Sort tableData (not just filteredData)
-                    const sorted = [...filteredData].sort((a, b) => {
-                        const valA = a[sortField] ?? '';
-                        const valB = b[sortField] ?? '';
+                    // Sort with fresh data
+                    const freshData = [...tableData];
+                    freshData.sort((a, b) => {
+                        const valA = a[dataField] || '';
+                        const valB = b[dataField] || '';
 
-                        // Handle numbers
-                        const isNumeric = !isNaN(valA) && !isNaN(valB);
-                        if (isNumeric) {
+                        // Numeric comparison for numeric fields
+                        if (dataField === 'sl_no' || dataField === 'INV' || dataField === 'L30') {
                             return (parseFloat(valA) - parseFloat(valB)) * currentSort.direction;
                         }
 
-                        // Fallback: string compare
+                        // String comparison for other fields
                         return String(valA).localeCompare(String(valB)) * currentSort.direction;
                     });
 
-                    filteredData = sorted;
+                    filteredData = freshData;
                     currentPage = 1;
                     renderTable();
                 });
             }
-
 
             // Initialize pagination
             function initPagination() {
@@ -4262,7 +3549,6 @@
                     };
 
                     filteredData.forEach(item => {
-
                         metrics.invTotal += parseFloat(item.INV) || 0;
                         metrics.ovL30Total += parseFloat(item.L30) || 0;
                         metrics.onHand += parseFloat(item.ON_HAND) || 0;
@@ -4315,6 +3601,10 @@
                 $('#inv-total').text('0');
                 $('#ovl30-total').text('0');
                 $('#ovdil-total').text('0%');
+                $('#onhand-total').text('0');
+                $('#committed-total').text('0');
+                $('#avltosell-total').text('0');
+
                 $('#al30-total').text('0');
                 $('#eDil-total').text('0%');
                 $('#views-total').text('0');
@@ -4339,7 +3629,7 @@
 
                 // Initialize both dropdowns
                 initEnhancedDropdown($parentSearch, $parentResults, 'Parent');
-                initEnhancedDropdown($skuSearch, $skuResults, 'SKU');
+                initEnhancedDropdown($skuSearch, $skuResults, '(Child) sku');
 
                 // Close dropdowns when clicking outside
                 $(document).on('click', function(e) {
@@ -4409,12 +3699,6 @@
                         clearTimeout(timeout);
                         const searchTerm = $(this).val().trim().toLowerCase();
 
-                        if (searchTerm === '') {
-                            filterByColumn(field, ''); 
-                            $results.hide();
-                            return;
-                        }
-
                         timeout = setTimeout(() => {
                             updateDropdownResults($results, field, searchTerm);
                         }, 300);
@@ -4474,124 +3758,123 @@
                 });
             }
 
-            // function initEnhancedDropdown($input, $results, field) {
-            //     let timeout;
-            //     const minSearchLength = 1;
+            function initEnhancedDropdown($input, $results, field) {
+                let timeout;
+                const minSearchLength = 1;
 
-            //     // Show dropdown when input is clicked
-            //     $input.on('click', function(e) {
-            //         e.stopPropagation();
-            //         updateDropdownResults($results, field, $(this).val().trim().toLowerCase());
-            //     });
+                // Show dropdown when input is clicked
+                $input.on('click', function(e) {
+                    e.stopPropagation();
+                    updateDropdownResults($results, field, $(this).val().trim().toLowerCase());
+                });
 
-            //     // Handle input events
-            //     $input.on('input', function() {
-            //         clearTimeout(timeout);
-            //         const searchTerm = $(this).val().trim().toLowerCase();
+                // Handle input events
+                $input.on('input', function() {
+                    clearTimeout(timeout);
+                    const searchTerm = $(this).val().trim().toLowerCase();
 
-            //         // If search is cleared, trigger filtering immediately
-            //         if (searchTerm === '') {
-            //             filterByColumn(field, '');
-            //             $results.hide();
-            //             return;
-            //         }
+                    // If search is cleared, trigger filtering immediately
+                    if (searchTerm === '') {
+                        filterByColumn(field, '');
+                        return;
+                    }
 
-            //         timeout = setTimeout(() => {
-            //             updateDropdownResults($results, field, searchTerm);
-            //         }, 300);
-            //     });
+                    timeout = setTimeout(() => {
+                        updateDropdownResults($results, field, searchTerm);
+                    }, 300);
+                });
 
-            //     // Handle item selection
-            //     $results.on('click', '.dropdown-search-item', function(e) {
-            //         e.preventDefault();
-            //         e.stopPropagation();
+                // Handle item selection
+                $results.on('click', '.dropdown-search-item', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
 
-            //         const value = $(this).data('value');
-            //         $input.val(value);
-            //         filterByColumn(field, value);
+                    const value = $(this).data('value');
+                    $input.val(value);
+                    filterByColumn(field, value);
 
-            //         // Close the dropdown after selection
-            //         $results.hide();
+                    // Close the dropdown after selection
+                    $results.hide();
 
-            //         // If you want to clear the filter when clicking the same value again
-            //         if ($input.data('last-value') === value) {
-            //             $input.val('');
-            //             filterByColumn(field, '');
-            //         }
-            //         $input.data('last-value', value);
-            //     });
+                    // If you want to clear the filter when clicking the same value again
+                    if ($input.data('last-value') === value) {
+                        $input.val('');
+                        filterByColumn(field, '');
+                    }
+                    $input.data('last-value', value);
+                });
 
-            //     // Handle keyboard navigation
-            //     $input.on('keydown', function(e) {
-            //         if (e.key === 'ArrowDown') {
-            //             e.preventDefault();
-            //             const $firstItem = $results.find('.dropdown-search-item').first();
-            //             if ($firstItem.length) {
-            //                 $firstItem.focus();
-            //             }
-            //         }
-            //     });
+                // Handle keyboard navigation
+                $input.on('keydown', function(e) {
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        const $firstItem = $results.find('.dropdown-search-item').first();
+                        if ($firstItem.length) {
+                            $firstItem.focus();
+                        }
+                    }
+                });
 
-            //     $results.on('keydown', '.dropdown-search-item', function(e) {
-            //         if (e.key === 'ArrowDown') {
-            //             e.preventDefault();
-            //             $(this).next('.dropdown-search-item').focus();
-            //         } else if (e.key === 'ArrowUp') {
-            //             e.preventDefault();
-            //             const $prev = $(this).prev('.dropdown-search-item');
-            //             if ($prev.length) {
-            //                 $prev.focus();
-            //             } else {
-            //                 $input.focus();
-            //             }
-            //         } else if (e.key === 'Enter') {
-            //             e.preventDefault();
-            //             $(this).click();
-            //             $results.hide();
-            //         } else if (e.key === 'Escape') {
-            //             $results.hide();
-            //             $input.focus();
-            //         }
-            //     });
-            // }
+                $results.on('keydown', '.dropdown-search-item', function(e) {
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        $(this).next('.dropdown-search-item').focus();
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        const $prev = $(this).prev('.dropdown-search-item');
+                        if ($prev.length) {
+                            $prev.focus();
+                        } else {
+                            $input.focus();
+                        }
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        $(this).click();
+                        $results.hide();
+                    } else if (e.key === 'Escape') {
+                        $results.hide();
+                        $input.focus();
+                    }
+                });
+            }
 
-            // function updateDropdownResults($results, field, searchTerm) {
-            //     if (!tableData.length) return;
+            function updateDropdownResults($results, field, searchTerm) {
+                if (!tableData.length) return;
 
-            //     $results.empty();
+                $results.empty();
 
-            //     if (searchTerm.length < minSearchLength) {
-            //         // Show all unique values when search is empty
-            //         const uniqueValues = [...new Set(tableData.map(item => String(item[field] || '')))];
-            //         uniqueValues.sort().forEach(value => {
-            //             if (value) {
-            //                 $results.append(
-            //                     `<div class="dropdown-search-item" data-value="${value}">${value}</div>`
-            //                 );
-            //             }
-            //         });
-            //     } else {
-            //         // Filter results based on search term
-            //         const matches = tableData.filter(item =>
-            //             String(item[field] || '').toLowerCase().includes(searchTerm)
-            //         );
+                if (searchTerm.length < minSearchLength) {
+                    // Show all unique values when search is empty
+                    const uniqueValues = [...new Set(tableData.map(item => String(item[field] || '')))];
+                    uniqueValues.sort().forEach(value => {
+                        if (value) {
+                            $results.append(
+                                `<div class="dropdown-search-item" data-value="${value}">${value}</div>`
+                            );
+                        }
+                    });
+                } else {
+                    // Filter results based on search term
+                    const matches = tableData.filter(item =>
+                        String(item[field] || '').toLowerCase().includes(searchTerm)
+                    );
 
-            //         if (matches.length) {
-            //             const uniqueMatches = [...new Set(matches.map(item => String(item[field] || '')))];
-            //             uniqueMatches.sort().forEach(value => {
-            //                 if (value) {
-            //                     $results.append(
-            //                         `<div class="dropdown-search-item" data-value="${value}">${value}</div>`
-            //                     );
-            //                 }
-            //             });
-            //         } else {
-            //             $results.append('<div class="dropdown-search-item no-results">No matches found</div>');
-            //         }
-            //     }
+                    if (matches.length) {
+                        const uniqueMatches = [...new Set(matches.map(item => String(item[field] || '')))];
+                        uniqueMatches.sort().forEach(value => {
+                            if (value) {
+                                $results.append(
+                                    `<div class="dropdown-search-item" data-value="${value}">${value}</div>`
+                                );
+                            }
+                        });
+                    } else {
+                        $results.append('<div class="dropdown-search-item no-results">No matches found</div>');
+                    }
+                }
 
-            //     $results.show();
-            // }
+                $results.show();
+            }
 
             function applyRowTypeFilter(filterType) {
                 // Reset to all data first
