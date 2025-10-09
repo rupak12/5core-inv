@@ -27,7 +27,7 @@ class AutoUpdateAmazonFbaUnderPtBids extends Command
 
         $updateKwBids = new AmazonSpBudgetController;
 
-        $campaigns = $this->getAutomateAmzUtilizedBgtKw();
+        $campaigns = $this->getAutomateAmzFbaUnderUtilizedBgtKw();
 
         if (empty($campaigns)) {
             $this->warn("No campaigns matched filter conditions.");
@@ -37,12 +37,12 @@ class AutoUpdateAmazonFbaUnderPtBids extends Command
         $campaignIds = collect($campaigns)->pluck('campaign_id')->toArray();
         $newBids = collect($campaigns)->pluck('sbid')->toArray();
 
-        $result = $updateKwBids->updateAutoCampaignKeywordsBid($campaignIds, $newBids);
+        $result = $updateKwBids->updateAutoCampaignTargetsBid($campaignIds, $newBids);
         $this->info("Update Result: " . json_encode($result));
 
     }
 
-    public function getAutomateAmzUtilizedBgtKw()
+    public function getAutomateAmzFbaUnderUtilizedBgtKw()
     {
         $productMasters = ProductMaster::orderBy('parent', 'asc')
             ->orderByRaw("CASE WHEN sku LIKE 'PARENT %' THEN 1 ELSE 0 END")
@@ -115,9 +115,9 @@ class AutoUpdateAmazonFbaUnderPtBids extends Command
             $l1_cpc = floatval($row['l1_cpc']);
             $l7_cpc = floatval($row['l7_cpc']);
             if ($l1_cpc > $l7_cpc) {
-                $row['sbid'] = round($l1_cpc * 1.05, 2);
+                $row['sbid'] = floor($l1_cpc * 1.05 * 100) / 100;
             } else {
-                $row['sbid'] = round($l7_cpc * 1.05, 2);
+                $row['sbid'] = floor($l7_cpc * 1.05 * 100) / 100;
             }
 
             $budget = floatval($row['campaignBudgetAmount']);

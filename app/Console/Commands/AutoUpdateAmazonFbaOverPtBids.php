@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Http\Controllers\Campaigns\AmazonSbBudgetController;
 use App\Http\Controllers\Campaigns\AmazonSpBudgetController;
 use Illuminate\Console\Command;
 use App\Models\AmazonSpCampaignReport;
@@ -27,7 +28,7 @@ class AutoUpdateAmazonFbaOverPtBids extends Command
 
         $updateKwBids = new AmazonSpBudgetController;
 
-        $campaigns = $this->getAutomateAmzUtilizedBgtKw();
+        $campaigns = $this->getAutomateAmzFbaUtilizedBgtPt();
 
         if (empty($campaigns)) {
             $this->warn("No campaigns matched filter conditions.");
@@ -37,12 +38,12 @@ class AutoUpdateAmazonFbaOverPtBids extends Command
         $campaignIds = collect($campaigns)->pluck('campaign_id')->toArray();
         $newBids = collect($campaigns)->pluck('sbid')->toArray();
 
-        $result = $updateKwBids->updateAutoCampaignKeywordsBid($campaignIds, $newBids);
+        $result = $updateKwBids->updateAutoCampaignTargetsBid($campaignIds, $newBids);
         $this->info("Update Result: " . json_encode($result));
 
     }
 
-    public function getAutomateAmzUtilizedBgtKw()
+    public function getAutomateAmzFbaUtilizedBgtPt()
     {
         $productMasters = ProductMaster::orderBy('parent', 'asc')
             ->orderByRaw("CASE WHEN sku LIKE 'PARENT %' THEN 1 ELSE 0 END")
@@ -113,7 +114,7 @@ class AutoUpdateAmazonFbaOverPtBids extends Command
             $row['l1_cpc'] = $matchedCampaignL1->costPerClick ?? 0;
 
             $l1_cpc = floatval($row['l1_cpc']);
-            $row['sbid'] = round($l1_cpc * 0.95, 2);
+            $row['sbid'] = floor($l1_cpc * 0.95 * 100) / 100;
 
             $budget = floatval($row['campaignBudgetAmount']);
             $l7_spend = floatval($row['l7_spend']);

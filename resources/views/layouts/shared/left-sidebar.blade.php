@@ -1101,7 +1101,13 @@
             </li>
 
             {{-- Inventory Management --}}
-
+              <li class="side-nav-item">
+                <a href="{{ route('view.stock.mapping') }}" class="side-nav-link">
+                    <i class="ri-dashboard-3-line"></i>
+                    <span> Stock Mapping </span>
+                </a>
+            </li>
+            
             <li class="side-nav-item">
                 <a data-bs-toggle="collapse" href="#invsidebarPages" aria-expanded="false"
                     aria-controls="sidebarPages" class="side-nav-link">
@@ -1450,6 +1456,26 @@
                                                 </li>
                                             </ul>
                                         </div>
+                                    </li>
+                                    <li>
+                                        <a data-bs-toggle="collapse" href="#amazonFbaACOS" aria-expanded="false"
+                                            aria-controls="amazonFbaACOS">
+                                            <span>Amazon FBA ACOS</span>
+                                            <span class="menu-arrow"></span>
+                                        </a>
+                                        <div class="collapse" id="amazonFbaACOS">
+                                            <ul class="side-nav-fourth-level">
+                                                <li>
+                                                    <a href="{{ route('amazon.fba.acos.kw.control') }}">KW Control</a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('amazon.fba.acos.pt.control') }}">PT Control</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('amazon.missing.ads') }}">Amazon Missing Ads</a>
                                     </li>
                                     {{-- Add EXtra For Amazon Pricing --}}
                                 </ul>

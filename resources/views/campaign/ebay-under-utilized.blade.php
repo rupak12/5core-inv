@@ -447,11 +447,12 @@
                             var l7_cpc = parseFloat(row.l7_cpc) || 0;
 
                             var sbid = 0;
-                            if(l7_cpc > l1_cpc){
-                                sbid = (l7_cpc * 1.05).toFixed(2);
+                            if(l1_cpc > l7_cpc) {
+                                sbid = Math.floor(l1_cpc * 1.05 * 100) / 100;
                             }else{
-                                sbid = (l1_cpc * 1.05).toFixed(2);
+                                sbid = Math.floor(l7_cpc * 1.05 * 100) / 100;
                             }
+                            sbid = sbid.toFixed(2);
                             return sbid;
                         },
                     },
@@ -474,11 +475,12 @@
                                 var l7_cpc = parseFloat(rowData.l7_cpc) || 0;
 
                                 var sbid = 0;
-                                if(l7_cpc > l1_cpc){
-                                    sbid = (l7_cpc * 1.05).toFixed(2);
+                                if(l1_cpc > l7_cpc) {
+                                    sbid = Math.floor(l1_cpc * 1.05 * 100) / 100;
                                 }else{
-                                    sbid = (l1_cpc * 1.05).toFixed(2);
+                                    sbid = Math.floor(l7_cpc * 1.05 * 100) / 100;
                                 }
+                                sbid = sbid.toFixed(2);
                                 updateBid(sbid, rowData.campaign_id);
                             }
                         }
@@ -649,11 +651,12 @@
                         var l7_cpc = parseFloat(rowData.l7_cpc) || 0;
 
                         var sbid = 0;
-                        if(l7_cpc > l1_cpc){
-                            sbid = (l7_cpc * 1.05).toFixed(2);
+                        if(l1_cpc > l7_cpc) {
+                            sbid = Math.floor(l1_cpc * 1.05 * 100) / 100;
                         }else{
-                            sbid = (l1_cpc * 1.05).toFixed(2);
+                            sbid = Math.floor(l7_cpc * 1.05 * 100) / 100;
                         }
+                        sbid = sbid.toFixed(2);
 
                         campaignIds.push(rowData.campaign_id);
                         bids.push(sbid);
@@ -729,11 +732,12 @@
                     let l7_cpc = parseFloat(row.l7_cpc || 0);
                     let sbid = 0;
 
-                    if(l7_cpc > l1_cpc){
-                        sbid = (l7_cpc * 1.05).toFixed(2);
+                    if(l1_cpc > l7_cpc) {
+                        sbid = Math.floor(l1_cpc * 1.05 * 100) / 100;
                     }else{
-                        sbid = (l1_cpc * 1.05).toFixed(2);
+                        sbid = Math.floor(l7_cpc * 1.05 * 100) / 100;
                     }
+                    sbid = sbid.toFixed(2);
 
                     return {
                         campaignName: row.campaignName || "",
