@@ -37,9 +37,8 @@ class AutoUpdateAmazonFbaOverKwBids extends Command
         $campaignIds = collect($campaigns)->pluck('campaign_id')->toArray();
         $newBids = collect($campaigns)->pluck('sbid')->toArray();
 
-        // $result = $updateKwBids->updateAutoCampaignKeywordsBid($campaignIds, $newBids);
-        // $this->info("Update Result: " . json_encode($result));
-        Log::info("Amazon FBA Over KW Bids Update Result: ",[$campaigns]);
+        $result = $updateKwBids->updateAutoCampaignKeywordsBid($campaignIds, $newBids);
+        $this->info("Update Result: " . json_encode($result));
 
     }
 
