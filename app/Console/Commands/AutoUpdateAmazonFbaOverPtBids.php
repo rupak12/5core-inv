@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Http\Controllers\Campaigns\AmazonSbBudgetController;
+use App\Http\Controllers\Campaigns\AmazonSpBudgetController;
 use Illuminate\Console\Command;
 use App\Models\AmazonSpCampaignReport;
 use App\Models\ProductMaster;
@@ -25,7 +26,7 @@ class AutoUpdateAmazonFbaOverPtBids extends Command
     {
         $this->info("Starting Amazon bids auto-update...");
 
-        $updateKwBids = new AmazonSbBudgetController;
+        $updateKwBids = new AmazonSpBudgetController;
 
         $campaigns = $this->getAutomateAmzFbaUtilizedBgtPt();
 
@@ -37,7 +38,7 @@ class AutoUpdateAmazonFbaOverPtBids extends Command
         $campaignIds = collect($campaigns)->pluck('campaign_id')->toArray();
         $newBids = collect($campaigns)->pluck('sbid')->toArray();
 
-        $result = $updateKwBids->updateAutoCampaignKeywordsBid($campaignIds, $newBids);
+        $result = $updateKwBids->updateAutoCampaignTargetsBid($campaignIds, $newBids);
         $this->info("Update Result: " . json_encode($result));
 
     }
