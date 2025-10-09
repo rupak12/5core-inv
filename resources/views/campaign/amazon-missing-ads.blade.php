@@ -47,14 +47,14 @@
             transition: background 0.18s, color 0.18s;
         }
 
-        .tabulator .tabulator-cell:focus {
+        /* .tabulator .tabulator-cell:focus {
             outline: 1px solid #262626;
             background: #e0eaff;
-        }
+        } */
 
-        .tabulator-row:hover {
+        /* .tabulator-row:hover {
             background-color: #dbeafe !important;
-        }
+        } */
 
         .parent-row {
             background-color: #e0eaff !important;
@@ -274,7 +274,7 @@
             };
 
             var table = new Tabulator("#budget-under-table", {
-                index: "Sku",
+                index: "sku",
                 ajaxURL: "/amazon/missing/ads/data",
                 layout: "fitData",
                 movableColumns: true,
@@ -283,7 +283,7 @@
                 virtualDom: true,
                 rowFormatter: function(row) {
                     const data = row.getData();
-                    const sku = data["Sku"] || '';
+                    const sku = data["sku"] || '';
 
                     if (sku.toUpperCase().includes("PARENT")) {
                         row.getElement().classList.add("parent-row");
@@ -460,36 +460,41 @@
                             var row = cell.getRow().getData();
                             var kwCampaign = row.kw_campaign_name || '';
                             var ptCampaign = row.pt_campaign_name || '';
+                            var sku = row.sku || '';
+                            const isParent = sku.toUpperCase().includes("PARENT");
 
-                            if(kwCampaign && ptCampaign){
-                                return `
-                                    <span style="color: green;">Both Running</span>
-                                    <i class="fa fa-info-circle text-primary toggle-missingAds-btn" 
-                                        style="cursor:pointer; margin-left:8px;">
-                                    </i>
-                                `;
-                            } else if(kwCampaign){
-                                return `
-                                    <span style="color: red;">PT Missing</span>
-                                    <i class="fa fa-info-circle text-primary toggle-missingAds-btn" 
-                                        style="cursor:pointer; margin-left:8px;">
-                                    </i>
-                                `;
-                            } else if(ptCampaign){
-                                return `
-                                    <span style="color: red;">KW Missing</span>
-                                    <i class="fa fa-info-circle text-primary toggle-missingAds-btn" 
-                                        style="cursor:pointer; margin-left:8px;">
-                                    </i>
-                                `;
-                            } else {
-                                return `
-                                    <span style="color: red;">Both Missing</span>
-                                    <i class="fa fa-info-circle text-primary toggle-missingAds-btn" 
-                                        style="cursor:pointer; margin-left:8px;">
-                                    </i>
-                                `;
+                            if(!isParent){
+                                if(kwCampaign && ptCampaign){
+                                    return `
+                                        <span style="color: green;">Both Running</span>
+                                        <i class="fa fa-info-circle text-primary toggle-missingAds-btn" 
+                                            style="cursor:pointer; margin-left:8px;">
+                                        </i>
+                                    `;
+                                } else if(kwCampaign){
+                                    return `
+                                        <span style="color: red;">PT Missing</span>
+                                        <i class="fa fa-info-circle text-primary toggle-missingAds-btn" 
+                                            style="cursor:pointer; margin-left:8px;">
+                                        </i>
+                                    `;
+                                } else if(ptCampaign){
+                                    return `
+                                        <span style="color: red;">KW Missing</span>
+                                        <i class="fa fa-info-circle text-primary toggle-missingAds-btn" 
+                                            style="cursor:pointer; margin-left:8px;">
+                                        </i>
+                                    `;
+                                } else {
+                                    return `
+                                        <span style="color: red;">Both Missing</span>
+                                        <i class="fa fa-info-circle text-primary toggle-missingAds-btn" 
+                                            style="cursor:pointer; margin-left:8px;">
+                                        </i>
+                                    `;
+                                }
                             }
+                            
                         }
                     },
                     {
