@@ -2,77 +2,77 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 @section('css')
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
-<link rel="stylesheet" href="{{ asset('assets/css/styles.css') }}">
-<style>
-    /* Custom styles for the Tabulator table */
-    /* Pagination styling */
-    .tabulator .tabulator-footer .tabulator-paginator .tabulator-page {
-        padding: 8px 16px;
-        margin: 0 4px;
-        border-radius: 6px;
-        font-size: 0.95rem;
-        font-weight: 500;
-        transition: all 0.2s;
-    }
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('assets/css/styles.css') }}">
+    <style>
+        /* Custom styles for the Tabulator table */
+        /* Pagination styling */
+        .tabulator .tabulator-footer .tabulator-paginator .tabulator-page {
+            padding: 8px 16px;
+            margin: 0 4px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
 
-    .tabulator .tabulator-footer .tabulator-paginator .tabulator-page:hover {
-        background: #e0eaff;
-        color: #2563eb;
-    }
+        .tabulator .tabulator-footer .tabulator-paginator .tabulator-page:hover {
+            background: #e0eaff;
+            color: #2563eb;
+        }
 
-    .tabulator .tabulator-footer .tabulator-paginator .tabulator-page.active {
-        background: #2563eb;
-        color: white;
-    }
+        .tabulator .tabulator-footer .tabulator-paginator .tabulator-page.active {
+            background: #2563eb;
+            color: white;
+        }
 
-    .custom-select-wrapper {
-        width: 100%;
-        cursor: pointer;
-        position: relative;
-    }
+        .custom-select-wrapper {
+            width: 100%;
+            cursor: pointer;
+            position: relative;
+        }
 
-    .custom-select-display {
-        background-color: #fff;
-        border: 1px solid #ced4da;
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.375rem;
-    }
+        .custom-select-display {
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+        }
 
-    .custom-select-options {
-        position: absolute;
-        z-index: 999;
-        top: 100%;
-        left: 0;
-        right: 0;
-        max-height: 200px;
-        overflow-y: auto;
-        border: 1px solid #ced4da;
-        border-top: none;
-        background-color: #fff;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    }
+        .custom-select-options {
+            position: absolute;
+            z-index: 999;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ced4da;
+            border-top: none;
+            background-color: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
 
-    .custom-select-search {
-        width: 100%;
-        padding: 0.5rem;
-        border: none;
-        border-bottom: 1px solid #eee;
-        outline: none;
-    }
+        .custom-select-search {
+            width: 100%;
+            padding: 0.5rem;
+            border: none;
+            border-bottom: 1px solid #eee;
+            outline: none;
+        }
 
-    .custom-select-option {
-        padding: 0.5rem 0.75rem;
-        cursor: pointer;
-    }
+        .custom-select-option {
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+        }
 
-    .custom-select-option:hover {
-        background-color: #f1f1f1;
-    }
-
-</style>
+        .custom-select-option:hover {
+            background-color: #f1f1f1;
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -287,6 +287,8 @@
     <script src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         var jq = jQuery.noConflict(true);
@@ -375,7 +377,9 @@
                         ], 'N/A'),
                         valid_tracking_rate_allowed: pick(item, ['valid_tracking_rate_allowed'],
                             ''),
-                        on_time_delivery: pick(item, ['on_time_delivery_rate', 'On Time Delivery Rate'],
+                        on_time_delivery: pick(item, ['on_time_delivery_rate',
+                                'On Time Delivery Rate'
+                            ],
                             'N/A'),
                         on_time_delivery_allowed: pick(item, ['on_time_delivery_rate_allowed'], ''),
                         // atoz_claims_rate: pick(item, ['atoz_claims_rate', 'AtoZ Claims Rate'],
@@ -1453,7 +1457,7 @@
         function startPlayback() {
             if (!originalChannelData.length) return;
             uniqueChannels = [...new Set(originalChannelData.map(item => item['channel']?.trim() || item['Channel ']
-            ?.trim() || item['Channel']?.trim()))].filter(Boolean);
+                ?.trim() || item['Channel']?.trim()))].filter(Boolean);
             uniqueChannelRows = uniqueChannels.map(channel => originalChannelData.find(item => (item['channel']?.trim() ||
                 item['Channel ']?.trim() || item['Channel']?.trim()) === channel));
             if (!uniqueChannelRows.length) return;
@@ -1793,7 +1797,7 @@
                     })
                     .finally(() => {
                         submitBtn.prop('disabled', false).html(
-                        '<i class="fas fa-file-import me-1"></i> Import');
+                            '<i class="fas fa-file-import me-1"></i> Import');
                     });
             });
 

@@ -91,7 +91,7 @@ class PricingMasterViewsController extends Controller
         return view('pricing-master.pricing_masters_view', [
             'mode' => $mode,
             'demo' => $demo,
-            'records' => $processedData, // processed data table ke liye
+            'records' => $processedData,
         ]);
     }
 
@@ -102,15 +102,15 @@ class PricingMasterViewsController extends Controller
 
         $processedData = $this->processPricingData();
 
-        return view('pricing-master.inv_by_sales', [
+        return view('pricing-master.inventory_by_sales_value', [
             'mode' => $mode,
             'demo' => $demo,
-            'records' => $processedData, // processed data table ke liye
+            'records' => $processedData,
         ]);
     }
 
 
-        public function calculateCVRMasters(Request $request)
+    public function calculateCVRMasters(Request $request)
     {
         $mode = $request->query('mode');
         $demo = $request->query('demo');
@@ -120,14 +120,14 @@ class PricingMasterViewsController extends Controller
         return view('pricing-master.cvr_master', [
             'mode' => $mode,
             'demo' => $demo,
-           
-            'records' => $processedData, // processed data table ke liye
+
+            'records' => $processedData,
         ]);
     }
 
 
 
-    
+
 
 
     protected function processPricingData($searchTerm = '')
@@ -314,7 +314,7 @@ class PricingMasterViewsController extends Controller
             $l30 = $shopifyItem ? ($shopifyItem->quantity ?? 0) : 0;
             $shopify_l30 = $shopifyItem ? ($shopifyItem->shopify_l30 ?? 0) : 0;
 
-            $total_views = ($amazon ? ($amazon->sessions_l30 ?? 0 ) : 0) +
+            $total_views = ($amazon ? ($amazon->sessions_l30 ?? 0) : 0) +
                 ($ebay ? ($ebay->views ?? 0) : 0) +
                 ($ebay2 ? ($ebay2->views ?? 0) : 0) +
                 ($ebay3 ? ($ebay3->views ?? 0) : 0) +
@@ -340,9 +340,9 @@ class PricingMasterViewsController extends Controller
                 ($aliexpress ? ($aliexpress->aliexpress_l30 ?? 0) : 0);
 
 
-            
 
-            $total_l60_count = 
+
+            $total_l60_count =
                 ($tiktok ? ($tiktok->shopify_tiktokl60 ?? 0) : 0) +
                 ($shein ? ($shein->shopify_sheinl60 ?? 0) : 0) +
                 ($amazon ? ($amazon->units_ordered_l60 ?? 0) : 0) +
@@ -357,37 +357,37 @@ class PricingMasterViewsController extends Controller
                 ($tiendamia ? ($tiendamia->m_l60 ?? 0) : 0) +
                 ($doba ? ($doba->l60 ?? 0) : 0) +
                 ($aliexpress ? ($aliexpress->aliexpress_l60 ?? 0) : 0);
-            
+
 
 
             // Calculate avg CVR only for channels where L30 > 0 and views > 0
-          $channels = [
-            ['data' => $amazon,     'l30' => 'units_ordered_l30',      'views' => 'sessions_l30'],
-            ['data' => $ebay,       'l30' => 'ebay_l30',               'views' => 'views'],
-            ['data' => $ebay2,      'l30' => 'ebay_l30',               'views' => 'views'],
-            ['data' => $ebay3,      'l30' => 'ebay_l30',               'views' => 'views'],
-            ['data' => $temuMetric, 'l30' => 'quantity_purchased_l30', 'views' => 'product_clicks_l30'],
-            ['data' => $reverb,     'l30' => 'r_l30',                  'views' => 'views'],
-            ['data' => $walmart,    'l30' => 'l30',                    'views' => 'views'],
-            ['data' => $tiktok,     'l30' => 'shopify_tiktokl30',                    'views' => 'views'],
-            ['data' => $shein,      'l30' => 'shopify_sheinl30',       'views' => 'views_clicks'],
-        ];
+            $channels = [
+                ['data' => $amazon,     'l30' => 'units_ordered_l30',      'views' => 'sessions_l30'],
+                ['data' => $ebay,       'l30' => 'ebay_l30',               'views' => 'views'],
+                ['data' => $ebay2,      'l30' => 'ebay_l30',               'views' => 'views'],
+                ['data' => $ebay3,      'l30' => 'ebay_l30',               'views' => 'views'],
+                ['data' => $temuMetric, 'l30' => 'quantity_purchased_l30', 'views' => 'product_clicks_l30'],
+                ['data' => $reverb,     'l30' => 'r_l30',                  'views' => 'views'],
+                ['data' => $walmart,    'l30' => 'l30',                    'views' => 'views'],
+                ['data' => $tiktok,     'l30' => 'shopify_tiktokl30',                    'views' => 'views'],
+                ['data' => $shein,      'l30' => 'shopify_sheinl30',       'views' => 'views_clicks'],
+            ];
 
-        $l30_count = 0;        // Count of channels where L30 > 0 and views > 0
-        $views_sum = 0;        // Sum of views for those channels
+            $l30_count = 0;        // Count of channels where L30 > 0 and views > 0
+            $views_sum = 0;        // Sum of views for those channels
 
-        foreach ($channels as $channel) {
-            $obj = $channel['data'];
-            if ($obj && is_object($obj)) {
-                $l30 = $obj->{$channel['l30']} ?? 0;
-                $views = $obj->{$channel['views']} ?? 0;
+            foreach ($channels as $channel) {
+                $obj = $channel['data'];
+                if ($obj && is_object($obj)) {
+                    $l30 = $obj->{$channel['l30']} ?? 0;
+                    $views = $obj->{$channel['views']} ?? 0;
 
-                if ($l30 > 0 && $views > 0) {
-                    $l30_count++;           // count channels
-                    $views_sum += $views;   // sum views
+                    if ($l30 > 0 && $views > 0) {
+                        $l30_count++;           // count channels
+                        $views_sum += $views;   // sum views
+                    }
                 }
             }
-        }
 
 
 
@@ -424,7 +424,7 @@ class PricingMasterViewsController extends Controller
             }
 
             // For $avgCvr, use all views
-            $views_sum = 
+            $views_sum =
                 ($amazon->sessions_l30 ?? 0) +
                 ($ebay->views ?? 0) +
                 ($ebay2->views ?? 0) +
@@ -630,7 +630,7 @@ class PricingMasterViewsController extends Controller
                 'tiendamia_cvr' => null, // No views data
                 'tiendamia_buyer_link' => isset($tiendamiaListingData[$sku]) ? ($tiendamiaListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'tiendamia_seller_link' => isset($tiendamiaListingData[$sku]) ? ($tiendamiaListingData[$sku]->value['seller_link'] ?? null) : null,
- 
+
                 // TikTok                          
                 'tiktok_price' => $tiktok ? ($tiktok->price ?? 0) : 0,
                 'tiktok_l30'   => $tiktok ? ($tiktok->shopify_tiktokl30 ?? 0) : 0,
@@ -670,7 +670,7 @@ class PricingMasterViewsController extends Controller
                     ($temuMetric && ($temuMetric->{'product_clicks_l30'} ?? 0) && ($temuMetric->{'quantity_purchased_l30'} ?? 0) ? ($inv * 20) : 0)
                 ),
 
-                
+
                 //  100 / cvr * inv not cvr percentage                             
 
 
@@ -680,7 +680,7 @@ class PricingMasterViewsController extends Controller
 
 
 
-                            
+
 
 
 
@@ -805,7 +805,7 @@ class PricingMasterViewsController extends Controller
 
 
 
- 
+
                 'tiktok_sprice' => isset($tiktokDataView[$sku]) ?
                     (is_array($tiktokDataView[$sku]->value) ?
                         ($tiktokDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($tiktokDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
@@ -852,7 +852,7 @@ class PricingMasterViewsController extends Controller
             // Add inv_value and COGS calculations
             // inv_value = INV × shopifyb2c_price (total inventory worth at selling price)
             $item->inv_value = $inv * $item->shopifyb2c_price;
-            
+
             // COGS = LP × INV (cost of goods sold - total cost of current inventory)
             $item->COGS = $lp * $inv;
 
@@ -976,7 +976,7 @@ class PricingMasterViewsController extends Controller
             'color' => $cvr <= 7 ? 'blue' : ($cvr <= 13 ? 'green' : 'red')
         ];
     }
-    
+
 
     protected function getDistinctValues($data)
     {
@@ -1691,7 +1691,7 @@ class PricingMasterViewsController extends Controller
         ]);
 
         $product = ProductMaster::where('sku', $data['sku'])->first();
-        
+
         if (!$product) {
             return response()->json([
                 'success' => false,
