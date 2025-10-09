@@ -1457,6 +1457,26 @@
                                             </ul>
                                         </div>
                                     </li>
+                                    <li>
+                                        <a data-bs-toggle="collapse" href="#amazonFbaACOS" aria-expanded="false"
+                                            aria-controls="amazonFbaACOS">
+                                            <span>Amazon FBA ACOS</span>
+                                            <span class="menu-arrow"></span>
+                                        </a>
+                                        <div class="collapse" id="amazonFbaACOS">
+                                            <ul class="side-nav-fourth-level">
+                                                <li>
+                                                    <a href="{{ route('amazon.fba.acos.kw.control') }}">KW Control</a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('amazon.fba.acos.pt.control') }}">PT Control</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('amazon.missing.ads') }}">Amazon Missing Ads</a>
+                                    </li>
                                     {{-- Add EXtra For Amazon Pricing --}}
                                 </ul>
                             </div>
