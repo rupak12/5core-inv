@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "googleads/google-ads-php": "^31.0",
         "guzzlehttp/guzzle": "^7.9",
         "jasara/laravel-selling-partner-api": "^4.0",
         "laravel/framework": "^10.10",

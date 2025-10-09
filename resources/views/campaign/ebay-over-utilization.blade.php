@@ -543,7 +543,7 @@
 
                     // price < 20
                     let price = parseFloat(data.price || 0);
-                    if (price < 20) {
+                    if (price < 30) {
                         return false;
                     }
 

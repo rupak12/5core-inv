@@ -36,20 +36,20 @@ class AmazonPinkDilAdController extends Controller
 
         $amazonSpCampaignReportsL7 = AmazonSpCampaignReport::where('ad_type', 'SPONSORED_PRODUCTS')
             ->where('report_date_range', 'L7')
-            ->whereIn('campaignName', $skus)
-            ->where(function ($q) {
-                $q->where('campaignName', 'NOT LIKE', '%PT%')
-                ->where('campaignName', 'NOT LIKE', '%PT.%');
+            ->where(function ($q) use ($skus) {
+                foreach ($skus as $sku) $q->orWhere('campaignName', 'LIKE', '%' . $sku . '%');
             })
+            ->where('campaignName', 'NOT LIKE', '%PT')
+            ->where('campaignName', 'NOT LIKE', '%PT.')
             ->get();
 
         $amazonSpCampaignReportsL1 = AmazonSpCampaignReport::where('ad_type', 'SPONSORED_PRODUCTS')
             ->where('report_date_range', 'L1')
-            ->whereIn('campaignName', $skus)
-            ->where(function ($q) {
-                $q->where('campaignName', 'NOT LIKE', '%PT%')
-                ->where('campaignName', 'NOT LIKE', '%PT.%');
+            ->where(function ($q) use ($skus) {
+                foreach ($skus as $sku) $q->orWhere('campaignName', 'LIKE', '%' . $sku . '%');
             })
+            ->where('campaignName', 'NOT LIKE', '%PT')
+            ->where('campaignName', 'NOT LIKE', '%PT.')
             ->get();
 
 
@@ -62,8 +62,17 @@ class AmazonPinkDilAdController extends Controller
             $amazonSheet = $amazonDatasheetsBySku[$sku] ?? null;
             $shopify = $shopifyData[$pm->sku] ?? null;
 
-            $matchedCampaignL7 = $amazonSpCampaignReportsL7->firstWhere('campaignName', $sku);
-            $matchedCampaignL1 = $amazonSpCampaignReportsL1->firstWhere('campaignName', $sku);
+            $matchedCampaignL7 = $amazonSpCampaignReportsL7->first(function ($item) use ($sku) {
+                $campaignName = strtoupper(trim(rtrim($item->campaignName, '.')));
+                $cleanSku = strtoupper(trim(rtrim($sku, '.')));
+                return $campaignName === $cleanSku;
+            });
+
+            $matchedCampaignL1 = $amazonSpCampaignReportsL1->first(function ($item) use ($sku) {
+                $campaignName = strtoupper(trim(rtrim($item->campaignName, '.')));
+                $cleanSku = strtoupper(trim(rtrim($sku, '.')));
+                return $campaignName === $cleanSku;
+            });
 
 
             $row = [];
