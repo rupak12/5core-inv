@@ -28,10 +28,11 @@ class AccountHealthMasterController extends Controller
         $this->apiController = $apiController;
     }
 
-    public function test(){
+    public function test()
+    {
         $response = $this->apiController->fetchDataFromChannelMasterGoogleSheet();
         if ($response->getStatusCode() === 200) {
-             $apiData = $response->getData()->data;
+            $apiData = $response->getData()->data;
 
             // foreach ($apiData as $row) {
             //     $channelName = trim($row->{'Channel'} ?? $row->{'Channel '} ?? null);
@@ -54,7 +55,8 @@ class AccountHealthMasterController extends Controller
         return response()->json(['success' => false, 'message' => 'Failed to fetch data.'], 500);
     }
 
-    public function index(){
+    public function index()
+    {
         $channels = ChannelMaster::all();
         $accountHealthMaster = AccountHealthMaster::all();
         return view('channels.account-health-master', [
@@ -143,12 +145,14 @@ class AccountHealthMasterController extends Controller
     }
 
     // odr rate master start
-    public function odrRateIndex(){
+    public function odrRateIndex()
+    {
         $channels = ChannelMaster::all();
         return view('channels.account_health_master.odr-rate', compact('channels'));
     }
 
-    public function saveOdrRate(Request $request){
+    public function saveOdrRate(Request $request)
+    {
         $request->validate([
             'channel_id' => 'required|string',
             'report_date' => 'required|date',
@@ -233,10 +237,10 @@ class AccountHealthMasterController extends Controller
             $odr->prev_1_date = $odr->report_date;
 
             // Update current with new data
-            $odr->current = $request->current;
+            $odr->current = $request->current ?? $request->odr_rate;
             $odr->report_date = $nowDate;
 
-            $odr->allowed = $request->allowed;
+            $odr->allowed = $request->allowed ?? $request->odr_rate_allowed;
             $odr->what = $request->what;
             $odr->why = $request->why;
             $odr->action = $request->action;
@@ -277,12 +281,14 @@ class AccountHealthMasterController extends Controller
     // odr rate master end
 
     // fullfillment rate start
-    public function fullfillmentRateIndex(){
+    public function fullfillmentRateIndex()
+    {
         $channels = ChannelMaster::all();
         return view('channels.account_health_master.fullfillment-rate', compact('channels'));
     }
 
-    public function saveFullfillmentRate(Request $request){
+    public function saveFullfillmentRate(Request $request)
+    {
         $request->validate([
             'channel_id' => 'required|string',
             'report_date' => 'required|date',
@@ -320,7 +326,7 @@ class AccountHealthMasterController extends Controller
         ];
 
         $channels = ChannelMaster::whereNotIn('channel', $excludedChannels)->get();
-        
+
         $odrRates = FullfillmentRate::with('channel')
             ->orderBy('report_date', 'desc')
             ->get()
@@ -354,45 +360,66 @@ class AccountHealthMasterController extends Controller
     {
         $channelId = ChannelMaster::where('channel', $request->channel)->value('id');
 
-        $odr = FullfillmentRate::where('channel_id', $channelId)->first();
+        if (!$channelId) {
+            return response()->json(['message' => 'Channel not found'], 404);
+        }
+
+        $fulfillment = FullfillmentRate::where('channel_id', $channelId)->first();
 
         $nowDate = now()->toDateString();
 
-        if ($odr) {
-            // Shift previous data
-            $odr->prev_2 = $odr->prev_1;
-            $odr->prev_2_date = $odr->prev_1_date;
+        if ($fulfillment) {
+            // Only shift data if we're updating the current value
+            if ($request->has('current') || $request->has('fulfillment_rate')) {
+                $fulfillment->prev_2 = $fulfillment->prev_1;
+                $fulfillment->prev_2_date = $fulfillment->prev_1_date;
 
-            $odr->prev_1 = $odr->current;
-            $odr->prev_1_date = $odr->report_date;
+                $fulfillment->prev_1 = $fulfillment->current;
+                $fulfillment->prev_1_date = $fulfillment->report_date;
 
-            // Update current with new data
-            $odr->current = $request->current;
-            $odr->report_date = $nowDate;
+                // Update current with new data
+                $fulfillment->current = $request->current ?? $request->fulfillment_rate;
+                $fulfillment->report_date = $nowDate;
+            }
 
-            $odr->allowed = $request->allowed;
-            $odr->what = $request->what;
-            $odr->why = $request->why;
-            $odr->action = $request->action;
-            $odr->c_action = $request->c_action;
-            $odr->account_health_links = $request->account_health_links;
+            // Only update allowed if it's present in the request
+            if ($request->has('allowed') || $request->has('fulfillment_rate_allowed')) {
+                $fulfillment->allowed = $request->allowed ?? $request->fulfillment_rate_allowed;
+            }
 
-            $odr->save();
+            // Only update other fields if they're present in the request
+            if ($request->has('what')) {
+                $fulfillment->what = $request->what;
+            }
+            if ($request->has('why')) {
+                $fulfillment->why = $request->why;
+            }
+            if ($request->has('action')) {
+                $fulfillment->action = $request->action;
+            }
+            if ($request->has('c_action')) {
+                $fulfillment->c_action = $request->c_action;
+            }
+            if ($request->has('account_health_links')) {
+                $fulfillment->account_health_links = $request->account_health_links;
+            }
+
+            $fulfillment->save();
         } else {
-            $odr = FullfillmentRate::create([
+            $fulfillment = FullfillmentRate::create([
                 'channel_id' => $channelId,
                 'report_date' => $nowDate,
-                'current' => $request->current,
-                'allowed' => $request->allowed,
-                'what' => $request->what,
-                'why' => $request->why,
-                'action' => $request->action,
-                'c_action' => $request->c_action,
-                'account_health_links' => $request->account_health_links,
+                'current' => $request->current ?? $request->fulfillment_rate ?? null,
+                'allowed' => $request->allowed ?? $request->fulfillment_rate_allowed ?? null,
+                'what' => $request->what ?? null,
+                'why' => $request->why ?? null,
+                'action' => $request->action ?? null,
+                'c_action' => $request->c_action ?? null,
+                'account_health_links' => $request->account_health_links ?? null,
             ]);
         }
 
-        return response()->json(['message' => 'ODR Rate updated successfully']);
+        return response()->json(['success' => true, 'message' => 'Fullfillment Rate updated successfully']);
     }
 
     public function updateFullfillmentHealthLink(Request $request)
@@ -412,12 +439,14 @@ class AccountHealthMasterController extends Controller
     // fullfillment rate end
 
     // validTracking rate start
-    public function validTrackingRateIndex(){
+    public function validTrackingRateIndex()
+    {
         $channels = ChannelMaster::all();
         return view('channels.account_health_master.valid-tracking-rate', compact('channels'));
     }
 
-    public function saveValidTrackingRate(Request $request){
+    public function saveValidTrackingRate(Request $request)
+    {
         $request->validate([
             'channel_id' => 'required|string',
             'report_date' => 'required|date',
@@ -488,45 +517,66 @@ class AccountHealthMasterController extends Controller
     {
         $channelId = ChannelMaster::where('channel', $request->channel)->value('id');
 
-        $odr = ValidTrackingRate::where('channel_id', $channelId)->first();
+        if (!$channelId) {
+            return response()->json(['message' => 'Channel not found'], 404);
+        }
+
+        $validTracking = ValidTrackingRate::where('channel_id', $channelId)->first();
 
         $nowDate = now()->toDateString();
 
-        if ($odr) {
-            // Shift previous data
-            $odr->prev_2 = $odr->prev_1;
-            $odr->prev_2_date = $odr->prev_1_date;
+        if ($validTracking) {
+            // Only shift data if we're updating the current value
+            if ($request->has('current') || $request->has('valid_tracking_rate')) {
+                $validTracking->prev_2 = $validTracking->prev_1;
+                $validTracking->prev_2_date = $validTracking->prev_1_date;
 
-            $odr->prev_1 = $odr->current;
-            $odr->prev_1_date = $odr->report_date;
+                $validTracking->prev_1 = $validTracking->current;
+                $validTracking->prev_1_date = $validTracking->report_date;
 
-            // Update current with new data
-            $odr->current = $request->current;
-            $odr->report_date = $nowDate;
+                // Update current with new data
+                $validTracking->current = $request->current ?? $request->valid_tracking_rate;
+                $validTracking->report_date = $nowDate;
+            }
 
-            $odr->allowed = $request->allowed;
-            $odr->what = $request->what;
-            $odr->why = $request->why;
-            $odr->action = $request->action;
-            $odr->c_action = $request->c_action;
-            $odr->account_health_links = $request->account_health_links;
+            // Only update allowed if it's present in the request
+            if ($request->has('allowed') || $request->has('valid_tracking_rate_allowed')) {
+                $validTracking->allowed = $request->allowed ?? $request->valid_tracking_rate_allowed;
+            }
 
-            $odr->save();
+            // Only update other fields if they're present in the request
+            if ($request->has('what')) {
+                $validTracking->what = $request->what;
+            }
+            if ($request->has('why')) {
+                $validTracking->why = $request->why;
+            }
+            if ($request->has('action')) {
+                $validTracking->action = $request->action;
+            }
+            if ($request->has('c_action')) {
+                $validTracking->c_action = $request->c_action;
+            }
+            if ($request->has('account_health_links')) {
+                $validTracking->account_health_links = $request->account_health_links;
+            }
+
+            $validTracking->save();
         } else {
-            $odr = ValidTrackingRate::create([
+            $validTracking = ValidTrackingRate::create([
                 'channel_id' => $channelId,
                 'report_date' => $nowDate,
-                'current' => $request->current,
-                'allowed' => $request->allowed,
-                'what' => $request->what,
-                'why' => $request->why,
-                'action' => $request->action,
-                'c_action' => $request->c_action,
-                'account_health_links' => $request->account_health_links,
+                'current' => $request->current ?? $request->valid_tracking_rate ?? null,
+                'allowed' => $request->allowed ?? $request->valid_tracking_rate_allowed ?? null,
+                'what' => $request->what ?? null,
+                'why' => $request->why ?? null,
+                'action' => $request->action ?? null,
+                'c_action' => $request->c_action ?? null,
+                'account_health_links' => $request->account_health_links ?? null,
             ]);
         }
 
-        return response()->json(['message' => 'ODR Rate updated successfully']);
+        return response()->json(['success' => true, 'message' => 'Valid Tracking Rate updated successfully']);
     }
 
     public function updateValidTrackingHealthLink(Request $request)
@@ -546,12 +596,14 @@ class AccountHealthMasterController extends Controller
     // validTracking rate end
 
     // lateShipment rate start
-    public function lateShipmentRateIndex(){
+    public function lateShipmentRateIndex()
+    {
         $channels = ChannelMaster::all();
         return view('channels.account_health_master.late-shipment', compact('channels'));
     }
 
-    public function saveLateShipmentRate(Request $request){
+    public function saveLateShipmentRate(Request $request)
+    {
         $request->validate([
             'channel_id' => 'required|string',
             'report_date' => 'required|date',
@@ -680,12 +732,14 @@ class AccountHealthMasterController extends Controller
     // lateShipment rate end
 
     // onTimeDelivery rate start
-    public function onTimeDeliveryIndex(){
+    public function onTimeDeliveryIndex()
+    {
         $channels = ChannelMaster::all();
         return view('channels.account_health_master.on-time-delivery', compact('channels'));
     }
 
-    public function saveOnTimeDeliveryRate(Request $request){
+    public function saveOnTimeDeliveryRate(Request $request)
+    {
         $request->validate([
             'channel_id' => 'required|string',
             'report_date' => 'required|date',
@@ -756,45 +810,66 @@ class AccountHealthMasterController extends Controller
     {
         $channelId = ChannelMaster::where('channel', $request->channel)->value('id');
 
-        $odr = OnTimeDeliveryRate::where('channel_id', $channelId)->first();
+        if (!$channelId) {
+            return response()->json(['message' => 'Channel not found'], 404);
+        }
+
+        $onTimeDelivery = OnTimeDeliveryRate::where('channel_id', $channelId)->first();
 
         $nowDate = now()->toDateString();
 
-        if ($odr) {
-            // Shift previous data
-            $odr->prev_2 = $odr->prev_1;
-            $odr->prev_2_date = $odr->prev_1_date;
+        if ($onTimeDelivery) {
+            // Only shift data if we're updating the current value
+            if ($request->has('current') || $request->has('on_time_delivery')) {
+                $onTimeDelivery->prev_2 = $onTimeDelivery->prev_1;
+                $onTimeDelivery->prev_2_date = $onTimeDelivery->prev_1_date;
 
-            $odr->prev_1 = $odr->current;
-            $odr->prev_1_date = $odr->report_date;
+                $onTimeDelivery->prev_1 = $onTimeDelivery->current;
+                $onTimeDelivery->prev_1_date = $onTimeDelivery->report_date;
 
-            // Update current with new data
-            $odr->current = $request->current;
-            $odr->report_date = $nowDate;
+                // Update current with new data
+                $onTimeDelivery->current = $request->current ?? $request->on_time_delivery;
+                $onTimeDelivery->report_date = $nowDate;
+            }
 
-            $odr->allowed = $request->allowed;
-            $odr->what = $request->what;
-            $odr->why = $request->why;
-            $odr->action = $request->action;
-            $odr->c_action = $request->c_action;
-            $odr->account_health_links = $request->account_health_links;
+            // Only update allowed if it's present in the request
+            if ($request->has('allowed') || $request->has('on_time_delivery_allowed')) {
+                $onTimeDelivery->allowed = $request->allowed ?? $request->on_time_delivery_allowed;
+            }
 
-            $odr->save();
+            // Only update other fields if they're present in the request
+            if ($request->has('what')) {
+                $onTimeDelivery->what = $request->what;
+            }
+            if ($request->has('why')) {
+                $onTimeDelivery->why = $request->why;
+            }
+            if ($request->has('action')) {
+                $onTimeDelivery->action = $request->action;
+            }
+            if ($request->has('c_action')) {
+                $onTimeDelivery->c_action = $request->c_action;
+            }
+            if ($request->has('account_health_links')) {
+                $onTimeDelivery->account_health_links = $request->account_health_links;
+            }
+
+            $onTimeDelivery->save();
         } else {
-            $odr = OnTimeDeliveryRate::create([
+            $onTimeDelivery = OnTimeDeliveryRate::create([
                 'channel_id' => $channelId,
                 'report_date' => $nowDate,
-                'current' => $request->current,
-                'allowed' => $request->allowed,
-                'what' => $request->what,
-                'why' => $request->why,
-                'action' => $request->action,
-                'c_action' => $request->c_action,
-                'account_health_links' => $request->account_health_links,
+                'current' => $request->current ?? $request->on_time_delivery ?? null,
+                'allowed' => $request->allowed ?? $request->on_time_delivery_allowed ?? null,
+                'what' => $request->what ?? null,
+                'why' => $request->why ?? null,
+                'action' => $request->action ?? null,
+                'c_action' => $request->c_action ?? null,
+                'account_health_links' => $request->account_health_links ?? null,
             ]);
         }
 
-        return response()->json(['message' => 'ODR Rate updated successfully']);
+        return response()->json(['success' => true, 'message' => 'On Time Delivery Rate updated successfully']);
     }
 
     public function updateOnTimeDeliveryHealthLink(Request $request)
@@ -814,12 +889,14 @@ class AccountHealthMasterController extends Controller
     // onTimeDelivery rate end
 
     // negativeSeller rate start
-    public function negativeSellerIndex(){
+    public function negativeSellerIndex()
+    {
         $channels = ChannelMaster::all();
         return view('channels.account_health_master.negative-seller', compact('channels'));
     }
 
-    public function saveNegativeSellerRate(Request $request){
+    public function saveNegativeSellerRate(Request $request)
+    {
         $request->validate([
             'channel_id' => 'required|string',
             'report_date' => 'required|date',
@@ -948,12 +1025,14 @@ class AccountHealthMasterController extends Controller
     // negativeSeller rate end
 
     // a-z-Claims rate start
-    public function aTozClaimsIndex(){
+    public function aTozClaimsIndex()
+    {
         $channels = ChannelMaster::all();
         return view('channels.account_health_master.a-z-claims', compact('channels'));
     }
 
-    public function saveAtoZClaimsRate(Request $request){
+    public function saveAtoZClaimsRate(Request $request)
+    {
         $request->validate([
             'channel_id' => 'required|string',
             'report_date' => 'required|date',
@@ -1024,45 +1103,66 @@ class AccountHealthMasterController extends Controller
     {
         $channelId = ChannelMaster::where('channel', $request->channel)->value('id');
 
-        $odr = AtoZClaimsRate::where('channel_id', $channelId)->first();
+        if (!$channelId) {
+            return response()->json(['message' => 'Channel not found'], 404);
+        }
+
+        $atozClaims = AtoZClaimsRate::where('channel_id', $channelId)->first();
 
         $nowDate = now()->toDateString();
 
-        if ($odr) {
-            // Shift previous data
-            $odr->prev_2 = $odr->prev_1;
-            $odr->prev_2_date = $odr->prev_1_date;
+        if ($atozClaims) {
+            // Only shift data if we're updating the current value
+            if ($request->has('current') || $request->has('atoz_claims_rate')) {
+                $atozClaims->prev_2 = $atozClaims->prev_1;
+                $atozClaims->prev_2_date = $atozClaims->prev_1_date;
 
-            $odr->prev_1 = $odr->current;
-            $odr->prev_1_date = $odr->report_date;
+                $atozClaims->prev_1 = $atozClaims->current;
+                $atozClaims->prev_1_date = $atozClaims->report_date;
 
-            // Update current with new data
-            $odr->current = $request->current;
-            $odr->report_date = $nowDate;
+                // Update current with new data
+                $atozClaims->current = $request->current ?? $request->atoz_claims_rate;
+                $atozClaims->report_date = $nowDate;
+            }
 
-            $odr->allowed = $request->allowed;
-            $odr->what = $request->what;
-            $odr->why = $request->why;
-            $odr->action = $request->action;
-            $odr->c_action = $request->c_action;
-            $odr->account_health_links = $request->account_health_links;
+            // Only update allowed if it's present in the request
+            if ($request->has('allowed') || $request->has('atoz_claims_rate_allowed')) {
+                $atozClaims->allowed = $request->allowed ?? $request->atoz_claims_rate_allowed;
+            }
 
-            $odr->save();
+            // Only update other fields if they're present in the request
+            if ($request->has('what')) {
+                $atozClaims->what = $request->what;
+            }
+            if ($request->has('why')) {
+                $atozClaims->why = $request->why;
+            }
+            if ($request->has('action')) {
+                $atozClaims->action = $request->action;
+            }
+            if ($request->has('c_action')) {
+                $atozClaims->c_action = $request->c_action;
+            }
+            if ($request->has('account_health_links')) {
+                $atozClaims->account_health_links = $request->account_health_links;
+            }
+
+            $atozClaims->save();
         } else {
-            $odr = AtoZClaimsRate::create([
+            $atozClaims = AtoZClaimsRate::create([
                 'channel_id' => $channelId,
                 'report_date' => $nowDate,
-                'current' => $request->current,
-                'allowed' => $request->allowed,
-                'what' => $request->what,
-                'why' => $request->why,
-                'action' => $request->action,
-                'c_action' => $request->c_action,
-                'account_health_links' => $request->account_health_links,
+                'current' => $request->current ?? $request->atoz_claims_rate ?? null,
+                'allowed' => $request->allowed ?? $request->atoz_claims_rate_allowed ?? null,
+                'what' => $request->what ?? null,
+                'why' => $request->why ?? null,
+                'action' => $request->action ?? null,
+                'c_action' => $request->c_action ?? null,
+                'account_health_links' => $request->account_health_links ?? null,
             ]);
         }
 
-        return response()->json(['message' => 'ODR Rate updated successfully']);
+        return response()->json(['success' => true, 'message' => 'A-to-Z Claims Rate updated successfully']);
     }
 
     public function updateAtoZClaimsHealthLink(Request $request)
@@ -1082,12 +1182,14 @@ class AccountHealthMasterController extends Controller
     // a-z-Claims rate end
 
     // voilation rate start
-    public function voilationIndex(){
+    public function voilationIndex()
+    {
         $channels = ChannelMaster::all();
         return view('channels.account_health_master.voilation', compact('channels'));
     }
 
-    public function saveVoilanceRate(Request $request){
+    public function saveVoilanceRate(Request $request)
+    {
         $request->validate([
             'channel_id' => 'required|string',
             'report_date' => 'required|date',
@@ -1216,12 +1318,14 @@ class AccountHealthMasterController extends Controller
     // voilation rate end
 
     // refund rate start
-    public function refundIndex(){
+    public function refundIndex()
+    {
         $channels = ChannelMaster::all();
         return view('channels.account_health_master.refund', compact('channels'));
     }
 
-    public function saveRefundRate(Request $request){
+    public function saveRefundRate(Request $request)
+    {
         $request->validate([
             'channel_id' => 'required|string',
             'report_date' => 'required|date',
