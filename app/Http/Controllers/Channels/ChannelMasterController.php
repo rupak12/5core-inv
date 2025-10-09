@@ -314,6 +314,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([

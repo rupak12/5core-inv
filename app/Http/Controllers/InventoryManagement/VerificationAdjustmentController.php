@@ -1240,6 +1240,10 @@ class VerificationAdjustmentController extends Controller
             ->groupBy('sku')
             ->pluck('latest_id');
 
+            Inventory::where('is_hide', 1)
+            ->whereNotIn('id', $latestHiddenIds)
+            ->update(['is_hide' => 0]);
+
         $hiddenRecords = Inventory::whereIn('id', $latestHiddenIds)->get();
 
         $data = $hiddenRecords->map(function ($item) {

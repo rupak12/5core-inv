@@ -888,7 +888,7 @@
                 
                 // const pft = parseNumber(row['Gprofit%']);
                 // totalPft += pft;
-                const cogs = parseNumber(row['G ROI%']);
+                const cogs = parseNumber(row['cogs']);
                 
                 totalCogs += cogs;
                 // const l30Sales = parseNumber(row['L30 Sales']);
@@ -1712,6 +1712,7 @@
                                 let gprofit = pctFix(pick(item, ['gprofit_percentage', 'PFT_percentage', 'gprofit', 'Gprofit%'], 0));
                                 let groi    = pctFix(pick(item, ['G Roi', 'g_roi_percentage', 'roi'], 0));
                                 let gprofitL60  = pctFix(pick(item, ['Gprofitl60'], 0));
+                                let cogs = pctFix(pick(item, ['cogs'], 0));
 
                                 return {
                                     'Channel': pick(item, ['channel', 'Channel', 'Channel '], ''),  // use per-row channel
@@ -1738,6 +1739,7 @@
                                     'Update': toNum(pick(item, ['update_flag', 'update','Update'], 0), 0),
                                     'Ac Health': pick(item, ['account_health', 'ac_health', 'accounthealth'], ''),
                                     'Channel Percentage': pctFix(pick(item, ['channel_percentage'], 0), 0),
+                                    'cogs': cogs,
                                     
                                 };
                                 

@@ -180,7 +180,9 @@ class WarehouseController extends Controller
     public function trashGodown(Request $request)
     {
         $warehouseId = 5;
-        $data = Inventory::with('warehouse')->where('warehouse_id', $warehouseId)->get();
+        $trashData = Inventory::with('warehouse')->where('warehouse_id', $warehouseId)->get();
+        $incomingData = IncomingData::with('warehouse')->where('warehouse_id', $warehouseId)->get();
+        $data = $trashData->merge($incomingData)->values();
 
         if ($request->ajax()) {
             return response()->json(['data' => $data]);
