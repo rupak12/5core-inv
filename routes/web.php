@@ -1776,7 +1776,7 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
 
     Route::controller(EbayOverUtilizedBgtController::class)->group(function () {
         Route::get('/ebay-over-uti', 'ebayOverUtilisation')->name('ebay-over-uti');
-        Route::get('/ebay/under/utilized', 'ebayOverUtilized')->name('ebay-under-utilize');
+        Route::get('/ebay/under/utilized', 'ebayUnderUtilized')->name('ebay-under-utilize');
         Route::get('/ebay/correctly/utlized', 'ebayCorrectlyUtilized')->name('ebay-correctly-utilize');
         Route::get('/ebay/make-new/campaign/kw', 'ebayMakeCampaignKw')->name('ebay-make-new-campaign-kw');
         Route::get('/ebay/make-new/campaign/kw/data', 'getEbayMakeNewCampaignKw');
