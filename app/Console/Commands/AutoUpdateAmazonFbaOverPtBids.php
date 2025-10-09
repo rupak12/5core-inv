@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Http\Controllers\Campaigns\AmazonSpBudgetController;
+use App\Http\Controllers\Campaigns\AmazonSbBudgetController;
 use Illuminate\Console\Command;
 use App\Models\AmazonSpCampaignReport;
 use App\Models\ProductMaster;
@@ -25,9 +25,9 @@ class AutoUpdateAmazonFbaOverPtBids extends Command
     {
         $this->info("Starting Amazon bids auto-update...");
 
-        $updateKwBids = new AmazonSpBudgetController;
+        $updateKwBids = new AmazonSbBudgetController;
 
-        $campaigns = $this->getAutomateAmzUtilizedBgtKw();
+        $campaigns = $this->getAutomateAmzUtilizedBgtPt();
 
         if (empty($campaigns)) {
             $this->warn("No campaigns matched filter conditions.");
