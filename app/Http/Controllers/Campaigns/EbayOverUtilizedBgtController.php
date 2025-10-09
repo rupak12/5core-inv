@@ -458,7 +458,7 @@ class EbayOverUtilizedBgtController extends Controller
         ]);
     }
 
-    public function ebayOverUtilized(){
+    public function ebayUnderUtilized(){
         return view('campaign.ebay-under-utilized');
     }
 

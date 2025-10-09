@@ -7,6 +7,7 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use App\Console\Commands\FetchReverbData;
 use App\Console\Commands\FetchMacyProducts;
 use App\Console\Commands\FetchWayfairData;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class Kernel extends ConsoleKernel
@@ -31,6 +32,11 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\EbayOverUtilzBidsAutoUpdate::class,
         \App\Console\Commands\EbayPinkDilKwBidsAutoUpdate::class,
         \App\Console\Commands\EbayPriceLessBidsAutoUpdate::class,
+        \App\Console\Commands\AutoUpdateAmazonFbaOverKwBids::class,
+        \App\Console\Commands\AutoUpdateAmazonFbaUnderKwBids::class,
+        \App\Console\Commands\AutoUpdateAmazonFbaOverPtBids::class,
+        \App\Console\Commands\AutoUpdateAmazonFbaUnderPtBids::class,
+
     ];
 
     /**
@@ -157,6 +163,22 @@ class Kernel extends ConsoleKernel
         $schedule->command('amazon:auto-update-pink-dil-hl-ads')
             ->dailyAt('12:00')
             ->timezone('Asia/Kolkata');
+        // FBA bids update command
+
+        $schedule->command('amazon-fba:auto-update-over-kw-bids')
+            ->dailyAt('12:00')
+            ->timezone('Asia/Kolkata');
+        $schedule->command('amazon-fba:auto-update-under-kw-bids')
+            ->dailyAt('12:00')
+            ->timezone('Asia/Kolkata');
+        $schedule->command('amazon-fba:auto-update-over-pt-bids')
+            ->dailyAt('12:00')
+            ->timezone('Asia/Kolkata');
+        $schedule->command('amazon-fba:auto-update-under-pt-bids')
+            ->dailyAt('12:00')
+            ->timezone('Asia/Kolkata');
+
+        // Ebay bids update command
         $schedule->command('ebay:auto-update-over-bids')
             ->dailyAt('12:00')
             ->timezone('Asia/Kolkata');

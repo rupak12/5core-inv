@@ -1101,7 +1101,13 @@
             </li>
 
             {{-- Inventory Management --}}
-
+              <li class="side-nav-item">
+                <a href="{{ route('view.stock.mapping') }}" class="side-nav-link">
+                    <i class="ri-dashboard-3-line"></i>
+                    <span> Stock Mapping </span>
+                </a>
+            </li>
+            
             <li class="side-nav-item">
                 <a data-bs-toggle="collapse" href="#invsidebarPages" aria-expanded="false"
                     aria-controls="sidebarPages" class="side-nav-link">
