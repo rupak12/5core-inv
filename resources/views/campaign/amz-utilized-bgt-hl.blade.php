@@ -520,7 +520,7 @@
                             var l7_cpc = parseFloat(row.l7_cpc) || 0;
                             var sbid;
 
-                            sbid = Math.floor(l1_cpc * 0.50 * 100) / 100;
+                            sbid = Math.floor(l1_cpc * 0.25 * 100) / 100;
                             return sbid;
                         },
                     },
@@ -543,7 +543,7 @@
                                 var l7_cpc = parseFloat(rowData.l7_cpc) || 0;
                                 var sbid;
                                     
-                                sbid = Math.floor(l1_cpc * 0.50 * 100) / 100;
+                                sbid = Math.floor(l1_cpc * 0.25 * 100) / 100;
                                 updateBid(sbid, rowData.campaign_id);
                             }
                         }
@@ -773,7 +773,7 @@
                         var l7_cpc = parseFloat(rowData.l7_cpc) || 0;
                         var sbid;
                         
-                        sbid = Math.floor(l1_cpc * 0.50 * 100) / 100;
+                        sbid = Math.floor(l1_cpc * 0.25 * 100) / 100;
 
                         campaignIds.push(rowData.campaign_id);
                         bids.push(sbid);
