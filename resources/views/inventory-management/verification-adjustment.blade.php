@@ -2967,6 +2967,13 @@
                     return;
                 }
 
+                // const visibleData = filteredData.filter(item => item.is_hide != 1);
+
+                // if (visibleData.length === 0) {
+                //     alert("No visible data to export!");
+                //     return;
+                // }
+
                 // Convert filteredData to flat JSON
                 const rows = filteredData.map(item => ({
                     Parent: item.Parent,
@@ -2994,7 +3001,6 @@
 
                 XLSX.writeFile(wb, "verification_data.xlsx");
             });
-
 
             
 
