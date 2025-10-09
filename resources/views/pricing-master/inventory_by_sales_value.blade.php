@@ -1749,34 +1749,38 @@ const table = new Tabulator("#forecast-table", {
         console.log("Processed Response:", finalData);
         return finalData;
     },
-});
 
-// Function to update header totals
-function updateHeaderTotals() {
-    const tableData = table.getData();
-    
-    let totalInvValue = 0;
-    let totalCogs = 0;
-    
-    tableData.forEach(row => {
-        totalInvValue += parseFloat(row.inv_value) || 0;
-        totalCogs += parseFloat(row.COGS) || 0;
     });
-    
-    const formattedInvValue = Math.round(totalInvValue).toLocaleString();
-    const formattedCogs = Math.round(totalCogs).toLocaleString();
-    
-    const invValueHeader = document.getElementById('invValueHeader');
-    const cogsHeader = document.getElementById('cogsHeader');
-    
-    if (invValueHeader) {
-        invValueHeader.textContent = `${formattedInvValue}`;
+
+    // Function to update header totals (exclude parent rows)
+    function updateHeaderTotals() {
+        const tableData = table.getData();
+
+        let totalInvValue = 0;
+        let totalCogs = 0;
+
+        tableData.forEach(row => {
+            // Only add SKU rows (not parent)
+            if (!row.is_parent) {
+                totalInvValue += parseFloat(row.inv_value) || 0;
+                totalCogs += parseFloat(row.COGS) || 0;
+            }
+        });
+
+        const formattedInvValue = Math.round(totalInvValue).toLocaleString();
+        const formattedCogs = Math.round(totalCogs).toLocaleString();
+
+        const invValueHeader = document.getElementById('invValueHeader');
+        const cogsHeader = document.getElementById('cogsHeader');
+
+        if (invValueHeader) {
+            invValueHeader.textContent = `${formattedInvValue}`;
+        }
+
+        if (cogsHeader) {
+            cogsHeader.textContent = `${formattedCogs}`;
+        }
     }
-    
-    if (cogsHeader) {
-        cogsHeader.textContent = `${formattedCogs}`;
-    }
-}
 
 // Initialize totals when page loads
 setTimeout(updateHeaderTotals, 1000);
