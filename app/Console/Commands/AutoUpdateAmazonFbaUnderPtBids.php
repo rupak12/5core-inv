@@ -115,9 +115,9 @@ class AutoUpdateAmazonFbaUnderPtBids extends Command
             $l1_cpc = floatval($row['l1_cpc']);
             $l7_cpc = floatval($row['l7_cpc']);
             if ($l1_cpc > $l7_cpc) {
-                $row['sbid'] = round($l1_cpc * 1.05, 2);
+                $row['sbid'] = floor($l1_cpc * 1.05 * 100) / 100;
             } else {
-                $row['sbid'] = round($l7_cpc * 1.05, 2);
+                $row['sbid'] = floor($l7_cpc * 1.05 * 100) / 100;
             }
 
             $budget = floatval($row['campaignBudgetAmount']);

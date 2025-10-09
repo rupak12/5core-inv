@@ -7,6 +7,7 @@ use Illuminate\Console\Command;
 use App\Models\AmazonSpCampaignReport;
 use App\Models\ProductMaster;
 use App\Models\ShopifySku;
+use Illuminate\Support\Facades\Log;
 
 class AutoUpdateAmazonFbaOverKwBids extends Command
 {
@@ -36,8 +37,9 @@ class AutoUpdateAmazonFbaOverKwBids extends Command
         $campaignIds = collect($campaigns)->pluck('campaign_id')->toArray();
         $newBids = collect($campaigns)->pluck('sbid')->toArray();
 
-        $result = $updateKwBids->updateAutoCampaignKeywordsBid($campaignIds, $newBids);
-        $this->info("Update Result: " . json_encode($result));
+        // $result = $updateKwBids->updateAutoCampaignKeywordsBid($campaignIds, $newBids);
+        // $this->info("Update Result: " . json_encode($result));
+        Log::info("Amazon FBA Over KW Bids Update Result: ",[$campaigns]);
 
     }
 
@@ -121,7 +123,7 @@ class AutoUpdateAmazonFbaOverKwBids extends Command
             $row['l1_cpc'] = $matchedCampaignL1->costPerClick ?? 0;
 
             $l1_cpc = floatval($row['l1_cpc']);
-            $row['sbid'] = round($l1_cpc * 0.95, 2);
+            $row['sbid'] = floor($l1_cpc * 0.95 * 100) / 100;
 
             $budget = floatval($row['campaignBudgetAmount']);
             $l7_spend = floatval($row['l7_spend']);
