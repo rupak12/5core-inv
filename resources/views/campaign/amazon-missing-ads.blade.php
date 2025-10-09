@@ -214,7 +214,7 @@
                                         </div>
                                         
                                         <div class="stats-box">
-                                            <div class="stats-label">Missing Ads</div>
+                                            <div class="stats-label">Both Missing Ads</div>
                                             <div id="both-missing" class="stats-value danger">0</div>
                                         </div>
 
@@ -236,7 +236,7 @@
                                             <div id="pt-running" class="stats-value success">0</div>
                                         </div>
                                         <div class="stats-box">
-                                            <div class="stats-label">Ads Running</div>
+                                            <div class="stats-label">Both Ads Running</div>
                                             <div id="both-running" class="stats-value success">0</div>
                                         </div>
                                     </div>
