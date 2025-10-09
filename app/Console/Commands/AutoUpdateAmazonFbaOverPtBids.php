@@ -27,7 +27,7 @@ class AutoUpdateAmazonFbaOverPtBids extends Command
 
         $updateKwBids = new AmazonSbBudgetController;
 
-        $campaigns = $this->getAutomateAmzUtilizedBgtPt();
+        $campaigns = $this->getAutomateAmzFbaUtilizedBgtPt();
 
         if (empty($campaigns)) {
             $this->warn("No campaigns matched filter conditions.");
@@ -42,7 +42,7 @@ class AutoUpdateAmazonFbaOverPtBids extends Command
 
     }
 
-    public function getAutomateAmzUtilizedBgtKw()
+    public function getAutomateAmzFbaUtilizedBgtPt()
     {
         $productMasters = ProductMaster::orderBy('parent', 'asc')
             ->orderByRaw("CASE WHEN sku LIKE 'PARENT %' THEN 1 ELSE 0 END")
