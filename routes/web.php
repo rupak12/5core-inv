@@ -161,6 +161,7 @@ use App\Http\Controllers\AdvertisementMaster\MetaParent\ProductWiseMetaParentCon
 use App\Http\Controllers\ArrivedContainerController;
 use App\Http\Controllers\Campaigns\AmazonAdRunningController;
 use App\Http\Controllers\Campaigns\AmazonCampaignReportsController;
+use App\Http\Controllers\Campaigns\AmazonFbaAdsController;
 use App\Http\Controllers\Campaigns\AmazonPinkDilAdController;
 use App\Http\Controllers\Campaigns\AmazonSbBudgetController;
 use App\Http\Controllers\Campaigns\AmazonSpBudgetController;
@@ -1824,6 +1825,18 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
         Route::get('/amazon/hl/ads/data', 'getAmazonHlAdsData');
 
         Route::get('/amazon/campaign/reports/data', 'getAmazonCampaignsData');
+    });
+
+    Route::controller(AmazonFbaAdsController::class)->group(function(){
+        Route::get('/amazon/fba/over/kw/ads', 'amzFbaUtilizedBgtKw')->name('amazon.fba.over.kw.ads');
+        Route::get('/amazon/fba/over/pt/ads', 'amzFbaUtilizedBgtPt')->name('amazon.fba.over.pt.ads');
+        Route::get('/amazon/fba/under/kw/ads', 'amzFbaUnderUtilizedBgtKw')->name('amazon.fba.under.kw.ads');
+        Route::get('/amazon/fba/under/pt/ads', 'amzFbaUnderUtilizedBgtPt')->name('amazon.fba.under.pt.ads');
+        Route::get('/amazon/fba/correct/kw/ads', 'amzFbaCorrectlyUtilizedBgtKw')->name('amazon.fba.correct.kw.ads');
+        Route::get('/amazon/fba/correct/pt/ads', 'amzFbaCorrectlyUtilizedBgtPt')->name('amazon.fba.correct.pt.ads');
+
+        Route::get('/amazon/fba/kw/ads/data', 'getAmazonFbaKwAdsData');
+        Route::get('/amazon/fba/pt/ads/data', 'getAmazonFbaPtAdsData');
     });
 
     Route::controller(EbayACOSController::class)->group(function () {

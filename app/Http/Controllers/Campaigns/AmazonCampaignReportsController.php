@@ -169,6 +169,7 @@ class AmazonCampaignReportsController extends Controller
             })
             ->where('campaignName', 'NOT LIKE', '%PT')
             ->where('campaignName', 'NOT LIKE', '%PT.')
+            ->where('campaignStatus', '!=', 'ARCHIVED')
             ->get();
 
         $amazonSpCampaignReportsL30 = AmazonSpCampaignReport::where('ad_type', 'SPONSORED_PRODUCTS')
@@ -178,6 +179,7 @@ class AmazonCampaignReportsController extends Controller
             })
             ->where('campaignName', 'NOT LIKE', '%PT')
             ->where('campaignName', 'NOT LIKE', '%PT.')
+            ->where('campaignStatus', '!=', 'ARCHIVED')
             ->get();
 
         $amazonSpCampaignReportsL15 = AmazonSpCampaignReport::where('ad_type', 'SPONSORED_PRODUCTS')
@@ -187,6 +189,7 @@ class AmazonCampaignReportsController extends Controller
             })
             ->where('campaignName', 'NOT LIKE', '%PT')
             ->where('campaignName', 'NOT LIKE', '%PT.')
+            ->where('campaignStatus', '!=', 'ARCHIVED')
             ->get();
 
         $amazonSpCampaignReportsL7 = AmazonSpCampaignReport::where('ad_type', 'SPONSORED_PRODUCTS')
@@ -196,6 +199,7 @@ class AmazonCampaignReportsController extends Controller
             })
             ->where('campaignName', 'NOT LIKE', '%PT')
             ->where('campaignName', 'NOT LIKE', '%PT.')
+            ->where('campaignStatus', '!=', 'ARCHIVED')
             ->get();
 
         $result = [];
@@ -230,10 +234,6 @@ class AmazonCampaignReportsController extends Controller
                 $cleanSku = strtoupper(trim(rtrim($sku, '.')));
                 return $campaignName === $cleanSku;
             });
-
-            if(!$matchedCampaignL60 && !$matchedCampaignL30 && !$matchedCampaignL15 && !$matchedCampaignL7){
-                continue;
-            }
 
             $row = [
                 'parent' => $parent,
@@ -415,7 +415,6 @@ class AmazonCampaignReportsController extends Controller
 
                 return (
                     (str_ends_with($cleanName, $sku . ' PT') || str_ends_with($cleanName, $sku . ' PT.'))
-                    && strtoupper($item->campaignStatus) === 'ENABLED'
                 );
             });
 
@@ -424,7 +423,6 @@ class AmazonCampaignReportsController extends Controller
 
                 return (
                     (str_ends_with($cleanName, $sku . ' PT') || str_ends_with($cleanName, $sku . ' PT.'))
-                    && strtoupper($item->campaignStatus) === 'ENABLED'
                 );
             });
 
@@ -433,13 +431,8 @@ class AmazonCampaignReportsController extends Controller
 
                 return (
                     (str_ends_with($cleanName, $sku . ' PT') || str_ends_with($cleanName, $sku . ' PT.'))
-                    && strtoupper($item->campaignStatus) === 'ENABLED'
                 );
             });
-
-            if(!$matchedCampaignL60 && !$matchedCampaignL30 && !$matchedCampaignL15 && !$matchedCampaignL7){
-                continue;
-            }
 
             $row = [
                 'parent' => $parent,
@@ -451,25 +444,14 @@ class AmazonCampaignReportsController extends Controller
                 'campaignStatus' => $matchedCampaignL30->campaignStatus ?? '',
                 'campaignBudgetAmount' => $matchedCampaignL30->campaignBudgetAmount ?? 0,
                 
-                // L7
-                'impressions_l7' => $matchedCampaignL7->impressions ?? 0,
-                'clicks_l7'      => $matchedCampaignL7->clicks ?? 0,
-                'spend_l7'       => $matchedCampaignL7->spend ?? 0,
-                'ad_sales_l7'    => $matchedCampaignL7->sales7d ?? 0,
-                'ad_sold_l7'     => $matchedCampaignL7->unitsSoldSameSku7d ?? 0,
-                'acos_l7'        => ($matchedCampaignL7 && $matchedCampaignL7->sales7d > 0) 
-                                        ? round(($matchedCampaignL7->spend / $matchedCampaignL7->sales7d) * 100, 2) : 0,
-                'cpc_l7'         => $matchedCampaignL7->costPerClick ?? 0,
-
-                // L15
-                'impressions_l15' => $matchedCampaignL15->impressions ?? 0,
-                'clicks_l15'      => $matchedCampaignL15->clicks ?? 0,
-                'spend_l15'       => $matchedCampaignL15->spend ?? 0,
-                'ad_sales_l15'    => $matchedCampaignL15->sales15d ?? 0,
-                'ad_sold_l15'     => $matchedCampaignL15->unitsSoldSameSku15d ?? 0,
-                'acos_l15'        => ($matchedCampaignL15 && $matchedCampaignL15->sales15d > 0) 
-                                        ? round(($matchedCampaignL15->spend / $matchedCampaignL15->sales15d) * 100, 2) : 0,
-                'cpc_l15'         => $matchedCampaignL15->costPerClick ?? 0,
+                // L60
+                'impressions_l60' => $matchedCampaignL60->impressions ?? 0,
+                'clicks_l60'      => $matchedCampaignL60->clicks ?? 0,
+                'spend_l60'       => $matchedCampaignL60->spend ?? 0,
+                'ad_sales_l60'    => $matchedCampaignL60->sales30d ?? 0,
+                'ad_sold_l60'     => $matchedCampaignL60->unitsSoldSameSku30d ?? 0,
+                'acos_l60'        => ($matchedCampaignL60 && ($matchedCampaignL60->sales30d ?? 0) > 0) ? round(($matchedCampaignL60->spend / $matchedCampaignL60->sales30d) * 100, 2) : 0,
+                'cpc_l60'         => $matchedCampaignL60->costPerClick ?? 0,
 
                 // L30
                 'impressions_l30' => $matchedCampaignL30->impressions ?? 0,
@@ -477,19 +459,29 @@ class AmazonCampaignReportsController extends Controller
                 'spend_l30'       => $matchedCampaignL30->spend ?? 0,
                 'ad_sales_l30'    => $matchedCampaignL30->sales30d ?? 0,
                 'ad_sold_l30'     => $matchedCampaignL30->unitsSoldSameSku30d ?? 0,
-                'acos_l30'        => ($matchedCampaignL30 && $matchedCampaignL30->sales30d > 0) 
-                                        ? round(($matchedCampaignL30->spend / $matchedCampaignL30->sales30d) * 100, 2) : 0,
+                'acos_l30'        => ($matchedCampaignL30 && ($matchedCampaignL30->sales30d ?? 0) > 0) ? round(($matchedCampaignL30->spend / $matchedCampaignL30->sales30d) * 100, 2) : 0,
                 'cpc_l30'         => $matchedCampaignL30->costPerClick ?? 0,
 
-                // L60
-                'impressions_l60' => $matchedCampaignL60->impressions ?? 0,
-                'clicks_l60'      => $matchedCampaignL60->clicks ?? 0,
-                'spend_l60'       => $matchedCampaignL60->spend ?? 0,
-                'ad_sales_l60'    => $matchedCampaignL60->sales60d ?? 0,
-                'ad_sold_l60'     => $matchedCampaignL60->unitsSoldSameSku60d ?? 0,
-                'acos_l60'        => ($matchedCampaignL60 && $matchedCampaignL60->sales60d > 0) 
-                                        ? round(($matchedCampaignL60->spend / $matchedCampaignL60->sales60d) * 100, 2) : 0,
-                'cpc_l60'         => $matchedCampaignL60->costPerClick ?? 0,
+                // L15
+                'impressions_l15' => $matchedCampaignL15->impressions ?? 0,
+                'clicks_l15'      => $matchedCampaignL15->clicks ?? 0,
+                'spend_l15'       => $matchedCampaignL15->spend ?? 0,
+                'ad_sales_l15'    => ($matchedCampaignL15->sales1d ?? 0) + ($matchedCampaignL15->sales14d ?? 0),
+                'ad_sold_l15'     => ($matchedCampaignL15->unitsSoldSameSku1d ?? 0) + ($matchedCampaignL15->unitsSoldSameSku14d ?? 0),
+                'acos_l15'        => (($matchedCampaignL15->spend ?? 0) > 0 && (($matchedCampaignL15->sales1d ?? 0) + ($matchedCampaignL15->sales14d ?? 0)) > 0) 
+                                    ? round(($matchedCampaignL15->spend / (($matchedCampaignL15->sales1d ?? 0) + ($matchedCampaignL15->sales14d ?? 0))) * 100, 2) 
+                                    : 0,
+                'cpc_l15'         => $matchedCampaignL15->costPerClick ?? 0,
+
+                // L7
+                'impressions_l7'  => $matchedCampaignL7->impressions ?? 0,
+                'clicks_l7'       => $matchedCampaignL7->clicks ?? 0,
+                'spend_l7'        => $matchedCampaignL7->spend ?? 0,
+                'ad_sales_l7'     => $matchedCampaignL7->sales7d ?? 0,
+                'ad_sold_l7'      => $matchedCampaignL7->unitsSoldSameSku7d ?? 0,
+                'acos_l7'         => ($matchedCampaignL7 && ($matchedCampaignL7->sales7d ?? 0) > 0) ? round(($matchedCampaignL7->spend / $matchedCampaignL7->sales7d) * 100, 2) : 0,
+                'cpc_l7'          => $matchedCampaignL7->costPerClick ?? 0,
+
 
 
                 'NRL' => '',
@@ -510,7 +502,9 @@ class AmazonCampaignReportsController extends Controller
                 }
             }
 
-            $result[] = (object) $row;
+            if($row['campaignName'] != ''){
+                $result[] = (object) $row;
+            }
         }
 
         return response()->json([
