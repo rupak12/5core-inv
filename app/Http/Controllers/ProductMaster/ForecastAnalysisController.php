@@ -77,6 +77,9 @@ class ForecastAnalysisController extends Controller
         $forecastMap = DB::table('forecast_analysis')->get()->keyBy(fn($item) => $normalizeSku($item->sku));
         $movementMap = DB::table('movement_analysis')->get()->keyBy(fn($item) => $normalizeSku($item->sku));
         $readyToShipMap = DB::table('ready_to_ship')->get()->keyBy(fn($item) => $normalizeSku($item->sku));
+        $mfrgProgressMap = DB::table('mfrg_progress')->get()->keyBy(fn($item) => $normalizeSku($item->sku));
+        $transitContainerDetailsMap = DB::table('transit_container_details')->where('status', '')->select('our_sku', 'tab_name', 'no_of_units', 'total_ctn')
+        ->get()->keyBy(fn($item) => $normalizeSku($item->our_sku));
 
         $processedData = [];
 
@@ -117,8 +120,6 @@ class ForecastAnalysisController extends Controller
                 $forecast = $forecastMap->get($sheetSku);
                 $item->{'s-msl'} = $forecast->s_msl ?? 0;
                 $item->{'Approved QTY'} = $forecast->approved_qty ?? 0;
-                $item->order_given = $forecast->order_given ?? 0;
-                $item->transit = $forecast->transit ?? '';
                 $item->nr = $forecast->nr ?? '';
                 $item->req = $forecast->req ?? '';
                 $item->hide = $forecast->hide ?? '';
@@ -132,6 +133,17 @@ class ForecastAnalysisController extends Controller
 
             if($readyToShipMap->has($sheetSku)){
                 $item->readyToShipQty = $readyToShipMap->get($sheetSku)->qty ?? 0;
+            }
+
+            if ($mfrgProgressMap->has($sheetSku)) {
+                $item->containerName = $transitContainerDetailsMap[strtoupper(trim($prodData->sku))]->tab_name ?? '';
+                $noOfUnit = $transitContainerDetailsMap[strtoupper(trim($prodData->sku))]->no_of_units ?? 0;
+                $totalCtn = $transitContainerDetailsMap[strtoupper(trim($prodData->sku))]->total_ctn ?? 0;
+                $con_ctn_qty = $noOfUnit * $totalCtn;
+                $mipQty = $mfrgProgressMap->get($sheetSku)->qty ?? 0;
+                $item->order_given = $mipQty - $con_ctn_qty;
+                $item->transit = $con_ctn_qty;
+                $item->c_sku_qty = $con_ctn_qty;
             }
 
             if ($movementMap->has($sheetSku)) {
@@ -473,9 +485,9 @@ class ForecastAnalysisController extends Controller
                 }
 
                 $item->containerName = $transitContainer[strtoupper(trim($prodData->sku))]->tab_name ?? '';
-                    $noOfUnit = $transitContainer[strtoupper(trim($prodData->sku))]->no_of_units ?? 0;
-                    $totalCtn = $transitContainer[strtoupper(trim($prodData->sku))]->total_ctn	 ?? 0;
-                    $item->c_sku_qty = $noOfUnit * $totalCtn;
+                $noOfUnit = $transitContainer[strtoupper(trim($prodData->sku))]->no_of_units ?? 0;
+                $totalCtn = $transitContainer[strtoupper(trim($prodData->sku))]->total_ctn	 ?? 0;
+                $item->c_sku_qty = $noOfUnit * $totalCtn;
 
                 if($readyToShipMap->has($sheetSku)){
                     $item->readyToShipQty = $readyToShipMap->get($sheetSku)->qty ?? 0;

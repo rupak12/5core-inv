@@ -506,22 +506,32 @@
                     sorter: "number",
                     headerSort: true,
                     formatter: function(cell) {
-                        const value = cell.getValue();
-                        const rowData = cell.getRow().getData();
+                        const row = cell.getRow();
+                        // const value = cell.getValue();
+                        const c_sku_qty = row.getData().c_sku_qty || 0;
+                        let containerName = row.getData().containerName || '';
+                        if (containerName) {
+                            containerName = containerName.replace(/Container\s*(\d+)/i, "C-$1");
+                        }
+                        return `<div style="line-height:1.5;">
+                            <span style="font-weight:600;">${c_sku_qty}</span><br>
+                            <small class="text-info">${containerName}</small>
+                        </div>`;
+                        // const rowData = cell.getRow().getData();
 
-                        const sku = rowData.SKU ?? '';
-                        const parent = rowData.Parent ?? '';
+                        // const sku = rowData.SKU ?? '';
+                        // const parent = rowData.Parent ?? '';
 
-                        return `<div 
-                        class="editable-qty" 
-                        contenteditable="true" 
-                        data-field="Transit" 
-                        data-original="${value ?? ''}" 
-                        data-sku='${sku}' 
-                        data-parent='${parent}' 
-                        style="outline:none; min-width:40px; text-align:center; font-weight:bold;">
-                        ${value ?? ''}
-                    </div>`;
+                        // return `<div 
+                        //     class="editable-qty" 
+                        //     contenteditable="true" 
+                        //     data-field="Transit" 
+                        //     data-original="${value ?? ''}" 
+                        //     data-sku='${sku}' 
+                        //     data-parent='${parent}' 
+                        //     style="outline:none; min-width:40px; text-align:center; font-weight:bold;">
+                        //     ${value ?? ''}
+                        // </div>`;
                     }
                 },
                 {
