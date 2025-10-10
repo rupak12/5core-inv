@@ -1724,7 +1724,7 @@
                     }
                     
                     $.ajax({
-                        url: '/update-ebay-pmt-percenatge',
+                        url: '/update-ebay-3-pmt-percenatge',
                         type: 'POST',
                         data: {
                             type: 'percentage',
@@ -1796,7 +1796,7 @@
                     }
                     
                     $.ajax({
-                        url: '/update-ebay-pmt-percenatge',
+                        url: '/update-ebay-3-pmt-percenatge',
                         type: 'POST',
                         data: {
                             type: 'ad_updates',
@@ -2366,7 +2366,7 @@
             function loadData() {
                 showLoader();
                 return $.ajax({
-                    url: '/ebay/pmp/ads/data',
+                    url: '/ebay-3/pmp/ads/data',
                     type: 'GET',
                     dataType: 'json',
                     success: function(response) {
@@ -5705,7 +5705,7 @@
                 }
 
                 $.ajax({
-                    url: '/update-ebay-pmt-sprice',
+                    url: '/update-ebay-3-pmt-sprice',
                     type: 'POST',
                     data: {
                         _token: $('meta[name="csrf-token"]').attr('content'),
