@@ -9,19 +9,16 @@ class EbayMetric extends Model
 {
     use HasFactory;
 
+    protected $table = 'fetch_api_for_ebay_data_metric_data';
+
     protected $fillable = [
+        'id',
         'item_id',
         'sku',
-        'ebay_l30',
-        'ebay_l60',
-        'ebay_price',
-        'price_lmpa',
-        'campaign_id',
-        'views',
-        'total_pft',
-        't_sale_l30',
-        'pft_percentage',
-        'roi_percentage',
-        't_cogs',
+        'ebay_data_price',
+        'ebay_data_l30',
+        'ebay_data_l60',
+        'ebay_data_views',
     ];
+
 }
