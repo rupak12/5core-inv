@@ -974,7 +974,7 @@
 
                     let invFilterVal = $("#inv-filter").val();
                     if (!invFilterVal) {
-                        if (parseFloat(data.INV) === 0) return false;
+                        // if (parseFloat(data.INV) === 0) return false;
                     } else if (invFilterVal === "INV_0") {
                         if (parseFloat(data.INV) !== 0) return false;
                     } else if (invFilterVal === "OTHERS") {
