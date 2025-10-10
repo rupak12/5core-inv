@@ -193,6 +193,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('sync:walmart-metrics-data')->everyMinute();
         $schedule->command('sync:tiktok-sheet-data')->everyMinute();
         $schedule->command('app:aliexpress-sheet-sync')->everyMinute();
+        $schedule->command('app:fetch-ebay-table-data')->dailyAt('00:00');
           $schedule->call(function () {
             DB::connection('apicentral')
                 ->table('google_ads_campaigns')
@@ -213,3 +214,4 @@ class Kernel extends ConsoleKernel
         require base_path('routes/console.php');
     }
 }
+ 

@@ -170,6 +170,11 @@ use App\Http\Controllers\Campaigns\AmazonSpBudgetController;
 use App\Http\Controllers\Campaigns\AmzCorrectlyUtilizedController;
 use App\Http\Controllers\Campaigns\AmzUnderUtilizedBgtController;
 use App\Http\Controllers\Campaigns\CampaignImportController;
+use App\Http\Controllers\Campaigns\Ebay3AcosController;
+use App\Http\Controllers\Campaigns\Ebay3KeywordAdsController;
+use App\Http\Controllers\Campaigns\Ebay3PinkDilAdController;
+use App\Http\Controllers\Campaigns\Ebay3PmtAdsController;
+use App\Http\Controllers\Campaigns\Ebay3UtilizedAdsController;
 use App\Http\Controllers\Campaigns\EbayKwAdsController;
 use App\Http\Controllers\Campaigns\EbayOverUtilizedBgtController;
 use App\Http\Controllers\Campaigns\EbayPinkDilAdController;
@@ -1780,18 +1785,6 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
         Route::get('/amazon/pink-dil/hl/ads/data', 'getAmazonPinkDilHlAdsData');
     });
 
-    Route::controller(EbayOverUtilizedBgtController::class)->group(function () {
-        Route::get('/ebay-over-uti', 'ebayOverUtilisation')->name('ebay-over-uti');
-        Route::get('/ebay/under/utilized', 'ebayUnderUtilized')->name('ebay-under-utilize');
-        Route::get('/ebay/correctly/utlized', 'ebayCorrectlyUtilized')->name('ebay-correctly-utilize');
-        Route::get('/ebay/make-new/campaign/kw', 'ebayMakeCampaignKw')->name('ebay-make-new-campaign-kw');
-        Route::get('/ebay/make-new/campaign/kw/data', 'getEbayMakeNewCampaignKw');
-
-        Route::get('/ebay-over-uti/data', 'getEbayOverUtiData')->name('ebay-over-uti-data');
-        Route::post('/update-ebay-nr-data', 'updateNrData');
-        Route::put('/update-ebay-keywords-bid-price', 'updateKeywordsBidDynamic');
-    });
-
     //FaceBook Adds Manager 
     Route::controller(FacebookAddsManagerController::class)->group(function () {
         Route::get('/facebook-ads-control/data', 'index')->name('facebook.ads.index');
@@ -1855,7 +1848,18 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
         Route::get('/amazon/missing/ads', 'index')->name('amazon.missing.ads');
         Route::get('/amazon/missing/ads/data', 'getAmazonMissingAdsData');
     });
+    // ebay ads section
+    Route::controller(EbayOverUtilizedBgtController::class)->group(function () {
+        Route::get('/ebay-over-uti', 'ebayOverUtilisation')->name('ebay-over-uti');
+        Route::get('/ebay/under/utilized', 'ebayUnderUtilized')->name('ebay-under-utilize');
+        Route::get('/ebay/correctly/utlized', 'ebayCorrectlyUtilized')->name('ebay-correctly-utilize');
+        Route::get('/ebay/make-new/campaign/kw', 'ebayMakeCampaignKw')->name('ebay-make-new-campaign-kw');
+        Route::get('/ebay/make-new/campaign/kw/data', 'getEbayMakeNewCampaignKw');
 
+        Route::get('/ebay-over-uti/data', 'getEbayOverUtiData')->name('ebay-over-uti-data');
+        Route::post('/update-ebay-nr-data', 'updateNrData');
+        Route::put('/update-ebay-keywords-bid-price', 'updateKeywordsBidDynamic');
+    });
     Route::controller(EbayACOSController::class)->group(function () {
         Route::get('/ebay-over-uti-acos-pink', 'ebayOverUtiAcosPink')->name('ebay-over-uti-acos-pink');
         Route::get('/ebay-over-uti-acos-green', 'ebayOverUtiAcosGreen')->name('ebay-over-uti-acos-green');
@@ -1886,6 +1890,46 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
 
         Route::get('/ebay/keywords/ads/less-than-twenty', 'ebayPriceLessThanTwentyAdsView')->name('ebay.keywords.ads.less-than-twenty');
         Route::get('/ebay/keywords/ads/less-than-twenty/data', 'ebayPriceLessThanTwentyAdsData');
+
+    });
+
+    // ebay 3 ads section
+    Route::controller(Ebay3AcosController::class)->group(function () {
+        Route::get('/ebay-3/over-acos-pink', 'ebay3OverAcosPinkView')->name('ebay3-over-uti-acos-pink');
+        Route::get('/ebay-3/over-acos-green', 'ebay3OverAcosGreenView')->name('ebay3-over-uti-acos-green');
+        Route::get('/ebay-3/over-acos-red', 'ebay3OverAcosRedView')->name('ebay3-over-uti-acos-red');
+        Route::get('/ebay-3/under-acos-pink', 'ebay3UnderAcosPinkView')->name('ebay3-under-uti-acos-pink');
+        Route::get('/ebay-3/under-acos-green', 'ebay3UnderAcosGreenView')->name('ebay3-under-uti-acos-green');
+        Route::get('/ebay-3/under-acos-red', 'ebay3UnderAcosRedView')->name('ebay3-under-uti-acos-red');
+
+        Route::get('/ebay-3/acos/control/data', 'getEbay3AcosControlData');
+    });
+
+    Route::controller(Ebay3PinkDilAdController::class)->group(function () {
+        Route::get('/ebay-3/pink-dil/ads', 'index')->name('ebay3.pink.dil.ads');
+        Route::get('/ebay-3/pink-dil/ads/data', 'getEbay3PinkDilAdsData');
+    });
+
+    Route::controller(Ebay3PmtAdsController::class)->group(function () {
+        Route::get('/ebay-3/pmt/ads', 'index')->name('ebay3.pmt.ads');
+    });
+
+    Route::controller(Ebay3UtilizedAdsController::class)->group(function () {
+        Route::get('/ebay-3/over-utilized', 'ebay3OverUtilizedAdsView')->name('ebay3.over.utilized');
+        Route::get('/ebay-3/under-utilized', 'ebay3UnderUtilizedAdsView')->name('ebay3.under.utilized');
+        Route::get('/ebay-3/correctly-utilized', 'ebay3CorrectlyUtilizedAdsView')->name('ebay3.correctly.utilized');
+        Route::get('/ebay-3/utilized/ads/data', 'getEbay3UtilizedAdsData');
+    });
+
+    Route::controller(Ebay3KeywordAdsController::class)->group(function(){
+        Route::get('/ebay-3/keywords/ads', 'ebay3KeywordAdsView')->name('ebay3.keywords.ads');
+        Route::get('/ebay-3/keywords/ads/data', 'getEbay3KeywordAdsData');
+
+        Route::get('/ebay-3/keywords/ads/less-than-thirty', 'ebay3PriceLessThanThirtyAdsView')->name('ebay3.keywords.ads.less-than-thirty');
+        Route::get('/ebay-3/keywords/ads/less-than-thirty/data', 'ebay3PriceLessThanThirtyAdsData');
+
+        Route::get('/ebay-3/make-new/kw-ads', 'ebay3MakeNewKwAdsView')->name('ebay3.make.new.kw.ads');
+        Route::get('/ebay-3/make-new/kw-ads/data', 'getEbay3MMakeNewKwAdsData');
     });
 
     Route::controller(WalmartUtilisationController::class)->group(function () {
