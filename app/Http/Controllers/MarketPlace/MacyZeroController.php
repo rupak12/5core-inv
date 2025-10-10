@@ -6,6 +6,7 @@ use App\Http\Controllers\ApiController;
 use App\Http\Controllers\Controller;
 use App\Models\MacyDataView;
 use App\Models\MacyProduct;
+use App\Models\MacysListingStatus;
 use App\Models\MarketplacePercentage;
 use App\Models\ProductMaster;
 use App\Models\ShopifySku;
@@ -190,5 +191,70 @@ class MacyZeroController extends Controller
         })->count();
 
         return $zeroViewCount;
+    }
+
+     public function getLivePendingAndZeroViewCounts()
+    {
+        $productMasters = ProductMaster::whereNull('deleted_at')->get();
+        $skus = $productMasters->pluck('sku')->unique()->toArray();
+
+        $shopifyData = ShopifySku::whereIn('sku', $skus)->get()->keyBy('sku');
+        $macyDataViews = MacysListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
+
+        $macyMetrics = MacyProduct::whereIn('sku', $skus)->get()->keyBy('sku');
+
+
+        $listedCount = 0;
+        $zeroInvOfListed = 0;
+        $liveCount = 0;
+        $zeroViewCount = 0;
+
+        foreach ($productMasters as $item) {
+            $sku = trim($item->sku);
+            $inv = $shopifyData[$sku]->inv ?? 0;
+            $isParent = stripos($sku, 'PARENT') !== false;
+            if ($isParent) continue;
+
+            $status = $macyDataViews[$sku]->value ?? null;
+            if (is_string($status)) {
+                $status = json_decode($status, true);
+            }
+            $listed = $status['listed'] ?? (floatval($inv) > 0 ? 'Pending' : 'Listed');
+            $live = $status['live'] ?? null;
+
+            // Listed count (for live pending)
+            if ($listed === 'Listed') {
+                $listedCount++;
+                if (floatval($inv) <= 0) {
+                    $zeroInvOfListed++;
+                }
+            }
+
+            // Live count
+            if ($live === 'Live') {
+                $liveCount++;
+            }
+
+            // Zero view: INV > 0, views == 0 (from ebay_metric table), not parent SKU (NR ignored)
+            $views = $macyMetrics[$sku]->views_clicks ?? null;
+            // if (floatval($inv) > 0 && $views !== null && intval($views) === 0) {
+            //     $zeroViewCount++;
+            // }
+            if ($inv > 0) {
+                if ($views === null) {
+                    // Do nothing, ignore null
+                } elseif (intval($views) === 0) {
+                    $zeroViewCount++;
+                }
+            }
+        }
+
+        // live pending = listed - 0-inv of listed - live
+        $livePending = $listedCount - $zeroInvOfListed - $liveCount;
+
+        return [
+            'live_pending' => $livePending,
+            'zero_view' => $zeroViewCount,
+        ];
     }
 }
