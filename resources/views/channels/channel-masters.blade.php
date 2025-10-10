@@ -661,13 +661,13 @@
                             <th>R&A</th>
                             {{-- <th>Link</th> --}}
                             <th>Sheet Link</th>
-                            <th class="text-center align-middle">
+                            {{-- <th class="text-center align-middle">
                                 <small id="l60SalesCountBadge" class="badge bg-dark text-white mb-1"
                                     style="font-size: 13px;">
                                     ₹ 0
                                 </small><br>
                                 L-60 Sales
-                            </th>
+                            </th> --}}
                             <th class="text-center align-middle">
                                 <small id="l30SalesCountBadge" class="badge bg-dark text-white mb-1"
                                     style="font-size: 13px;">
@@ -682,13 +682,13 @@
                                 </small><br>
                                 Growth
                             </th>
-                            <th class="text-center align-middle">
+                            {{-- <th class="text-center align-middle">
                                 <small id="l60OrdersCountBadge" class="badge bg-dark text-white mb-1"
                                     style="font-size: 13px;">
                                     0
                                 </small><br>
                                 L60 Orders
-                            </th>
+                            </th> --}}
                             <th class="text-center align-middle">
                                 <small id="l30OrdersCountBadge" class="badge bg-dark text-white mb-1"
                                     style="font-size: 13px;">
@@ -915,8 +915,8 @@
                 totalPft += profitAmount;
                 totalL30Sales += l30Sales;
             });
-            let gProfit = totalL30Sales !== 0 ? (totalPft / totalL30Sales * 100) : null;
-            let gRoi = totalCogs !== 0 ? (totalPft / totalCogs * 100) : null;
+            let gProfit = totalL30Sales !== 0 ? (totalPft / totalL30Sales)* 100 : null;
+            let gRoi = totalCogs !== 0 ? (totalPft / totalCogs)* 100 : null;
             if (gprofitBadge) {
                 gprofitBadge.textContent = gProfit !== null ? gProfit.toFixed(1) + '%' : 'N/A';
             }
@@ -1815,13 +1815,13 @@
                                             value="${sheetLink}"
                                             data-channel="${channelName}"
                                             placeholder="Enter Link"
-                                            style="min-width: 100px;" />
+                                            style="min-width: 10px;" />
                                         ${sheetLink ? `<a href="${sheetLink}" target="_blank" class="btn btn-sm btn-success">🔗</a>` : ''}
                                     </div>
                                 `;
                             }
                         },      
-                        { data: 'L-60 Sales', render: v => `<span class="metric-value">${toNum(v).toLocaleString('en-US')}</span>` },
+                        // { data: 'L-60 Sales', render: v => `<span class="metric-value">${toNum(v).toLocaleString('en-US')}</span>` },
                         // { data: 'L30 Sales',  render: v => `<span class="metric-value">${toNum(v).toLocaleString('en-US')}</span>` },
                         {
                             data: 'L30 Sales',
@@ -1855,7 +1855,7 @@
                             }
                         },
                         
-                        { data: 'L60 Orders', render: v => `<span class="metric-value">${toNum(v).toLocaleString('en-US')}</span>` },
+                        // { data: 'L60 Orders', render: v => `<span class="metric-value">${toNum(v).toLocaleString('en-US')}</span>` },
                         { data: 'L30 Orders', render: v => `<span class="metric-value">${toNum(v).toLocaleString('en-US')}</span>` },
 
                         // {
