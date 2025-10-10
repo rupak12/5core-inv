@@ -26,19 +26,47 @@ class EbayApiService
         $this->siteId      = env('EBAY_SITE_ID', 0); // US = 0
         $this->compatLevel = env('EBAY_COMPAT_LEVEL', '1189');
     }
+    // public function generateBearerToken()
+    // {
+    //     // 1. If cached token exists, return it immediately
+    //     if (Cache::has('ebay_bearer')) {
+    //         echo "\nBearer Token in Cache";
+
+    //         return Cache::get('ebay_bearer');
+    //     }
+       
+    //     echo "Generating New Ebay Token";
+
+
+    //     // 2. Otherwise, request new token from eBay
+    //     $clientId     = env('EBAY_APP_ID');
+    //     $clientSecret = env('EBAY_CERT_ID');
+    //     $refreshToken = env('EBAY_REFRESH_TOKEN');
+
+    //     $response = Http::asForm()
+    //         ->withBasicAuth($clientId, $clientSecret)
+    //         ->post('https://api.ebay.com/identity/v1/oauth2/token', [
+    //             'grant_type'    => 'refresh_token',
+    //             'refresh_token' => $refreshToken,
+    //             'scope'         => 'https://api.ebay.com/oauth/api_scope/sell.analytics.readonly https://api.ebay.com/oauth/api_scope/sell.inventory',
+    //         ]);
+
+    //     if ($response->failed()) {
+    //         throw new \Exception('Failed to get eBay token: ' . $response->body());
+    //     }
+
+    //     $data        = $response->json();
+    //     $accessToken = $data['access_token'];
+    //     $expiresIn   = $data['expires_in'] ?? 3600; // seconds, defaults to 1h
+
+    //     // 3. Store token in cache for slightly less than expiry time
+    //     Cache::put('ebay_bearer', $accessToken, now()->addSeconds($expiresIn - 60));
+
+    //     return $accessToken;
+    // }
     public function generateBearerToken()
     {
-        // 1. If cached token exists, return it immediately
-        if (Cache::has('ebay_bearer')) {
-            echo "\nBearer Token in Cache";
 
-            return Cache::get('ebay_bearer');
-        }
-       
-        echo "Generating New Ebay Token";
-
-
-        // 2. Otherwise, request new token from eBay
         $clientId     = env('EBAY_APP_ID');
         $clientSecret = env('EBAY_CERT_ID');
         $refreshToken = env('EBAY_REFRESH_TOKEN');
@@ -48,7 +76,7 @@ class EbayApiService
             ->post('https://api.ebay.com/identity/v1/oauth2/token', [
                 'grant_type'    => 'refresh_token',
                 'refresh_token' => $refreshToken,
-                'scope'         => 'https://api.ebay.com/oauth/api_scope https://api.ebay.com/oauth/api_scope/sell.inventory',
+                'scope'         => 'https://api.ebay.com/oauth/api_scope/sell.analytics.readonly https://api.ebay.com/oauth/api_scope/sell.inventory',
             ]);
 
         if ($response->failed()) {
@@ -56,12 +84,14 @@ class EbayApiService
         }
 
         $data        = $response->json();
-        $accessToken = $data['access_token'];
-        $expiresIn   = $data['expires_in'] ?? 3600; // seconds, defaults to 1h
+        $accessToken = $data['access_token'] ?? null;
+        $expiresIn   = $data['expires_in'] ?? 3600; 
 
-        // 3. Store token in cache for slightly less than expiry time
-        Cache::put('ebay_bearer', $accessToken, now()->addSeconds($expiresIn - 60));
+        if (!$accessToken) {
+            throw new \Exception('No access token returned from eBay.');
+        }
 
+        
         return $accessToken;
     }
 
@@ -170,4 +200,59 @@ class EbayApiService
             ];
         }
     }
+    public function getValidTrackingRate()
+{
+    $accessToken = $this->generateBearerToken();
+    $url = "https://api.ebay.com/sell/analytics/v1/seller_standards_profile";
+
+    $response = Http::withToken($accessToken)
+        ->withHeaders([
+            'Content-Type' => 'application/json',
+        ])
+        ->get($url);
+
+    if ($response->failed()) {
+        return [
+            'success' => false,
+            'message' => 'Failed to fetch seller standards: ' . $response->body(),
+        ];
+    }
+
+    $data = $response->json();
+
+    // Get the first profile
+    $profile = $data['standardsProfiles'][1] ?? null;
+
+    if (!$profile || empty($profile['metrics'])) {
+        return [
+            'success' => false,
+            'message' => 'Standards profile or metrics not found',
+            'data' => $data,
+        ];
+    }
+    $vtrMetric = null;
+    foreach ($profile['metrics'] as $metric) {
+        if (($metric['metricKey'] ?? null) === 'VALID_TRACKING_UPLOADED_WITHIN_HANDLING_RATE') {
+            $vtrMetric = $metric;
+            break;
+        }
+    }
+
+    if (!$vtrMetric) {
+        return [
+            'success' => false,
+            'message' => 'Valid Tracking Rate metric not found',
+            'data' => $data,
+        ];
+    }
+
+    return [
+        'success' => true,
+        'Channels' => 'Ebay1',
+        'vtr' => $vtrMetric['value']['value'] ?? null,
+        'numerator' => $vtrMetric['value']['numerator'] ?? null,
+        'denominator' => $vtrMetric['value']['denominator'] ?? null,
+        'thresholdLower' => $vtrMetric['thresholdLowerBound']['value'] ?? null,
+    ];
+ }
 }
