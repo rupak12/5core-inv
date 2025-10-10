@@ -3397,11 +3397,11 @@ class ChannelMasterController extends Controller
         $salesData = DB::connection('apicentral')
             ->table('shopify_order_items')
             ->select(
-                DB::raw('DATE(created_at) as date'),
+                DB::raw('DATE(order_date) as date'),
                 DB::raw('SUM(quantity * price) as total_sales')
             )
-            ->where('created_at', '>=', $l60Start)
-            ->groupBy(DB::raw('DATE(created_at)'))
+            ->where('order_date', '>=', $l60Start)
+            ->groupBy(DB::raw('DATE(order_date)'))
             ->orderBy('date', 'asc')
             ->get();
 

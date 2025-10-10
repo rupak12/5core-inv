@@ -2470,56 +2470,56 @@
 
         function drawSalesTrendChart() {
             fetch('/sales-trend-data')
-                .then(response => response.json())
-                .then(json => {
-                    const data = json.chartData || [];
-                    if (!data.length) return alert("No sales data found");
+            .then(response => response.json())
+            .then(json => {
+                const data = json.chartData || [];
+                if (!data.length) return alert("No sales data found");
 
-                    google.charts.load('current', { packages: ['corechart'] });
-                    google.charts.setOnLoadCallback(function () {
-                        const chartData = [['Date', 'L30 Sales', 'L60 Sales']];
-                        data.forEach(row => {
-                            chartData.push([
-                                row.date,
-                                parseFloat(row.l30_sales) || 0,
-                                parseFloat(row.l60_sales) || 0
-                            ]);
-                        });
-
-                        const dataTable = google.visualization.arrayToDataTable(chartData);
-                        const options = {
-                            title: 'Daily Total Sales (L30 vs L60)',
-                            legend: { position: 'bottom' },
-                            curveType: 'function',
-                            hAxis: {
-                                title: 'Date',
-                                textStyle: { fontSize: 10 },
-                                slantedText: true,
-                                slantedTextAngle: 45
-                            },
-                            vAxis: {
-                                title: 'Sales Amount ($)',
-                                minValue: 0
-                            },
-                            series: {
-                                0: { color: '#1E88E5', lineWidth: 3 },           // solid L30
-                                1: { color: '#FF7043', lineDashStyle: [4, 4] }  // dotted L60
-                            },
-                            chartArea: { left: 70, top: 50, width: '85%', height: '65%' },
-                            backgroundColor: 'transparent',
-                        };
-
-                        // show chart only now
-                        const chartDiv = document.getElementById('salesTrendChart');
-                        chartDiv.style.display = 'block';
-
-                        const chart = new google.visualization.LineChart(chartDiv);
-                        chart.draw(dataTable, options);
-
-                        window.addEventListener('resize', () => chart.draw(dataTable, options));
+                google.charts.load('current', { packages: ['corechart'] });
+                google.charts.setOnLoadCallback(function () {
+                    const chartData = [['Date', 'L30 Sales', 'L60 Sales']];
+                    data.forEach(row => {
+                        chartData.push([
+                            row.date,
+                            parseFloat(row.l30_sales) || 0,
+                            parseFloat(row.l60_sales) || 0
+                        ]);
                     });
-                })
-                .catch(err => console.error('Error fetching chart data:', err));
+
+                    const dataTable = google.visualization.arrayToDataTable(chartData);
+                    const options = {
+                        title: 'Daily Total Sales (L30 vs L60)',
+                        legend: { position: 'bottom' },
+                        curveType: 'function',
+                        hAxis: {
+                            title: 'Date',
+                            textStyle: { fontSize: 10 },
+                            slantedText: true,
+                            slantedTextAngle: 45
+                        },
+                        vAxis: {
+                            title: 'Sales Amount ($)',
+                            minValue: 0
+                        },
+                        series: {
+                            0: { color: '#1E88E5', lineWidth: 3 },           // solid L30
+                            1: { color: '#FF7043', lineDashStyle: [4, 4] }  // dotted L60
+                        },
+                        chartArea: { left: 70, top: 50, width: '85%', height: '65%' },
+                        backgroundColor: 'transparent',
+                    };
+
+                    // show chart only now
+                    const chartDiv = document.getElementById('salesTrendChart');
+                    chartDiv.style.display = 'block';
+
+                    const chart = new google.visualization.LineChart(chartDiv);
+                    chart.draw(dataTable, options);
+
+                    window.addEventListener('resize', () => chart.draw(dataTable, options));
+                });
+            })
+            .catch(err => console.error('Error fetching chart data:', err));
         }
 
         document.getElementById('showSalesGraph').addEventListener('click', function() {
