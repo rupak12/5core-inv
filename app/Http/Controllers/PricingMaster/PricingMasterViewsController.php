@@ -620,7 +620,7 @@ class PricingMasterViewsController extends Controller
                 'shein_buyer_link' => isset($sheinListingData[$sku]) ? ($sheinListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'shein_seller_link' => isset($sheinListingData[$sku]) ? ($sheinListingData[$sku]->value['seller_link'] ?? null) : null,
                 'shein_link1' => $shein ? ($shein->link1 ?? null) : null,
-                'shein_cvr' => $shein ? $this->calculateCVR($shein->shopify_sheinl30 ?? 0, ($shein->views_clicks ?? 0) * 3.7) : null,
+                'shein_cvr' => $shein ? $this->calculateCVR($shein->shopify_sheinl30 ?? 0, ($shein->views_clicks ?? 0)) : null,
 
                 // Bestbuy
                 'bestbuy_price' => $bestbuyUsa ? ($bestbuyUsa->price ?? 0) : 0,
