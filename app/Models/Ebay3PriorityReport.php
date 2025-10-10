@@ -13,7 +13,12 @@ class Ebay3PriorityReport extends Model
 
     protected $fillable = [
         'report_range',
+        'start_date',
+        'end_date',
         'campaign_id',
+        'campaign_name',
+        'campaignBudgetAmount',
+        'campaignStatus',
         'cpc_impressions',
         'cpc_clicks',
         'cpc_attributed_sales',

@@ -17,34 +17,27 @@ class Ebay3KeywordAdsController extends Controller
         return view('campaign.ebay-three.keyword-ads');
     }
 
-    public function getEbay3KeywordAdsData(){
-
-        $productMasters = ProductMaster::orderBy('parent', 'asc')
+    public function getEbay3KeywordAdsData()
+    {
+        $productMasters = ProductMaster::orderBy('parent')
             ->orderByRaw("CASE WHEN sku LIKE 'PARENT %' THEN 1 ELSE 0 END")
-            ->orderBy('sku', 'asc')
+            ->orderBy('sku')
             ->get();
 
         $skus = $productMasters->pluck('sku')->filter()->unique()->values()->all();
 
         $shopifyData = ShopifySku::whereIn('sku', $skus)->get()->keyBy('sku');
+        $nrValues    = EbayThreeDataView::whereIn('sku', $skus)->pluck('value', 'sku');
 
-        $nrValues = EbayDataView::whereIn('sku', $skus)->pluck('value', 'sku');
+        $allCampaigns = Ebay3PriorityReport::all();
+
+        $normalize = fn($value) => is_string($value) ? strtoupper(trim($value)) : $value;
 
         $periods = ['L7', 'L15', 'L30', 'L60'];
-        $campaignReports = [];
-        foreach ($periods as $period) {
-            $campaignReports[$period] = Ebay3PriorityReport::where('report_range', $period)
-                ->where(function ($q) use ($skus) {
-                    foreach ($skus as $sku) {
-                        $q->orWhere('campaign_name', 'LIKE', '%' . $sku . '%');
-                    }
-                })->get();
-        }
-
         $result = [];
 
         foreach ($productMasters as $pm) {
-            $sku = strtoupper($pm->sku);
+            $sku = $normalize($pm->sku);
             $parent = $pm->parent;
             $shopify = $shopifyData[$pm->sku] ?? null;
 
@@ -56,68 +49,45 @@ class Ebay3KeywordAdsController extends Controller
                 'NR'     => ''
             ];
 
-            $matchedCampaignL30 = $campaignReports['L30']->first(function ($item) use ($sku) {
-                return strtoupper(trim($item->campaign_name)) === strtoupper(trim($sku));
-            });
-
-            $row['campaignName'] = $matchedCampaignL30->campaign_name ?? '';
-            $row['campaignBudgetAmount'] = $matchedCampaignL30->campaignBudgetAmount ?? 0;
-            $row['campaignStatus'] = $matchedCampaignL30->campaignStatus ?? '';
-
-            if(!$matchedCampaignL30){
-                continue;
-            }
-
             if (isset($nrValues[$pm->sku])) {
                 $raw = $nrValues[$pm->sku];
-                if (!is_array($raw)) {
-                    $raw = json_decode($raw, true);
-                }
-                if (is_array($raw)) {
-                    $row['NR'] = $raw['NR'] ?? null;
-                }
+                if (!is_array($raw)) $raw = json_decode($raw, true);
+                if (is_array($raw)) $row['NR'] = $raw['NR'] ?? null;
             }
 
+            $matchedCampaigns = $allCampaigns->filter(function ($c) use ($sku, $normalize) {
+                return $normalize($c->campaign_name) === $sku;
+            });
+
+
+            if ($matchedCampaigns->isEmpty()) continue;
+
+            $row['campaignName']        = $matchedCampaigns->pluck('campaign_name')->unique()->implode(', ');
+            $row['campaignBudgetAmount'] = $matchedCampaigns->sum('campaignBudgetAmount');
+            $row['campaignStatus']      = $matchedCampaigns->pluck('campaignStatus')->unique()->implode(', ');
+
             foreach ($periods as $period) {
-                $matchedCampaign = $campaignReports[$period]->first(function ($item) use ($sku) {
-                    return strtoupper(trim($item->campaign_name)) === strtoupper(trim($sku));
-                });
-                
-                if (!$matchedCampaign) {
-                    $row["impressions_" . strtolower($period)] = 0;
-                    $row["clicks_" . strtolower($period)]      = 0;
-                    $row["ad_sales_" . strtolower($period)]    = 0;
-                    $row["ad_sold_" . strtolower($period)]     = 0;
-                    $row["spend_" . strtolower($period)]       = 0;
-                    $row["acos_" . strtolower($period)]        = 0;
-                    $row["cpc_" . strtolower($period)]         = 0;
-                    continue;
-                }
+                $periodMatches = $matchedCampaigns->where('report_range', $period);
 
-                $adFees = (float) str_replace('USD ', '', $matchedCampaign->cpc_ad_fees_payout_currency ?? 0);
-                $sales  = (float) str_replace('USD ', '', $matchedCampaign->cpc_sale_amount_payout_currency ?? 0);
-                $clicks = (float) ($matchedCampaign->cpc_clicks ?? 0);
-                $spend  = (float) ($matchedCampaign->cpc_cost ?? $adFees);
-                $cpc    = $clicks > 0 ? ($spend / $clicks) : 0;
-                $acos   = $sales > 0 ? ($adFees / $sales) * 100 : 0;
+                $impressions = $periodMatches->sum('cpc_impressions');
+                $clicks      = $periodMatches->sum('cpc_clicks');
+                $adFees      = $periodMatches->sum(fn($item) => (float) str_replace('USD ', '', $item->cpc_ad_fees_payout_currency ?? 0));
+                $sales       = $periodMatches->sum(fn($item) => (float) str_replace('USD ', '', $item->cpc_sale_amount_payout_currency ?? 0));
+                $unitsSold   = $periodMatches->sum('unitsSold');
 
-                if ($adFees > 0 && $sales === 0) {
-                    $acos = 100;
-                }
+                $cpc  = $clicks > 0 ? ($adFees / $clicks) : 0;
+                $acos = $sales > 0 ? ($adFees / $sales) * 100 : ($adFees > 0 ? 100 : 0);
 
-                $row["impressions_" . strtolower($period)] = $matchedCampaign->cpc_impressions ?? 0;
-                $row["clicks_" . strtolower($period)]      = $matchedCampaign->cpc_clicks ?? 0;
+                $row["impressions_" . strtolower($period)] = $impressions;
+                $row["clicks_" . strtolower($period)]      = $clicks;
                 $row["ad_sales_" . strtolower($period)]    = $sales;
-                $row["ad_sold_" . strtolower($period)]     = $matchedCampaign->unitsSold ?? 0;
+                $row["ad_sold_" . strtolower($period)]     = $unitsSold;
                 $row["spend_" . strtolower($period)]       = $adFees;
                 $row["acos_" . strtolower($period)]        = $acos;
                 $row["cpc_" . strtolower($period)]         = $cpc;
             }
 
-            if ($row['NR'] !== "NRA") {
-                $result[] = (object) $row;
-            }
-    
+            $result[] = (object) $row;
         }
 
         return response()->json([
@@ -236,7 +206,7 @@ class Ebay3KeywordAdsController extends Controller
                 }
             }
             
-            if($row['price'] < 30){
+            if($row['price'] < 30  && $row['price'] > 0){
                 if($row['price'] < 10){
                     $row['sbid'] = 0.10;
                 }elseif($row['price'] > 10 && $row['price'] <= 20){

@@ -38,8 +38,11 @@ class Ebay3CampaignReports extends Command
 
         // Step 1        
         $ranges = [
-            'L30' => [Carbon::today()->subDays(30), Carbon::today()->subDay()->endOfDay()],
             'L60' => [Carbon::today()->subDays(60), Carbon::today()->subDays(31)->endOfDay()],
+            'L30' => [Carbon::today()->subDays(30), Carbon::today()->subDay()->endOfDay()],
+            'L15' => [Carbon::today()->subDays(15), Carbon::today()->subDay()->endOfDay()],
+            'L7' => [Carbon::today()->subDays(7), Carbon::today()->subDay()->endOfDay()],
+            'L1' => [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()],
         ];
 
         // Loop through date ranges first: L30 then L60
@@ -76,15 +79,31 @@ class Ebay3CampaignReports extends Command
 
             $reportId = $this->pollReportStatus($accessToken, $taskId);
             if (!$reportId) continue;
+
+            $campaignsMap = $this->getAllCampaigns($accessToken);
+            if (empty($campaignsMap)) {
+                $this->error("No campaigns fetched from eBay!");
+                return;
+            }
     
             $items = $this->downloadParseAndStoreReport($accessToken, $reportId, $rangeKey);
-
+            
             foreach($items as $item){
                 if (!$item || empty($item['campaign_id'])) continue;
+
+                $campaignData = $campaignsMap[$item['campaign_id']] ?? ['name' => null,'status' => null, 'daily_budget' => null];
+                $campaignName = $campaignData['name'];
+                $campaignStatus = $campaignData['status'];
+                $campaignBudget = $campaignData['daily_budget'];
             
                 Ebay3PriorityReport::updateOrCreate(
                     ['campaign_id' => $item['campaign_id'], 'report_range' => $rangeKey],
                     [
+                        'campaign_name' => $campaignName,
+                        'campaignBudgetAmount' => $campaignBudget,
+                        'campaignStatus' => $campaignStatus,
+                        'start_date' => $from->toDateString(),
+                        'end_date' => $to->toDateString(),
                         'cpc_impressions' => $item['cpc_impressions'] ?? 0,
                         'cpc_clicks' => $item['cpc_clicks'] ?? 0,
                         'cpc_attributed_sales' => $item['cpc_attributed_sales'] ?? 0,
@@ -304,5 +323,36 @@ class Ebay3CampaignReports extends Command
         }
 
         return null;
+    }
+
+    private function getAllCampaigns($token)
+    {
+        $campaigns = [];
+        $limit = 50;
+        $offset = 0;
+
+        do {
+            $res = Http::withToken($token)->get('https://api.ebay.com/sell/marketing/v1/ad_campaign', [
+                'limit' => $limit,
+                'offset' => $offset,
+            ]);
+
+            if (!$res->ok()) break;
+
+            $data = $res->json();
+            foreach ($data['campaigns'] ?? [] as $c) {
+                $campaigns[$c['campaignId']] = [
+                    'name' => $c['campaignName'] ?? null,
+                    'status' => $c['campaignStatus'] ?? null,
+                    'daily_budget' => $c['budget']['daily']['amount']['value'] ?? null,
+                    'currency' => $c['budget']['daily']['amount']['currency'] ?? null,
+                ];
+            }
+
+            $total = $data['total'] ?? 0;
+            $offset += $limit;
+        } while ($offset < $total);
+
+        return $campaigns;
     }
 }
