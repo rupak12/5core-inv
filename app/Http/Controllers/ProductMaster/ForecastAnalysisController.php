@@ -27,24 +27,7 @@ class ForecastAnalysisController extends Controller
 
     private function buildForecastAnalysisData()
     {
-        $normalizeSku = fn($sku) => strtoupper(
-            preg_replace(
-                [
-                    '/([A-Z]{2,})(?=[A-Z]{2,}[0-9]*)/', 
-                    '/([A-Z])([0-9])/',                 
-                    '/([0-9])([A-Z])/',                 
-                    '/[^A-Z0-9\-]+/'                    
-                ],
-                [
-                    '$1 ',
-                    '$1 $2',
-                    '$1 $2',
-                    ' '
-                ],
-                trim($sku)
-            )
-        );
-
+        $normalizeSku = fn($sku) => strtoupper(trim($sku));
 
         $jungleScoutData = JungleScoutProductData::query()
             ->get()
@@ -172,7 +155,7 @@ class ForecastAnalysisController extends Controller
 
 
     
-    public function getViewForecastAnalysisData(Request $request)
+    public function getViewForecastAnalysisData()
     {
         try {
             $processedData = $this->buildForecastAnalysisData();
