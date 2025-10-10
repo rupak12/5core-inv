@@ -1,4 +1,4 @@
-@extends('layouts.vertical', ['title' => 'Ebay - MAKE NEW CAMPAIGN KW ', 'mode' => $mode ?? '', 'demo' => $demo ?? ''])
+@extends('layouts.vertical', ['title' => 'Ebay 3 - UNDER UTILIZED', 'mode' => $mode ?? '', 'demo' => $demo ?? ''])
 @section('css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
@@ -130,8 +130,8 @@
 @endsection
 @section('content')
     @include('layouts.shared.page-title', [
-        'page_title' => 'Ebay - MAKE NEW CAMPAIGN KW ',
-        'sub_title' => 'Ebay - MAKE NEW CAMPAIGN KW ',
+        'page_title' => 'Ebay 3 - UNDER UTILIZED',
+        'sub_title' => 'Ebay 3 - UNDER UTILIZED',
     ])
     <div class="row">
         <div class="col-12">
@@ -141,7 +141,7 @@
                         <!-- Title -->
                         <h4 class="fw-bold text-primary mb-3 d-flex align-items-center">
                             <i class="fa-solid fa-chart-line me-2"></i>
-                            Ebay - MAKE NEW CAMPAIGN KW 
+                            UNDER UTILIZED
                         </h4>
 
                         <!-- Filters Row -->
@@ -197,7 +197,7 @@
                                     </div>
                                     <select id="status-filter" class="form-select form-select-md" style="width: 140px;">
                                         <option value="">All Status</option>
-                                        <option value="ENABLED">Enabled</option>
+                                        <option value="RUNNING">Running</option>
                                         <option value="PAUSED">Paused</option>
                                         <option value="ARCHIVED">Archived</option>
                                     </select>
@@ -247,7 +247,7 @@
 
             var table = new Tabulator("#budget-under-table", {
                 index: "Sku",
-                ajaxURL: "/ebay/make-new/campaign/kw/data",
+                ajaxURL: "/ebay-3/utilized/ads/data",
                 layout: "fitData",
                 movableColumns: true,
                 resizableColumns: true,
@@ -310,27 +310,6 @@
                             }
                             return `<div class="text-center"><span class="dil-percent-value red">0%</span></div>`;
                         },
-                        visible: false
-                    },
-                    {
-                        title: "NRL",
-                        field: "NRL",
-                        formatter: function(cell) {
-                            const row = cell.getRow();
-                            const sku = row.getData().sku;
-                            const value = cell.getValue();
-                            const bgColor = value === 'NRL' ? 'red-bg' : 'green-bg';
-                            return `
-                                <select class="form-select form-select-sm editable-select" 
-                                        data-sku="${sku}" 
-                                        data-field="NRL"
-                                        style="width: 90px;">
-                                    <option value="RL" ${value === 'RL' ? 'selected' : ''}>RL</option>
-                                    <option value="NRL" ${value === 'NRL' ? 'selected' : ''}>NRL</option>
-                                </select>
-                            `;
-                        },
-                        hozAlign: "center",
                         visible: false
                     },
                     {
@@ -465,7 +444,15 @@
                         formatter: function(cell) {
                             var row = cell.getRow().getData();
                             var l1_cpc = parseFloat(row.l1_cpc) || 0;
-                            var sbid = (l1_cpc * 0.90).toFixed(2);
+                            var l7_cpc = parseFloat(row.l7_cpc) || 0;
+
+                            var sbid = 0;
+                            if(l1_cpc > l7_cpc) {
+                                sbid = Math.floor(l1_cpc * 1.05 * 100) / 100;
+                            }else{
+                                sbid = Math.floor(l7_cpc * 1.05 * 100) / 100;
+                            }
+                            sbid = sbid.toFixed(2);
                             return sbid;
                         },
                     },
@@ -485,23 +472,23 @@
                             if (e.target.classList.contains("update-row-btn")) {
                                 var rowData = cell.getRow().getData();
                                 var l1_cpc = parseFloat(rowData.l1_cpc) || 0;
-                                var sbid = (l1_cpc * 0.90).toFixed(2);
+                                var l7_cpc = parseFloat(rowData.l7_cpc) || 0;
+
+                                var sbid = 0;
+                                if(l1_cpc > l7_cpc) {
+                                    sbid = Math.floor(l1_cpc * 1.05 * 100) / 100;
+                                }else{
+                                    sbid = Math.floor(l7_cpc * 1.05 * 100) / 100;
+                                }
+                                sbid = sbid.toFixed(2);
                                 updateBid(sbid, rowData.campaign_id);
                             }
                         }
                     },
                     {
-                        title: "SBGT",
-                        field: "sbgt",
-                        hozAlign: "center",
-                        editor: "input"
-                    },
-                    {
-                        title: "APR BGT",
-                        field: "apr_bgt",
-                        hozAlign: "center",
-                        editor: "input"
-                    },
+                        title: "Status",
+                        field: "campaignStatus",
+                    }
                 ],
                 ajaxResponse: function(url, params, response) {
                     return response.data;
@@ -543,86 +530,99 @@
                 }
             });
 
-            table.on("tableBuilt", function () {
+            table.on("tableBuilt", function() {
 
                 function combinedFilter(data) {
+                    let acos = parseFloat(data.acos || 0);
+                    let budget = parseFloat(data.campaignBudgetAmount) || 0;
+                    let l7_spend = parseFloat(data.l7_spend) || 0;
+                    let l1_spend = parseFloat(data.l1_spend) || 0;
 
-                    // 🔍 Global Search (campaignName + SKU)
-                    let searchVal = ($("#global-search").val() || "").toLowerCase().trim();
-                    if (searchVal) {
-                        let campaignName = (data.campaignName || "").toLowerCase();
-                        let sku = (data.sku || "").toLowerCase();
-                        if (!campaignName.includes(searchVal) && !sku.includes(searchVal)) {
-                            return false;
-                        }
-                    }
+                    let ub7 = budget > 0 ? (l7_spend / (budget * 7)) * 100 : 0;
+                    let ub1 = budget > 0 ? (l1_spend / budget) * 100 : 0;
 
-                    // 🟡 Status Filter
-                    let statusVal = ($("#status-filter").val() || "").trim();
-                    if (statusVal && (data.campaignStatus || "").trim() !== statusVal) {
+                    if (!(ub7 < 70)) return false;
+
+                    // price < 20
+                    let price = parseFloat(data.price || 0);
+                    if (price < 30) {
                         return false;
                     }
 
-                    // 🧮 INV Filter
+                    // Pink DIL filter (exclude pink rows)
+                    let l30 = parseFloat(data.L30);
+                    let inv = parseFloat(data.INV);
+                    let dilDecimal = (!isNaN(l30) && !isNaN(inv) && inv !== 0) ? (l30 / inv) : 0;
+                    let dilColor = getDilColor(dilDecimal);
+                    if (dilColor === "pink") return false;
+
+                    // Global search filter
+                    let searchVal = $("#global-search").val()?.toLowerCase() || "";
+                    if (searchVal && !(data.campaignName?.toLowerCase().includes(searchVal))) {
+                        return false;
+                    }
+
+                    // Status filter
+                    let statusVal = $("#status-filter").val();
+                    if (statusVal && data.campaignStatus !== statusVal) {
+                        return false;
+                    }
+
+                    // Inventory filter
                     let invFilterVal = $("#inv-filter").val();
-                    let inv = parseFloat(data.INV) || 0;
+                    if (!invFilterVal) {
+                        if (parseFloat(data.INV) === 0) return false;
+                    } else if (invFilterVal === "INV_0") {
+                        if (parseFloat(data.INV) !== 0) return false;
+                    } else if (invFilterVal === "OTHERS") {
+                        if (parseFloat(data.INV) === 0) return false;
+                    }
 
-                    if (invFilterVal === "INV_0" && inv !== 0) return false;
-                    if (invFilterVal === "OTHERS" && inv === 0) return false;
-
-                    // 🟣 NRA Filter
-                    let nraFilterVal = ($("#nra-filter").val() || "").trim();
+                    // NR filter (use only data object)
+                    let nraFilterVal = $("#nra-filter").val();
                     if (nraFilterVal) {
-                        // Try to read from live DOM select, fallback to row data
-                        let rowSelect = document.querySelector(
-                            `select[data-sku="${data.sku}"][data-field="NR"]`
-                        );
-                        let rowVal = (rowSelect && rowSelect.value) ? rowSelect.value : (data.NR || "");
-                        if ((rowVal || "").trim() !== nraFilterVal) {
-                            return false;
-                        }
+                        let rowVal = data.NR || "";
+                        if (rowVal !== nraFilterVal) return false;
                     }
 
                     return true;
                 }
 
-                function applyCombinedFilter() {
-                    table.clearFilter(true); // clear all previous filters
-                    table.setFilter(combinedFilter); // apply combined filter fresh
-                    updateCampaignStats(); // update numbers
-                }
+                table.setFilter(combinedFilter);
 
                 function updateCampaignStats() {
-                    let total = table.getDataCount();            // all rows
-                    let filtered = table.getDataCount("active"); // filtered rows
-                    let currentPage = table.getRows("active").length; // visible rows on current page
-                    let percentage = total > 0 ? ((filtered / total) * 100).toFixed(0) : 0;
+                    let allData = table.getData(); // poora data
+                    let filteredCount = allData.filter(combinedFilter).length; // apply same filter function
 
-                    $("#total-campaigns").text(currentPage);
-                    $("#percentage-campaigns").text(percentage + "%");
+                    let total = allData.length;
+                    let percentage = total > 0 ? ((filteredCount / total) * 100).toFixed(0) : 0;
+
+                    document.getElementById("total-campaigns").innerText = filteredCount; // filtered rows count
+                    document.getElementById("percentage-campaigns").innerText = percentage + "%";
                 }
-
-                applyCombinedFilter();
 
                 table.on("dataFiltered", updateCampaignStats);
                 table.on("pageLoaded", updateCampaignStats);
                 table.on("dataProcessed", updateCampaignStats);
 
-                $("#global-search").on("keyup", function () {
-                    applyCombinedFilter();
+                $("#global-search").on("keyup", function() {
+                    table.setFilter(combinedFilter);
+                    updateCampaignStats(); // update count immediately
                 });
 
-                $("#status-filter, #inv-filter, #nra-filter").on("change", function () {
-                    applyCombinedFilter();
+                $("#status-filter, #inv-filter, #nra-filter").on("change", function() {
+                    table.setFilter(combinedFilter);
+                    updateCampaignStats(); // update count immediately
                 });
+
+                updateCampaignStats();
             });
-
 
             document.addEventListener("click", function(e) {
                 if (e.target.classList.contains("toggle-cols-btn")) {
                     let btn = e.target;
 
-                    let colsToToggle = ["INV", "L30", "DIL %", "NRL", "NR"];
+                    let colsToToggle = ["INV", "L30", "DIL %", "NR"];
 
                     colsToToggle.forEach(colName => {
                         let col = table.getColumn(colName);
@@ -648,7 +648,15 @@
                         
                         var rowData = row.getData();
                         var l1_cpc = parseFloat(rowData.l1_cpc) || 0;
-                        var sbid = (l1_cpc * 0.90).toFixed(2);
+                        var l7_cpc = parseFloat(rowData.l7_cpc) || 0;
+
+                        var sbid = 0;
+                        if(l1_cpc > l7_cpc) {
+                            sbid = Math.floor(l1_cpc * 1.05 * 100) / 100;
+                        }else{
+                            sbid = Math.floor(l7_cpc * 1.05 * 100) / 100;
+                        }
+                        sbid = sbid.toFixed(2);
 
                         campaignIds.push(rowData.campaign_id);
                         bids.push(sbid);
@@ -719,10 +727,23 @@
             document.getElementById("export-btn").addEventListener("click", function () {
                 let filteredData = table.getData("active");
 
-                let exportData = filteredData.map(row => ({
-                    campaignName: row.campaignName,
-                    sbid: (parseFloat(row.l1_cpc || 0) * 0.90).toFixed(2)
-                }));
+                let exportData = filteredData.map(row => {
+                    let l1_cpc = parseFloat(row.l1_cpc || 0);
+                    let l7_cpc = parseFloat(row.l7_cpc || 0);
+                    let sbid = 0;
+
+                    if(l1_cpc > l7_cpc) {
+                        sbid = Math.floor(l1_cpc * 1.05 * 100) / 100;
+                    }else{
+                        sbid = Math.floor(l7_cpc * 1.05 * 100) / 100;
+                    }
+                    sbid = sbid.toFixed(2);
+
+                    return {
+                        campaignName: row.campaignName || "",
+                        sbid: sbid
+                    };
+                });
 
                 if (exportData.length === 0) {
                     alert("No data available to export!");

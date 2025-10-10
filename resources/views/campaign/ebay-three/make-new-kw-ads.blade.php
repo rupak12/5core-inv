@@ -1,4 +1,4 @@
-@extends('layouts.vertical', ['title' => 'Ebay - MAKE NEW CAMPAIGN KW ', 'mode' => $mode ?? '', 'demo' => $demo ?? ''])
+@extends('layouts.vertical', ['title' => 'Ebay 3 - MAKE NEW CAMPAIGN KW ', 'mode' => $mode ?? '', 'demo' => $demo ?? ''])
 @section('css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
@@ -130,8 +130,8 @@
 @endsection
 @section('content')
     @include('layouts.shared.page-title', [
-        'page_title' => 'Ebay - MAKE NEW CAMPAIGN KW ',
-        'sub_title' => 'Ebay - MAKE NEW CAMPAIGN KW ',
+        'page_title' => 'Ebay 3 - MAKE NEW CAMPAIGN KW ',
+        'sub_title' => 'Ebay 3 - MAKE NEW CAMPAIGN KW ',
     ])
     <div class="row">
         <div class="col-12">
@@ -141,7 +141,7 @@
                         <!-- Title -->
                         <h4 class="fw-bold text-primary mb-3 d-flex align-items-center">
                             <i class="fa-solid fa-chart-line me-2"></i>
-                            Ebay - MAKE NEW CAMPAIGN KW 
+                            MAKE NEW CAMPAIGN KW 
                         </h4>
 
                         <!-- Filters Row -->
@@ -168,10 +168,7 @@
 
                             <!-- Stats -->
                             <div class="col-md-6">
-                                <div class="d-flex gap-2 justify-content-end">
-                                    <button id="apr-all-sbid-btn" class="btn btn-info btn-sm d-none">
-                                        APR ALL SBID
-                                    </button>
+                                <div class="d-flex gap-2 justify-content-md-end">
                                     <a href="javascript:void(0)" id="export-btn" class="btn btn-sm btn-success d-flex align-items-center justify-content-center">
                                         <i class="fas fa-file-export me-1"></i> Export Excel/CSV
                                     </a>
@@ -213,20 +210,6 @@
         </div>
     </div>
 
-    <div id="progress-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 9999;">
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
-            <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <div class="mt-3" style="color: white; font-size: 1.2rem; font-weight: 500;">
-                Updating campaigns...
-            </div>
-            <div style="color: #a3e635; font-size: 0.9rem; margin-top: 0.5rem;">
-                Please wait while we process your request
-            </div>
-        </div>
-    </div>
-
 @endsection
 
 @section('script')
@@ -247,7 +230,7 @@
 
             var table = new Tabulator("#budget-under-table", {
                 index: "Sku",
-                ajaxURL: "/ebay/make-new/campaign/kw/data",
+                ajaxURL: "/ebay-3/make-new/kw-ads/data",
                 layout: "fitData",
                 movableColumns: true,
                 resizableColumns: true,
@@ -261,13 +244,7 @@
                         row.getElement().classList.add("parent-row");
                     }
                 },
-                columns: [{
-                        formatter: "rowSelection",
-                        titleFormatter: "rowSelection",
-                        hozAlign: "center",
-                        headerSort: false,
-                        width: 50
-                    },
+                columns: [
                     {
                         title: "Parent",
                         field: "parent"
@@ -458,61 +435,9 @@
                             return l1_cpc.toFixed(2);
                         }
                     },
-                    {
-                        title: "SBID",
-                        field: "sbid",
-                        hozAlign: "center",
-                        formatter: function(cell) {
-                            var row = cell.getRow().getData();
-                            var l1_cpc = parseFloat(row.l1_cpc) || 0;
-                            var sbid = (l1_cpc * 0.90).toFixed(2);
-                            return sbid;
-                        },
-                    },
-                    {
-                        title: "APR BID",
-                        field: "apr_bid",
-                        hozAlign: "center",
-                        formatter: function(cell, formatterParams, onRendered) {
-                            var value = cell.getValue() || 0;
-                            return `
-                                <div style="align-items:center; gap:5px;">
-                                    <button class="btn btn-primary update-row-btn">APR BID</button>
-                                </div>
-                            `;
-                        },
-                        cellClick: function(e, cell) {
-                            if (e.target.classList.contains("update-row-btn")) {
-                                var rowData = cell.getRow().getData();
-                                var l1_cpc = parseFloat(rowData.l1_cpc) || 0;
-                                var sbid = (l1_cpc * 0.90).toFixed(2);
-                                updateBid(sbid, rowData.campaign_id);
-                            }
-                        }
-                    },
-                    {
-                        title: "SBGT",
-                        field: "sbgt",
-                        hozAlign: "center",
-                        editor: "input"
-                    },
-                    {
-                        title: "APR BGT",
-                        field: "apr_bgt",
-                        hozAlign: "center",
-                        editor: "input"
-                    },
                 ],
                 ajaxResponse: function(url, params, response) {
                     return response.data;
-                }
-            });
-
-            table.on("rowSelectionChanged", function(data, rows) {
-                if (data.length > 0) {
-                    document.getElementById("apr-all-sbid-btn").classList.remove("d-none");
-                } else {
-                    document.getElementById("apr-all-sbid-btn").classList.add("d-none");
                 }
             });
 
@@ -545,77 +470,78 @@
 
             table.on("tableBuilt", function () {
 
-                function combinedFilter(data) {
+    function combinedFilter(data) {
 
-                    // 🔍 Global Search (campaignName + SKU)
-                    let searchVal = ($("#global-search").val() || "").toLowerCase().trim();
-                    if (searchVal) {
-                        let campaignName = (data.campaignName || "").toLowerCase();
-                        let sku = (data.sku || "").toLowerCase();
-                        if (!campaignName.includes(searchVal) && !sku.includes(searchVal)) {
-                            return false;
-                        }
-                    }
+        // 🔍 Global Search (campaignName + SKU)
+        let searchVal = ($("#global-search").val() || "").toLowerCase().trim();
+        if (searchVal) {
+            let campaignName = (data.campaignName || "").toLowerCase();
+            let sku = (data.sku || "").toLowerCase();
+            if (!campaignName.includes(searchVal) && !sku.includes(searchVal)) {
+                return false;
+            }
+        }
 
-                    // 🟡 Status Filter
-                    let statusVal = ($("#status-filter").val() || "").trim();
-                    if (statusVal && (data.campaignStatus || "").trim() !== statusVal) {
-                        return false;
-                    }
+        // 🟡 Status Filter
+        let statusVal = $("#status-filter").val();
+        if (statusVal && (data.campaignStatus || "").trim() !== statusVal.trim()) {
+            return false;
+        }
 
-                    // 🧮 INV Filter
-                    let invFilterVal = $("#inv-filter").val();
-                    let inv = parseFloat(data.INV) || 0;
+        // 🧮 INV Filter
+        let invFilterVal = $("#inv-filter").val();
+        let inv = parseFloat(data.INV) || 0;
 
-                    if (invFilterVal === "INV_0" && inv !== 0) return false;
-                    if (invFilterVal === "OTHERS" && inv === 0) return false;
+        if (invFilterVal === "INV_0" && inv !== 0) return false;
+        if (invFilterVal === "OTHERS" && inv === 0) return false;
 
-                    // 🟣 NRA Filter
-                    let nraFilterVal = ($("#nra-filter").val() || "").trim();
-                    if (nraFilterVal) {
-                        // Try to read from live DOM select, fallback to row data
-                        let rowSelect = document.querySelector(
-                            `select[data-sku="${data.sku}"][data-field="NR"]`
-                        );
-                        let rowVal = (rowSelect && rowSelect.value) ? rowSelect.value : (data.NR || "");
-                        if ((rowVal || "").trim() !== nraFilterVal) {
-                            return false;
-                        }
-                    }
+        // 🟣 NRA Filter
+        let nraFilterVal = $("#nra-filter").val();
+        if (nraFilterVal) {
+            // Try to read from select input in DOM (if exists)
+            let rowSelect = document.querySelector(
+                `select[data-sku="${data.sku}"][data-field="NR"]`
+            );
 
-                    return true;
-                }
+            let rowVal = rowSelect ? rowSelect.value : (data.NR || "");
+            if (rowVal.trim() !== nraFilterVal.trim()) {
+                return false;
+            }
+        }
 
-                function applyCombinedFilter() {
-                    table.clearFilter(true); // clear all previous filters
-                    table.setFilter(combinedFilter); // apply combined filter fresh
-                    updateCampaignStats(); // update numbers
-                }
+        return true;
+    }
 
-                function updateCampaignStats() {
-                    let total = table.getDataCount();            // all rows
-                    let filtered = table.getDataCount("active"); // filtered rows
-                    let currentPage = table.getRows("active").length; // visible rows on current page
-                    let percentage = total > 0 ? ((filtered / total) * 100).toFixed(0) : 0;
+    // ✅ Apply initial filter
+    table.setFilter(combinedFilter);
 
-                    $("#total-campaigns").text(currentPage);
-                    $("#percentage-campaigns").text(percentage + "%");
-                }
+    // 🔢 Update Counts
+    function updateCampaignStats() {
+        let total = table.getDataCount();            // total rows
+        let filtered = table.getDataCount("active"); // rows after filter
+        let currentPage = table.getRows("active").length; // visible rows on current page
 
-                applyCombinedFilter();
+        let percentage = total > 0 ? ((filtered / total) * 100).toFixed(0) : 0;
 
-                table.on("dataFiltered", updateCampaignStats);
-                table.on("pageLoaded", updateCampaignStats);
-                table.on("dataProcessed", updateCampaignStats);
+        $("#total-campaigns").text(currentPage);
+        $("#percentage-campaigns").text(percentage + "%");
+    }
 
-                $("#global-search").on("keyup", function () {
-                    applyCombinedFilter();
-                });
+    // 🔁 Bind Events
+    table.on("dataFiltered", updateCampaignStats);
+    table.on("pageLoaded", updateCampaignStats);
+    table.on("dataProcessed", updateCampaignStats);
 
-                $("#status-filter, #inv-filter, #nra-filter").on("change", function () {
-                    applyCombinedFilter();
-                });
-            });
+    $("#global-search").on("keyup", function () {
+        table.setFilter(combinedFilter);
+    });
+
+    $("#status-filter, #inv-filter, #nra-filter").on("change", function () {
+        table.setFilter(combinedFilter);
+    });
+
+    updateCampaignStats();
+});
 
 
             document.addEventListener("click", function(e) {
@@ -632,89 +558,6 @@
                     });
                 }
             });
-
-            document.getElementById("apr-all-sbid-btn").addEventListener("click", function() {
-                const overlay = document.getElementById("progress-overlay");
-                overlay.style.display = "flex";
-
-                var filteredData = table.getSelectedRows();
-
-                var campaignIds = [];
-                var bids = [];
-
-                filteredData.forEach(function(row) {
-                    var rowEl = row.getElement();
-                    if(rowEl && rowEl.offsetParent !== null){
-                        
-                        var rowData = row.getData();
-                        var l1_cpc = parseFloat(rowData.l1_cpc) || 0;
-                        var sbid = (l1_cpc * 0.90).toFixed(2);
-
-                        campaignIds.push(rowData.campaign_id);
-                        bids.push(sbid);
-                    }
-                });
-                console.log("Campaign IDs:", campaignIds);
-                console.log("Bids:", bids);
-                fetch('/update-ebay-keywords-bid-price', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                            .getAttribute('content')
-                    },
-                    body: JSON.stringify({
-                        campaign_ids: campaignIds,
-                        bids: bids
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    console.log("Backend response:", data);
-                    if (data.status === 200) {
-                        alert("Keywords updated successfully!");
-                    } else {
-                        alert("Something went wrong: " + data.message);
-                    }
-                })
-                .catch(err => console.error(err))
-                .finally(() => {
-                    overlay.style.display = "none";
-                });
-            });
-
-            function updateBid(aprBid, campaignId) {
-                const overlay = document.getElementById("progress-overlay");
-                overlay.style.display = "flex";
-
-                console.log("Updating bid for Campaign ID:", campaignId, "New Bid:", aprBid);
-
-                fetch('/update-ebay-keywords-bid-price', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                            'content')
-                    },
-                    body: JSON.stringify({
-                        campaign_ids: [campaignId],
-                        bids: [aprBid]
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    console.log("Backend response:", data);
-                    if (data.status === 200) {
-                        alert("Keywords updated successfully!");
-                    } else {
-                        alert("Something went wrong: " + data.message);
-                    }
-                })
-                .catch(err => console.error(err))
-                .finally(() => {
-                    overlay.style.display = "none";
-                });
-            }
 
             document.getElementById("export-btn").addEventListener("click", function () {
                 let filteredData = table.getData("active");
@@ -733,7 +576,7 @@
                 let wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Campaigns");
 
-                XLSX.writeFile(wb, "ebay_over_acos_pink.xlsx");
+                XLSX.writeFile(wb, "ebay3_make_new_kwAds.xlsx");
             });
 
 

@@ -1,4 +1,4 @@
-@extends('layouts.vertical', ['title' => 'Ebay - MAKE NEW CAMPAIGN KW ', 'mode' => $mode ?? '', 'demo' => $demo ?? ''])
+@extends('layouts.vertical', ['title' => 'Ebay 3 < ACOS PINK', 'mode' => $mode ?? '', 'demo' => $demo ?? ''])
 @section('css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
@@ -130,8 +130,8 @@
 @endsection
 @section('content')
     @include('layouts.shared.page-title', [
-        'page_title' => 'Ebay - MAKE NEW CAMPAIGN KW ',
-        'sub_title' => 'Ebay - MAKE NEW CAMPAIGN KW ',
+        'page_title' => 'Ebay 3 < ACOS PINK',
+        'sub_title' => 'Ebay 3 < ACOS PINK',
     ])
     <div class="row">
         <div class="col-12">
@@ -141,7 +141,7 @@
                         <!-- Title -->
                         <h4 class="fw-bold text-primary mb-3 d-flex align-items-center">
                             <i class="fa-solid fa-chart-line me-2"></i>
-                            Ebay - MAKE NEW CAMPAIGN KW 
+                           UNDER ACOS PINK
                         </h4>
 
                         <!-- Filters Row -->
@@ -192,12 +192,12 @@
                             <div class="col-md-6">
                                 <div class="d-flex gap-2">
                                     <div class="input-group">
-                                        <input type="text" id="global-search" class="form-control form-control-md"
-                                            placeholder="Search campaign...">
+                                        <input type="text" id="global-search" class="form-control form-control-md" 
+                                               placeholder="Search campaign...">
                                     </div>
                                     <select id="status-filter" class="form-select form-select-md" style="width: 140px;">
                                         <option value="">All Status</option>
-                                        <option value="ENABLED">Enabled</option>
+                                        <option value="RUNNING">Running</option>
                                         <option value="PAUSED">Paused</option>
                                         <option value="ARCHIVED">Archived</option>
                                     </select>
@@ -247,7 +247,7 @@
 
             var table = new Tabulator("#budget-under-table", {
                 index: "Sku",
-                ajaxURL: "/ebay/make-new/campaign/kw/data",
+                ajaxURL: "/ebay-3/acos/control/data",
                 layout: "fitData",
                 movableColumns: true,
                 resizableColumns: true,
@@ -261,7 +261,8 @@
                         row.getElement().classList.add("parent-row");
                     }
                 },
-                columns: [{
+                columns: [
+                    {
                         formatter: "rowSelection",
                         titleFormatter: "rowSelection",
                         hozAlign: "center",
@@ -313,27 +314,6 @@
                         visible: false
                     },
                     {
-                        title: "NRL",
-                        field: "NRL",
-                        formatter: function(cell) {
-                            const row = cell.getRow();
-                            const sku = row.getData().sku;
-                            const value = cell.getValue();
-                            const bgColor = value === 'NRL' ? 'red-bg' : 'green-bg';
-                            return `
-                                <select class="form-select form-select-sm editable-select" 
-                                        data-sku="${sku}" 
-                                        data-field="NRL"
-                                        style="width: 90px;">
-                                    <option value="RL" ${value === 'RL' ? 'selected' : ''}>RL</option>
-                                    <option value="NRL" ${value === 'NRL' ? 'selected' : ''}>NRL</option>
-                                </select>
-                            `;
-                        },
-                        hozAlign: "center",
-                        visible: false
-                    },
-                    {
                         title: "NRA",
                         field: "NR",
                         formatter: function(cell) {
@@ -371,25 +351,17 @@
                         hozAlign: "right",
                         formatter: function(cell) {
                             var row = cell.getRow().getData();
-                            var acosRaw = row.acos; 
-                            var acos = parseFloat(acosRaw);
-
-                            if (isNaN(acos)) {
-                                acos = 0;
-                            }
+                            var acos = parseFloat(row.acos) || 0;
 
                             var td = cell.getElement();
                             td.classList.remove('green-bg', 'pink-bg', 'red-bg');
 
-                            if (acos === 0) {
-                                td.classList.add('red-bg');
-                                return "100%"; 
-                            } else if (acos < 7) {
-                                td.classList.add('pink-bg');
+                            if (acos < 7 && acos >= 0.01) {
+                                td.classList.add('pink-bg'); 
                             } else if (acos >= 7 && acos <= 14) {
-                                td.classList.add('green-bg');
+                                td.classList.add('green-bg'); 
                             } else if (acos > 14) {
-                                td.classList.add('red-bg');
+                                td.classList.add('red-bg'); 
                             }
 
                             return acos.toFixed(0) + "%";
@@ -407,11 +379,11 @@
 
                             var td = cell.getElement();
                             td.classList.remove('green-bg', 'pink-bg', 'red-bg');
-                            if (ub7 >= 70 && ub7 <= 90) {
+                            if (ub7 >= 60 && ub7 <= 90) {
                                 td.classList.add('green-bg');
                             } else if (ub7 > 90) {
                                 td.classList.add('pink-bg');
-                            } else if (ub7 < 70) {
+                            } else if (ub7 < 60) {
                                 td.classList.add('red-bg');
                             }
                             return ub7.toFixed(0) + "%";
@@ -428,11 +400,11 @@
 
                             var td = cell.getElement();
                             td.classList.remove('green-bg', 'pink-bg', 'red-bg');
-                            if (ub1 >= 70 && ub1 <= 90) {
+                            if (ub1 >= 60 && ub1 <= 90) {
                                 td.classList.add('green-bg');
                             } else if (ub1 > 90) {
                                 td.classList.add('pink-bg');
-                            } else if (ub1 < 70) {
+                            } else if (ub1 < 60) {
                                 td.classList.add('red-bg');
                             }
                             return ub1.toFixed(0) + "%";
@@ -463,9 +435,16 @@
                         field: "sbid",
                         hozAlign: "center",
                         formatter: function(cell) {
-                            var row = cell.getRow().getData();
-                            var l1_cpc = parseFloat(row.l1_cpc) || 0;
-                            var sbid = (l1_cpc * 0.90).toFixed(2);
+                            var rowData = cell.getRow().getData();
+                            var l1_cpc = parseFloat(rowData.l1_cpc) || 0;
+                            var l7_cpc = parseFloat(rowData.l7_cpc) || 0;
+                            var sbid;
+
+                            if (l7_cpc > l1_cpc) {
+                                sbid = (l7_cpc * 1.05).toFixed(2);
+                            } else {
+                                sbid = (l1_cpc * 1.05).toFixed(2);
+                            }
                             return sbid;
                         },
                     },
@@ -485,144 +464,142 @@
                             if (e.target.classList.contains("update-row-btn")) {
                                 var rowData = cell.getRow().getData();
                                 var l1_cpc = parseFloat(rowData.l1_cpc) || 0;
-                                var sbid = (l1_cpc * 0.90).toFixed(2);
+                                var l7_cpc = parseFloat(rowData.l7_cpc) || 0;
+                                var sbid;
+
+                                if (l7_cpc > l1_cpc) {
+                                    sbid = (l7_cpc * 1.05).toFixed(2);
+                                } else {
+                                    sbid = (l1_cpc * 1.05).toFixed(2);
+                                }
                                 updateBid(sbid, rowData.campaign_id);
                             }
                         }
                     },
                     {
-                        title: "SBGT",
-                        field: "sbgt",
-                        hozAlign: "center",
-                        editor: "input"
-                    },
-                    {
-                        title: "APR BGT",
-                        field: "apr_bgt",
-                        hozAlign: "center",
-                        editor: "input"
-                    },
+                        title: "Status",
+                        field: "campaignStatus",
+                    }
                 ],
                 ajaxResponse: function(url, params, response) {
                     return response.data;
                 }
             });
 
-            table.on("rowSelectionChanged", function(data, rows) {
-                if (data.length > 0) {
+            table.on("rowSelectionChanged", function(data, rows){
+                if(data.length > 0){
                     document.getElementById("apr-all-sbid-btn").classList.remove("d-none");
                 } else {
                     document.getElementById("apr-all-sbid-btn").classList.add("d-none");
                 }
             });
 
-            document.addEventListener("change", function(e) {
-                if (e.target.classList.contains("editable-select")) {
-                    let sku = e.target.getAttribute("data-sku");
+            document.addEventListener("change", function(e){
+                if(e.target.classList.contains("editable-select")){
+                    let sku   = e.target.getAttribute("data-sku");
                     let field = e.target.getAttribute("data-field");
                     let value = e.target.value;
 
                     fetch('/update-ebay-nr-data', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                    .getAttribute('content')
-                            },
-                            body: JSON.stringify({
-                                sku: sku,
-                                field: field,
-                                value: value
-                            })
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            sku: sku,
+                            field: field,
+                            value: value
                         })
-                        .then(res => res.json())
-                        .then(data => {
-                            console.log(data);
-                        })
-                        .catch(err => console.error(err));
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log(data);
+                    })
+                    .catch(err => console.error(err));
                 }
             });
 
-            table.on("tableBuilt", function () {
+            table.on("tableBuilt", function() {
 
                 function combinedFilter(data) {
+                    let acos = parseFloat(data.acos || 0);
+                    let budget = parseFloat(data.campaignBudgetAmount) || 0;
+                    let l7_spend = parseFloat(data.l7_spend) || 0;
+                    let l1_spend = parseFloat(data.l1_spend) || 0;
 
-                    // 🔍 Global Search (campaignName + SKU)
-                    let searchVal = ($("#global-search").val() || "").toLowerCase().trim();
-                    if (searchVal) {
-                        let campaignName = (data.campaignName || "").toLowerCase();
-                        let sku = (data.sku || "").toLowerCase();
-                        if (!campaignName.includes(searchVal) && !sku.includes(searchVal)) {
-                            return false;
-                        }
-                    }
+                    let ub7 = budget > 0 ? (l7_spend / (budget * 7)) * 100 : 0;
+                    let ub1 = budget > 0 ? (l1_spend / budget) * 100 : 0;
 
-                    // 🟡 Status Filter
-                    let statusVal = ($("#status-filter").val() || "").trim();
-                    if (statusVal && (data.campaignStatus || "").trim() !== statusVal) {
+                    if (!(acos < 7 && ub7 < 60)) return false;
+
+                    // Global search filter
+                    let searchVal = $("#global-search").val()?.toLowerCase() || "";
+                    if (searchVal && !(data.campaignName?.toLowerCase().includes(searchVal))) {
                         return false;
                     }
 
-                    // 🧮 INV Filter
+                    // Status filter
+                    let statusVal = $("#status-filter").val();
+                    if (statusVal && data.campaignStatus !== statusVal) {
+                        return false;
+                    }
+
+                    // Inventory filter
                     let invFilterVal = $("#inv-filter").val();
-                    let inv = parseFloat(data.INV) || 0;
+                    if (!invFilterVal) {
+                        if (parseFloat(data.INV) === 0) return false;
+                    } else if (invFilterVal === "INV_0") {
+                        if (parseFloat(data.INV) !== 0) return false;
+                    } else if (invFilterVal === "OTHERS") {
+                        if (parseFloat(data.INV) === 0) return false;
+                    }
 
-                    if (invFilterVal === "INV_0" && inv !== 0) return false;
-                    if (invFilterVal === "OTHERS" && inv === 0) return false;
-
-                    // 🟣 NRA Filter
-                    let nraFilterVal = ($("#nra-filter").val() || "").trim();
+                    // NR filter (use only data object)
+                    let nraFilterVal = $("#nra-filter").val();
                     if (nraFilterVal) {
-                        // Try to read from live DOM select, fallback to row data
-                        let rowSelect = document.querySelector(
-                            `select[data-sku="${data.sku}"][data-field="NR"]`
-                        );
-                        let rowVal = (rowSelect && rowSelect.value) ? rowSelect.value : (data.NR || "");
-                        if ((rowVal || "").trim() !== nraFilterVal) {
-                            return false;
-                        }
+                        let rowVal = data.NR || "";
+                        if (rowVal !== nraFilterVal) return false;
                     }
 
                     return true;
                 }
 
-                function applyCombinedFilter() {
-                    table.clearFilter(true); // clear all previous filters
-                    table.setFilter(combinedFilter); // apply combined filter fresh
-                    updateCampaignStats(); // update numbers
-                }
+                table.setFilter(combinedFilter);
 
                 function updateCampaignStats() {
-                    let total = table.getDataCount();            // all rows
-                    let filtered = table.getDataCount("active"); // filtered rows
-                    let currentPage = table.getRows("active").length; // visible rows on current page
-                    let percentage = total > 0 ? ((filtered / total) * 100).toFixed(0) : 0;
+                    let allData = table.getData(); // poora data
+                    let filteredCount = allData.filter(combinedFilter).length; // apply same filter function
 
-                    $("#total-campaigns").text(currentPage);
-                    $("#percentage-campaigns").text(percentage + "%");
+                    let total = allData.length;
+                    let percentage = total > 0 ? ((filteredCount / total) * 100).toFixed(0) : 0;
+
+                    document.getElementById("total-campaigns").innerText = filteredCount; // filtered rows count
+                    document.getElementById("percentage-campaigns").innerText = percentage + "%";
                 }
-
-                applyCombinedFilter();
 
                 table.on("dataFiltered", updateCampaignStats);
                 table.on("pageLoaded", updateCampaignStats);
                 table.on("dataProcessed", updateCampaignStats);
 
-                $("#global-search").on("keyup", function () {
-                    applyCombinedFilter();
+                $("#global-search").on("keyup", function() {
+                    table.setFilter(combinedFilter);
+                    updateCampaignStats(); // update count immediately
                 });
 
-                $("#status-filter, #inv-filter, #nra-filter").on("change", function () {
-                    applyCombinedFilter();
+                $("#status-filter, #inv-filter, #nra-filter").on("change", function() {
+                    table.setFilter(combinedFilter);
+                    updateCampaignStats(); // update count immediately
                 });
+
+                updateCampaignStats();
             });
-
 
             document.addEventListener("click", function(e) {
                 if (e.target.classList.contains("toggle-cols-btn")) {
                     let btn = e.target;
 
-                    let colsToToggle = ["INV", "L30", "DIL %", "NRL", "NR"];
+                    let colsToToggle = ["INV", "L30", "DIL %", "NR"];
 
                     colsToToggle.forEach(colName => {
                         let col = table.getColumn(colName);
@@ -633,12 +610,12 @@
                 }
             });
 
-            document.getElementById("apr-all-sbid-btn").addEventListener("click", function() {
+            document.getElementById("apr-all-sbid-btn").addEventListener("click", function(){
                 const overlay = document.getElementById("progress-overlay");
                 overlay.style.display = "flex";
 
                 var filteredData = table.getSelectedRows();
-
+                
                 var campaignIds = [];
                 var bids = [];
 
@@ -648,20 +625,27 @@
                         
                         var rowData = row.getData();
                         var l1_cpc = parseFloat(rowData.l1_cpc) || 0;
-                        var sbid = (l1_cpc * 0.90).toFixed(2);
+                        var l7_cpc = parseFloat(rowData.l7_cpc) || 0;
+                        var sbid;
+
+                        if (l7_cpc > l1_cpc) {
+                            sbid = (l7_cpc * 1.05).toFixed(2);
+                        } else {
+                            sbid = (l1_cpc * 1.05).toFixed(2);
+                        }
 
                         campaignIds.push(rowData.campaign_id);
                         bids.push(sbid);
                     }
                 });
+
                 console.log("Campaign IDs:", campaignIds);
                 console.log("Bids:", bids);
-                fetch('/update-ebay-keywords-bid-price', {
+                fetch('/update-keywords-bid-price', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                            .getAttribute('content')
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     },
                     body: JSON.stringify({
                         campaign_ids: campaignIds,
@@ -671,7 +655,7 @@
                 .then(res => res.json())
                 .then(data => {
                     console.log("Backend response:", data);
-                    if (data.status === 200) {
+                    if(data.status === 200){
                         alert("Keywords updated successfully!");
                     } else {
                         alert("Something went wrong: " + data.message);
@@ -688,13 +672,12 @@
                 overlay.style.display = "flex";
 
                 console.log("Updating bid for Campaign ID:", campaignId, "New Bid:", aprBid);
-
-                fetch('/update-ebay-keywords-bid-price', {
+                
+                fetch('/update-keywords-bid-price', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                            'content')
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     },
                     body: JSON.stringify({
                         campaign_ids: [campaignId],
@@ -704,7 +687,7 @@
                 .then(res => res.json())
                 .then(data => {
                     console.log("Backend response:", data);
-                    if (data.status === 200) {
+                    if(data.status === 200){
                         alert("Keywords updated successfully!");
                     } else {
                         alert("Something went wrong: " + data.message);
@@ -719,10 +702,22 @@
             document.getElementById("export-btn").addEventListener("click", function () {
                 let filteredData = table.getData("active");
 
-                let exportData = filteredData.map(row => ({
-                    campaignName: row.campaignName,
-                    sbid: (parseFloat(row.l1_cpc || 0) * 0.90).toFixed(2)
-                }));
+                let exportData = filteredData.map(row => {
+                    let l1_cpc = parseFloat(row.l1_cpc || 0);
+                    let l7_cpc = parseFloat(row.l7_cpc || 0);
+                    let sbid = 0;
+
+                    if (l7_cpc > l1_cpc) {
+                        sbid = (l7_cpc * 1.05).toFixed(2);
+                    } else {
+                        sbid = (l1_cpc * 1.05).toFixed(2);
+                    }
+
+                    return {
+                        campaignName: row.campaignName || "",
+                        sbid: sbid
+                    };
+                });
 
                 if (exportData.length === 0) {
                     alert("No data available to export!");
@@ -733,9 +728,8 @@
                 let wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Campaigns");
 
-                XLSX.writeFile(wb, "ebay_over_acos_pink.xlsx");
+                XLSX.writeFile(wb, "ebay_under_acos_pink.xlsx");
             });
-
 
 
             document.body.style.zoom = "78%";
