@@ -76,6 +76,7 @@ use App\Models\TiktokSheet;
 use App\Models\TopDawgSheetdata;
 use App\Models\WaifairProductSheet;
 use App\Models\WalmartMetrics;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -3384,6 +3385,59 @@ class ChannelMasterController extends Controller
             return 0;
         }
     }
+
+
+    public function getSalesTrendData()
+    {
+        $today = now();
+        $l30Start = $today->copy()->subDays(30);
+        $l60Start = $today->copy()->subDays(60);
+
+        // Get daily sales for last 60 days
+        $salesData = DB::connection('apicentral')
+            ->table('shopify_order_items')
+            ->select(
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('SUM(quantity * price) as total_sales')
+            )
+            ->where('created_at', '>=', $l60Start)
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->orderBy('date', 'asc')
+            ->get();
+
+        // Split into two datasets (L30 & L60)
+        $l30Data = [];
+        $l60Data = [];
+
+        foreach ($salesData as $row) {
+            $date = Carbon::parse($row->date)->format('Y-m-d');
+            if ($row->date >= $l30Start->toDateString()) {
+                $l30Data[$date] = $row->total_sales;
+            } else {
+                $l60Data[$date] = $row->total_sales;
+            }
+        }
+
+        // Prepare consistent date series
+        $period = new \DatePeriod(
+            $l60Start,
+            new \DateInterval('P1D'),
+            $today
+        );
+
+        $chartData = [];
+        foreach ($period as $date) {
+            $formatted = $date->format('Y-m-d');
+            $chartData[] = [
+                'date' => $formatted,
+                'l30_sales' => $l30Data[$formatted] ?? 0,
+                'l60_sales' => $l60Data[$formatted] ?? 0,
+            ];
+        }
+
+        return response()->json(['chartData' => $chartData]);
+    }
+
 
 
 }

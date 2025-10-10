@@ -290,6 +290,10 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
     Route::post('/update-executive', [ChannelMasterController::class, 'updateExecutive']);
     Route::post('/update-checkbox', [ChannelMasterController::class, 'sendToGoogleSheet']);
     Route::get('/channels-master-data', [ChannelMasterController::class, 'getViewChannelData']);
+    // Route::get('/get-channel-sales-data', [ChannelMasterController::class, 'getChannelSalesData']);
+    Route::get('/sales-trend-data', [ChannelMasterController::class, 'getSalesTrendData']);
+
+
 
     //Zero Visibility Master
     Route::get('/zero-visibility-master', [ZeroVisibilityMasterController::class, 'index'])->name('zero.visibility');
