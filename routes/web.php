@@ -1912,6 +1912,9 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
 
     Route::controller(Ebay3PmtAdsController::class)->group(function () {
         Route::get('/ebay-3/pmt/ads', 'index')->name('ebay3.pmt.ads');
+        Route::get('/ebay-3/pmp/ads/data', 'getEbay3PmtAdsData');
+        Route::post('/update-ebay-3-pmt-percenatge', 'updateEbay3Percentage');
+        Route::post('/update-ebay-3-pmt-sprice', 'saveEbay3PMTSpriceToDatabase');
     });
 
     Route::controller(Ebay3UtilizedAdsController::class)->group(function () {

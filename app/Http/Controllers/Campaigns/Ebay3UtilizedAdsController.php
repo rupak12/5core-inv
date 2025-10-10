@@ -27,7 +27,10 @@ class Ebay3UtilizedAdsController extends Controller
         return view('campaign.ebay-three.correctly-utilized-ads');
     }
 
-    public function getEbay3UtilizedAdsData(){
+    public function getEbay3UtilizedAdsData()
+    {
+        $normalize = fn($value) => strtoupper(trim($value));
+
         $productMasters = ProductMaster::orderBy('parent', 'asc')
             ->orderByRaw("CASE WHEN sku LIKE 'PARENT %' THEN 1 ELSE 0 END")
             ->orderBy('sku', 'asc')
@@ -36,99 +39,68 @@ class Ebay3UtilizedAdsController extends Controller
         $skus = $productMasters->pluck('sku')->filter()->unique()->values()->all();
 
         $shopifyData = ShopifySku::whereIn('sku', $skus)->get()->keyBy('sku');
-
         $ebayMetricData = Ebay3Metric::whereIn('sku', $skus)->get()->keyBy('sku');
-
         $nrValues = EbayThreeDataView::whereIn('sku', $skus)->pluck('value', 'sku');
 
-        $ebayCampaignReportsL7 = Ebay3PriorityReport::where('report_range', 'L7')
-            ->where(function ($q) use ($skus) {
-                foreach ($skus as $sku) {
-                    $q->orWhere('campaign_name', 'LIKE', '%' . $sku . '%');
-                }
-            })
-            ->get();
-
-        $ebayCampaignReportsL1 = Ebay3PriorityReport::where('report_range', 'L1')
-            ->where(function ($q) use ($skus) {
-                foreach ($skus as $sku) {
-                    $q->orWhere('campaign_name', 'LIKE', '%' . $sku . '%');
-                }
-            })
-            ->get();
-
-        $ebayCampaignReportsL30 = Ebay3PriorityReport::where('report_range', 'L30')
-            ->where(function ($q) use ($skus) {
-                foreach ($skus as $sku) {
-                    $q->orWhere('campaign_name', 'LIKE', '%' . $sku . '%');
-                }
-            })
-            ->get();
+        $allCampaigns = Ebay3PriorityReport::whereIn('campaign_name', $skus)->get();
 
         $result = [];
 
         foreach ($productMasters as $pm) {
-            $sku = strtoupper($pm->sku);
+            $sku = $normalize($pm->sku);
             $parent = $pm->parent;
 
             $shopify = $shopifyData[$pm->sku] ?? null;
             $ebay = $ebayMetricData[$pm->sku] ?? null;
 
-            $matchedCampaignL7 = $ebayCampaignReportsL7->first(function ($item) use ($sku) {
-                return stripos($item->campaign_name, $sku) !== false;
+            $matchedCampaigns = $allCampaigns->filter(function ($c) use ($sku, $normalize) {
+                return $normalize($c->campaign_name) === $sku;
             });
 
-            $matchedCampaignL1 = $ebayCampaignReportsL1->first(function ($item) use ($sku) {
-                return stripos($item->campaign_name, $sku) !== false;
-            });
-
-            $matchedCampaignL30 = $ebayCampaignReportsL30->first(function ($item) use ($sku) {
-                return stripos($item->campaign_name, $sku) !== false;
-            });
-
-            if (!$matchedCampaignL7 && !$matchedCampaignL1) {
+            if ($matchedCampaigns->isEmpty()) {
                 continue;
             }
 
-            $row = [];
-            $row['parent'] = $parent;
-            $row['sku']    = $pm->sku;
-            $row['INV']    = $shopify->inv ?? 0;
-            $row['L30']    = $shopify->quantity ?? 0;
-            $row['price']  = $ebay->ebay_price ?? 0;
-            $row['campaign_id'] = $matchedCampaignL7->campaign_id ?? ($matchedCampaignL1->campaign_id ?? '');
-            $row['campaignName'] = $matchedCampaignL7->campaign_name ?? ($matchedCampaignL1->campaign_name ?? '');
-            $row['campaignStatus'] = $matchedCampaignL7->campaignStatus ?? ($matchedCampaignL1->campaignStatus ?? '');
-            $row['campaignBudgetAmount'] = $matchedCampaignL7->campaignBudgetAmount ?? ($matchedCampaignL1->campaignBudgetAmount ?? '');
+            $matchedL1  = $matchedCampaigns->firstWhere('report_range', 'L1');
+            $matchedL7  = $matchedCampaigns->firstWhere('report_range', 'L7');
+            $matchedL30 = $matchedCampaigns->firstWhere('report_range', 'L30');
 
-            $adFees   = (float) str_replace('USD ', '', $matchedCampaignL30->cpc_ad_fees_payout_currency ?? 0);
-            $sales    = (float) str_replace('USD ', '', $matchedCampaignL30->cpc_sale_amount_payout_currency ?? 0 );
+            $row = [
+                'parent' => $parent,
+                'sku'    => $pm->sku,
+                'INV'    => $shopify->inv ?? 0,
+                'L30'    => $shopify->quantity ?? 0,
+                'price'  => $ebay->ebay_price ?? 0,
+                'campaign_id' => $matchedL7->campaign_id ?? ($matchedL1->campaign_id ?? ''),
+                'campaignName' => $matchedL7->campaign_name ?? ($matchedL1->campaign_name ?? ''),
+                'campaignStatus' => $matchedL7->campaignStatus ?? ($matchedL1->campaignStatus ?? ''),
+                'campaignBudgetAmount' => $matchedL7->campaignBudgetAmount ?? ($matchedL1->campaignBudgetAmount ?? ''),
+                'l7_spend' => (float) str_replace('USD ', '', $matchedL7->cpc_ad_fees_payout_currency ?? 0),
+                'l7_cpc'   => (float) str_replace('USD ', '', $matchedL7->cost_per_click ?? 0),
+                'l1_spend' => (float) str_replace('USD ', '', $matchedL1->cpc_ad_fees_payout_currency ?? 0),
+                'l1_cpc'   => (float) str_replace('USD ', '', $matchedL1->cost_per_click ?? 0),
+                'sbid'     => 0.10,
+                'NR'       => '',
+            ];
 
-            $acos = $sales > 0 ? ($adFees / $sales) * 100 : 0;
-            
-            if($adFees > 0 && $sales === 0){
-                $row['acos'] = 100;
-            }else{
-                $row['acos'] = $acos;
-            }
-
-            $row['l7_spend'] = (float) str_replace('USD ', '', $matchedCampaignL7->cpc_ad_fees_payout_currency ?? 0);
-            $row['l7_cpc'] = (float) str_replace('USD ', '', $matchedCampaignL7->cost_per_click ?? 0);
-            $row['l1_spend'] = (float) str_replace('USD ', '', $matchedCampaignL1->cpc_ad_fees_payout_currency ?? 0);
-            $row['l1_cpc'] = (float) str_replace('USD ', '', $matchedCampaignL1->cost_per_click ?? 0);
-
-            $row['NR'] = '';
             if (isset($nrValues[$pm->sku])) {
                 $raw = $nrValues[$pm->sku];
-                if (!is_array($raw)) {
-                    $raw = json_decode($raw, true);
-                }
-                if (is_array($raw)) {
-                    $row['NR'] = $raw['NR'] ?? null;
-                }
+                if (!is_array($raw)) $raw = json_decode($raw, true);
+                if (is_array($raw)) $row['NR'] = $raw['NR'] ?? null;
             }
 
-            if ($row['NR'] !== 'NRA') {
+            $adFees = (float) str_replace('USD ', '', $matchedL30->cpc_ad_fees_payout_currency ?? 0);
+            $sales  = (float) str_replace('USD ', '', $matchedL30->cpc_sale_amount_payout_currency ?? 0);
+            $row['acos'] = ($adFees > 0 && $sales === 0) ? 100 : ($sales > 0 ? ($adFees / $sales) * 100 : 0);
+
+            if ($row['price'] < 30) {
+                if ($row['price'] < 10) {
+                    $row['sbid'] = 0.10;
+                } elseif ($row['price'] <= 20) {
+                    $row['sbid'] = 0.20;
+                } else {
+                    $row['sbid'] = 0.30;
+                }
                 $result[] = (object) $row;
             }
         }
@@ -139,4 +111,5 @@ class Ebay3UtilizedAdsController extends Controller
             'status'  => 200,
         ]);
     }
+
 }

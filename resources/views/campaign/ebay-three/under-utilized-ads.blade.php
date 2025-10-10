@@ -544,10 +544,10 @@
                     if (!(ub7 < 70)) return false;
 
                     // price < 20
-                    let price = parseFloat(data.price || 0);
-                    if (price < 30) {
-                        return false;
-                    }
+                    // let price = parseFloat(data.price || 0);
+                    // if (price < 30) {
+                    //     return false;
+                    // }
 
                     // Pink DIL filter (exclude pink rows)
                     let l30 = parseFloat(data.L30);
