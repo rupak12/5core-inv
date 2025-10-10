@@ -132,7 +132,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('app:ebay2-campaign-reports')
             ->dailyAt('01:15')
             ->timezone('America/Los_Angeles');
-        // Amazon and Ebay bids update commands
+        // Amazon over utilized bids update commands
         $schedule->command('amazon:auto-update-over-kw-bids')
             ->dailyAt('12:00')
             ->timezone('Asia/Kolkata');
@@ -142,18 +142,17 @@ class Kernel extends ConsoleKernel
         $schedule->command('amazon:auto-update-over-hl-bids')
             ->dailyAt('12:00')
             ->timezone('Asia/Kolkata');
+        // amazon acos bgt update commands
         $schedule->command('amazon:auto-update-amz-bgt-kw')
-            ->days([1, 4]) // 1 = Monday, 4 = Thursday
-            ->at('12:00')
-            ->timezone('Asia/Kolkata');
+            ->dailyAt('12:00')
+            ->timezone('Asia/Kolkata'); 
         $schedule->command('amazon:auto-update-amz-bgt-pt')
-            ->days([1, 4])
-            ->at('12:00')
-            ->timezone('Asia/Kolkata');
+            ->dailyAt('12:00')
+            ->timezone('Asia/Kolkata'); 
         $schedule->command('amazon:auto-update-amz-bgt-hl')
-            ->days([1, 4])
-            ->at('12:00')
-            ->timezone('Asia/Kolkata');
+            ->dailyAt('12:00')
+            ->timezone('Asia/Kolkata'); 
+        // Pink Dil ads update command
         $schedule->command('amazon:auto-update-pink-dil-kw-ads')
             ->dailyAt('12:00')
             ->timezone('Asia/Kolkata');

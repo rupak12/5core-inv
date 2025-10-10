@@ -15,6 +15,8 @@ class EbayMetric extends Model
         'ebay_l30',
         'ebay_l60',
         'ebay_price',
+        'price_lmpa',
+        'campaign_id',
         'views',
         'total_pft',
         't_sale_l30',
