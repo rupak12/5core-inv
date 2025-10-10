@@ -380,7 +380,7 @@ class PricingMasterViewsController extends Controller
                 ['data' => $ebay2,      'l30' => 'ebay_l30',               'views' => 'views'],
                 ['data' => $ebay3,      'l30' => 'ebay_l30',               'views' => 'views'],
                 ['data' => $temuMetric, 'l30' => 'quantity_purchased_l30', 'views' => 'product_clicks_l30'],
-                ['data' => $reverb,     'l30' => 'r_l30',                  'views' => 'views'],
+                // ['data' => $reverb,     'l30' => 'r_l30',                  'views' => 'views'],
                 ['data' => $walmart,    'l30' => 'l30',                    'views' => 'views'],
                 ['data' => $tiktok,     'l30' => 'shopify_tiktokl30',                    'views' => 'views'],
                 ['data' => $shein,      'l30' => 'shopify_sheinl30',       'views' => 'views_clicks'],
@@ -422,9 +422,9 @@ class PricingMasterViewsController extends Controller
             if ($temuMetric && ($temuMetric->{'quantity_purchased_l30'} ?? 0) > 0) {
                 $total_l30_count_data++;
             }
-            if ($reverb && ($reverb->r_l30 ?? 0) > 0) {
-                $total_l30_count_data++;
-            }
+            // if ($reverb && ($reverb->r_l30 ?? 0) > 0) {
+            //     $total_l30_count_data++;
+            // }
             // Walmart excluded as it doesn't have views data
             if ($tiktok && ($tiktok->shopify_tiktokl30 ?? 0) > 0) {
                 $total_l30_count_data++;
