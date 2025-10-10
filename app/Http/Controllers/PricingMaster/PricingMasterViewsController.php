@@ -443,7 +443,7 @@ class PricingMasterViewsController extends Controller
                 ($ebay2->views ?? 0) +
                 ($ebay3->views ?? 0) +
                 ($temuMetric->{'product_clicks_l30'} ?? 0) +
-                ($reverb->views ?? 0) +
+                // ($reverb->views ?? 0) +
                 ($tiktok->views ?? 0) +
                 ($shein->views_clicks ?? 0);
 
