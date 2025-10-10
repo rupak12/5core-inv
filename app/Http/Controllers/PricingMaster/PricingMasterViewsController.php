@@ -126,6 +126,19 @@ class PricingMasterViewsController extends Controller
     }
 
 
+    public function pricingMasterIncR(Request $request)
+        {
+            $mode = $request->query('mode');
+            $demo = $request->query('demo');
+
+            $processedData = $this->processPricingData();
+
+            return view('pricing-master.pricing_master_incr', [
+                'mode' => $mode,
+                'demo' => $demo,
+                'records' => $processedData,
+            ]);
+        }
 
 
 

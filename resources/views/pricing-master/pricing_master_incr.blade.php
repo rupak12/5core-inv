@@ -1,4 +1,4 @@
-@extends('layouts.vertical', ['title' => 'CVR Masters Analysis'])
+@extends('layouts.vertical', ['title' => 'Pricing Masters Analysis'])
 
 @section('css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -480,8 +480,8 @@
 
 @section('content')
     @include('layouts.shared.page-title', [
-        'page_title' => 'CVR Masters Analysis',
-        'sub_title' => 'CVR Masters Analysis',
+        'page_title' => 'Pricing Masters Analysis Increase',
+        'sub_title' => 'Pricing Masters Analysis Increase',
     ])
 
     <!-- Image Preview -->
@@ -536,11 +536,9 @@
                         </div>
 
                          <div class="btn-group" id="inv-filter" role="group" aria-label="Inventory Filter">
-                        <input type="radio" class="btn-check" name="invFilter" id="filterAll" value="all" checked>
+                        <input type="radio" class="btn-check" name="invFilter" id="filterAll" value="all">
                         <label class="btn btn-outline-secondary" for="filterAll">All</label>
-                        <input type="radio" class="btn-check" name="invFilter" id="filterZero" value="zero">
-                        <label class="btn btn-outline-danger" for="filterZero">0</label>
-                        <input type="radio" class="btn-check" name="invFilter" id="filterOther" value="other">
+                        <input type="radio" class="btn-check" name="invFilter" id="filterOther" value="other" checked>
                         <label class="btn btn-outline-success" for="filterOther">Other</label>
                     </div>
 
@@ -574,6 +572,19 @@
                         <label class="btn btn-outline-secondary" for="cvrFilterClear">Clear</label>
                     </div>
 
+                    <div class="btn-group" id="pft-filter" role="group" aria-label="PFT Filter">
+                        <input type="radio" class="btn-check" name="pftFilter" id="pftFilterAll" value="all">
+                        <label class="btn btn-outline-primary" for="pftFilterAll">All PFT</label>
+                        <input type="radio" class="btn-check" name="pftFilter" id="pftFilterHigh" value="high">
+                        <label class="btn btn-outline-success" for="pftFilterHigh">High PFT (&gt; 20%)</label>
+                        <input type="radio" class="btn-check" name="pftFilter" id="pftFilterMedium" value="medium">
+                        <label class="btn btn-outline-info" for="pftFilterMedium">Medium PFT (11-20%)</label>
+                        <input type="radio" class="btn-check" name="pftFilter" id="pftFilterLow" value="low">
+                        <label class="btn btn-outline-warning" for="pftFilterLow">Low PFT (&lt; 11%)</label>
+                        <input type="radio" class="btn-check" name="pftFilter" id="pftFilterClear" value="clear" checked>
+                        <label class="btn btn-outline-secondary" for="pftFilterClear">Clear</label>
+                    </div>
+
                     <div class="btn-group" id="margin-filter" role="group" aria-label="Margin Filter">
                         <input type="radio" class="btn-check" name="marginFilter" id="marginFilterHigh" value="high">
                         <label class="btn btn-outline-success" for="marginFilterHigh">High Margin (&gt; 20%)</label>
@@ -582,14 +593,14 @@
                     </div>
 
                     <div class="btn-group" id="view-filter" role="group" aria-label="View Filter">
-                        <input type="radio" class="btn-check" name="viewFilter" id="parentFilter" value="parent" checked>
-                        <label class="btn btn-primary" for="parentFilter">Parent </label>
-                        <input type="radio" class="btn-check" name="viewFilter" id="skuFilter" value="sku">
+                        <input type="radio" class="btn-check" name="viewFilter" id="skuFilter" value="sku" checked>
                         <label class="btn btn-primary" for="skuFilter">SKU </label>
                         <input type="radio" class="btn-check" name="viewFilter" id="bothFilter" value="both">
                         <label class="btn btn-primary" for="bothFilter">Both </label>
                     </div>
                     </div>
+
+
 
                     </div>
 
@@ -689,45 +700,6 @@
     </div>
 </div>
 
-<!-- Remark Modal -->
-<div class="modal fade" id="remarkModal" tabindex="-1" aria-labelledby="remarkModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="remarkModalLabel">
-                    <i class="fas fa-edit me-2"></i>Edit Remark
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="remarkSkuDisplay" class="form-label fw-bold">SKU:</label>
-                    <span id="remarkSkuDisplay" class="text-primary fw-bold"></span>
-                </div>
-                <div class="mb-3">
-                    <label for="remarkTextarea" class="form-label fw-bold">Remark:</label>
-                    <textarea 
-                        class="form-control" 
-                        id="remarkTextarea" 
-                        rows="4" 
-                        placeholder="Enter your remark here..."
-                        maxlength="1000"
-                    ></textarea>
-                    <div class="form-text">Maximum 1000 characters</div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i>Cancel
-                </button>
-                <button type="button" class="btn btn-dark" id="saveRemarkBtn">
-                    <i class="fas fa-save me-1"></i>Save Remark
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 
 @endsection
 @section('script')
@@ -736,6 +708,61 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.body.style.zoom = "95%";
+
+        let activeFilters = {};
+
+        // Set default filters to hide INV=0 and PARENT SKUs
+        activeFilters.inv = "other"; // Hide INV=0
+        activeFilters.view = "sku"; // Hide PARENT SKUs
+
+        function applyCombinedFilters() {
+            table.clearFilter();
+            let hasFilter = false;
+            for (let key in activeFilters) {
+                if (activeFilters[key]) {
+                    hasFilter = true;
+                    break;
+                }
+            }
+            if (!hasFilter) return;
+            table.setFilter(function(data) {
+                // inv
+                if (activeFilters.inv) {
+                    if (activeFilters.inv === "zero" && parseFloat(data.INV) !== 0) return false;
+                    if (activeFilters.inv === "other" && parseFloat(data.INV) <= 0) return false;
+                }
+                // dil
+                if (activeFilters.dil) {
+                    const dil = parseFloat(data["Dil%"]) || 0;
+                    if (activeFilters.dil === "verylow" && dil > 10) return false;
+                    if (activeFilters.dil === "low" && !(dil >= 11 && dil <= 15)) return false;
+                    if (activeFilters.dil === "medium" && !(dil >= 16 && dil <= 20)) return false;
+                    if (activeFilters.dil === "high" && !(dil >= 21 && dil <= 40)) return false;
+                    if (activeFilters.dil === "veryhigh" && dil <= 40) return false;
+                }
+                // cvr
+                if (activeFilters.cvr) {
+                    const cvr = parseFloat(data.avgCvr) || 0;
+                    if (activeFilters.cvr === "high" && cvr <= 5) return false;
+                    if (activeFilters.cvr === "medium" && !(cvr >= 3 && cvr <= 5)) return false;
+                    if (activeFilters.cvr === "low" && cvr >= 3) return false;
+                }
+                // pft
+                if (activeFilters.pft) {
+                    const pft = parseFloat(data.avgPftPercent) || 0;
+                    if (activeFilters.pft === "high" && pft <= 20) return false;
+                    if (activeFilters.pft === "medium" && !(pft >= 11 && pft <= 20)) return false;
+                    if (activeFilters.pft === "low" && pft >= 11) return false;
+                }
+                // view
+                if (activeFilters.view) {
+                    const sku = (data.SKU || "").toUpperCase();
+                    if (activeFilters.view === "parent" && !sku.includes("PARENT")) return false;
+                    if (activeFilters.view === "sku" && sku.includes("PARENT")) return false;
+                }
+                return true;
+            });
+        }
 
         function showPriceComparisonModal(row) {
             const data = row.getData();
@@ -759,7 +786,6 @@
                 { label: "Tiktok", prefix: "tiktok" },
                 { label: "Tiendamia", prefix: "tiendamia" },
                 { label: "Aliexpress", prefix: "aliexpress" }
-
             ];
 
             const labels = [];
@@ -950,6 +976,7 @@
 
             const tiktokProfit = data.tiktok_price ? ((parseFloat(data.tiktok_price) * 0.64) - LP - SHIP) * (parseFloat(data
                 .tiktok_l30) || 0) : 0;
+
             const aliexpressProfit = data.aliexpress_price ? ((parseFloat(data.aliexpress_price) * 0.89) - LP - SHIP) * (parseFloat(data
                 .aliexpress_l30) || 0) : 0;
 
@@ -1059,14 +1086,8 @@
         document.querySelectorAll("input[name='invFilter']").forEach(input => {
             input.addEventListener("change", function() {
                 let value = this.value;
-
-                if (value === "all") {
-                    table.clearFilter();
-                } else if (value === "zero") {
-                    table.setFilter("inv", "=", 0);
-                } else if (value === "other") {
-                    table.setFilter("inv", ">", 0);
-                }
+                activeFilters.inv = value === "all" ? null : value;
+                applyCombinedFilters();
             });
         });
 
@@ -1077,33 +1098,8 @@
         document.querySelectorAll("input[name='cvrFilter']").forEach(input => {
             input.addEventListener("change", function() {
                 let value = this.value;
-
-                if (value === "clear") {
-                    table.clearFilter("avgCvr");
-                } else if (value === "all") {
-                    table.clearFilter("avgCvr");
-                } else if (value === "high") {
-                    table.setFilter(function(data) {
-                        const cvr = parseFloat(data.avgCvr) || 0;
-                        const inv = parseFloat(data.INV) || 0;
-                        const sku = (data.SKU || "").toUpperCase();
-                        return cvr > 5 && inv > 0 && !sku.includes("PARENT");
-                    });
-                } else if (value === "medium") {
-                    table.setFilter(function(data) {
-                        const cvr = parseFloat(data.avgCvr) || 0;
-                        const inv = parseFloat(data.INV) || 0;
-                        const sku = (data.SKU || "").toUpperCase();
-                        return cvr >= 3 && cvr <= 5 && inv > 0 && !sku.includes("PARENT");
-                    });
-                } else if (value === "low") {
-                    table.setFilter(function(data) {
-                        const cvr = parseFloat(data.avgCvr) || 0;
-                        const inv = parseFloat(data.INV) || 0;
-                        const sku = (data.SKU || "").toUpperCase();
-                        return cvr < 3 && inv > 0 && !sku.includes("PARENT");
-                    });
-                }
+                activeFilters.cvr = (value === "clear" || value === "all") ? null : value;
+                applyCombinedFilters();
             });
         });
 
@@ -1111,20 +1107,8 @@
         document.querySelectorAll("input[name='viewFilter']").forEach(input => {
             input.addEventListener("change", function() {
                 let value = this.value;
-
-                if (value === "parent") {
-                    table.setFilter(function(data) {
-                        const sku = (data.SKU || "").toUpperCase();
-                        return sku.includes("PARENT");
-                    });
-                } else if (value === "sku") {
-                    table.setFilter(function(data) {
-                        const sku = (data.SKU || "").toUpperCase();
-                        return !sku.includes("PARENT");
-                    });
-                } else if (value === "both") {
-                    table.clearFilter();
-                }
+                activeFilters.view = value === "both" ? null : value;
+                applyCombinedFilters();
             });
         });
 
@@ -1132,81 +1116,30 @@
         document.querySelectorAll("input[name='dilFilter']").forEach(input => {
             input.addEventListener("change", function() {
                 let value = this.value;
-
-                if (value === "clear") {
-                    table.clearFilter("Dil%");
-                } else if (value === "all") {
-                    table.clearFilter("Dil%");
-                } else if (value === "verylow") {
-                    table.setFilter(function(data) {
-                        const dil = parseFloat(data["Dil%"]) || 0;
-                        const inv = parseFloat(data.INV) || 0;
-                        const sku = (data.SKU || "").toUpperCase();
-                        return dil <= 10 && inv > 0 && !sku.includes("PARENT");
-                    });
-                } else if (value === "low") {
-                    table.setFilter(function(data) {
-                        const dil = parseFloat(data["Dil%"]) || 0;
-                        const inv = parseFloat(data.INV) || 0;
-                        const sku = (data.SKU || "").toUpperCase();
-                        return dil >= 11 && dil <= 15 && inv > 0 && !sku.includes("PARENT");
-                    });
-                } else if (value === "medium") {
-                    table.setFilter(function(data) {
-                        const dil = parseFloat(data["Dil%"]) || 0;
-                        const inv = parseFloat(data.INV) || 0;
-                        const sku = (data.SKU || "").toUpperCase();
-                        return dil >= 16 && dil <= 20 && inv > 0 && !sku.includes("PARENT");
-                    });
-                } else if (value === "high") {
-                    table.setFilter(function(data) {
-                        const dil = parseFloat(data["Dil%"]) || 0;
-                        const inv = parseFloat(data.INV) || 0;
-                        const sku = (data.SKU || "").toUpperCase();
-                        return dil >= 21 && dil <= 40 && inv > 0 && !sku.includes("PARENT");
-                    });
-                } else if (value === "veryhigh") {
-                    table.setFilter(function(data) {
-                        const dil = parseFloat(data["Dil%"]) || 0;
-                        const inv = parseFloat(data.INV) || 0;
-                        const sku = (data.SKU || "").toUpperCase();
-                        return dil > 40 && inv > 0 && !sku.includes("PARENT");
-                    });
-                }
+                activeFilters.dil = (value === "clear" || value === "all") ? null : value;
+                applyCombinedFilters();
             });
         });
 
-        // Filter by Margin radio buttons
-        document.querySelectorAll("input[name='marginFilter']").forEach(input => {
+        // Filter by PFT radio buttons for pft
+        document.querySelectorAll("input[name='pftFilter']").forEach(input => {
             input.addEventListener("change", function() {
                 let value = this.value;
-
-                if (value === "clear") {
-                    table.clearFilter();
-                } else if (value === "high") {
-                    table.setFilter(function(data) {
-                        const margin = parseFloat(data.avgPftPercent) || 0;
-                        const inv = parseFloat(data.INV) || 0;
-                        const sku = (data.SKU || "").toUpperCase();
-                        return margin > 20 && inv > 0 && !sku.includes("PARENT");
-                    });
-                }
+                activeFilters.pft = (value === "clear" || value === "all") ? null : value;
+                applyCombinedFilters();
             });
         });
+        
+        
 
-        // Initialize Tabulator table
-        const table = new Tabulator("#forecast-table", {
+
+
+       const table = new Tabulator("#forecast-table", {
             ajaxURL: "/pricing-master-data-views",
             fixedHeader: true,
          
             width: "100%",
             height: "700px",
-            dataTree: true,
-            dataTreeStartExpanded: false,
-            dataTreeChildIndent: 15,
-            dataTreeCollapseElement: "<i class='fas fa-chevron-down' style='color: #007bff; font-size: 14px; cursor: pointer; margin-right: 8px;'></i>",
-            dataTreeExpandElement: "<i class='fas fa-chevron-right' style='color: #007bff; font-size: 14px; cursor: pointer; margin-right: 8px;'></i>",
-            dataTreeElementColumn: "Parent",
           
             pagination: true, 
             paginationSize: 50,
@@ -1316,7 +1249,7 @@
                     {
                         title: "DIL%",
                         field: "Dil%",
-                        hozAlign: "center",
+                        hozAlign: "right",
                         formatter: function (cell) {
                             const data = cell.getRow().getData();
                             const value = cell.getValue() || 0;
@@ -1346,108 +1279,7 @@
                     }
 
                  ,
-
-               {
-                title: "Avg CVR",
-                field: "avgCvr",
-                hozAlign: "center",
-              
-                formatterParams: {
-                    decimal: 2,
-                
-            
-                },
-                formatter: function(cell) {
-                    let value = cell.getValue() || 0;
-                    // Remove % if present and parse as float
-                    if (typeof value === "string" && value.includes("%")) {
-                        value = value.replace("%", "");
-                    }
-                    value = parseFloat(value);
-                    if (isNaN(value)) value = 0;
-                    const element = document.createElement("span");
-                    // Show value with 2 decimals
-                    element.textContent = value.toFixed(1) + "%";
-                    if (value >= 0 && value <= 3) {
-                        element.style.color = "red"; // red text
-                    } else if (value > 3 && value <= 6) {
-                        element.style.backgroundColor = "yellow"; // yellow background
-                        element.style.color = "black";
-                        element.style.padding = "2px 4px";
-                        element.style.borderRadius = "4px";
-                    } else if (value > 6 && value <= 9) {
-                        element.style.color = "blue"; // blue text
-                    } else if (value > 9 && value <= 13) {
-                        element.style.color = "green"; // green text
-                    } else if (value > 41) {
-                        element.style.color = "purple"; // purple text (41 and above)
-                    }
-                    return element;
-                }
-            },
-
-            {
-                    title: "Total Views",
-                    field: "total_views",
-                    hozAlign: "center",
-                    headerSort: false,
-                    formatter: function(cell) {
-                        const value = cell.getValue() || 0;
-                        return `<span class="text-danger">${Math.round(value)} </span>`;
-                    }
-                    
-                },
-
-                 {
-                    title: "Total Req Views",
-                    field: "total_req_view",
-                    hozAlign: "center",
-                    headerSort: false,
-                    formatter: function(cell) {
-                        const value = cell.getValue() || 0;
-                        return `<span class="text-dark">${Math.round(value)} </span>`;
-                    }
-                    
-                },
-
-                {
-                    title: "Remark",
-                    field: "remark",
-                    hozAlign: "center",
-                    headerSort: false,
-                    formatter: function(cell) {
-                        const data = cell.getRow().getData();
-                        const remark = data.remark || '';
-                        const buttonColor = remark ? 'btn-outline-primary' : 'btn-outline-danger';
-                        return `<button class="btn ${buttonColor} btn-sm" onclick="openRemarkModal('${data.SKU}', '${remark}')" title="${remark ? 'Edit remark' : 'Add remark'}"><i class="fas fa-edit"></i></button>`;
-                    }
-                },
-
-                
-
-                {
-                    title: "Total L30 Count",
-                    field: "total_l30_count",
-                    hozAlign: "center",
-                    headerSort: false,
-                    formatter: function(cell) {
-                        const value = cell.getValue() || 0;
-                        return `<span class="text-success">${value} </span>`;
-                    }
-                },
-
-                {
-                    title: "Total L60 Count",
-                    field: "total_l60_count",
-                    hozAlign: "center",
-                    headerSort: false,
-                    formatter: function(cell) {
-                        const value = cell.getValue() || 0;
-                        return `<span class="text-success">${value} </span>`;
-                    }
-                },
-
-                {
+                  {
                     title: "AVG PRC",
                     field: "avgPrice",
                     hozAlign: "center",
@@ -1490,7 +1322,7 @@
                                     price: data.ebay2_price,
                                     l30: data.ebay2_l30
                                 },
-                               {
+                                {
                                     price: data.walmart_price,
                                     l30: data.walmart_l30
                                 },
@@ -1591,19 +1423,17 @@
                
 
                 {
-                     title: "AVG PFT%<br><span id='avgPftHeader' style='font-size:12px; color:#fff; '></span>",
+                    title: "AVG PFT%<br><span id='avgPftHeader' style='font-size:12px; color:#fff; '></span>",
                     field: "avgPftPercent",
                     hozAlign: "right",
                     headerSort: true,
                     sortable: true,
+                    
                     sorterParams: {
                         alignEmptyValues: "bottom"
                     },
-                    sorter: function(a, b) {
-                        let rowA = this.getRow(a);
-                        let rowB = this.getRow(b);
-                        return calculateAvgProfit(rowA.getData()) - calculateAvgProfit(rowB.getData());
-                    },
+                   
+                    
                     headerSort: true,
                     sorter: function(a, b) {
                         const valA = a || 0;
@@ -1874,6 +1704,98 @@
                     }
                     ,
 
+            {
+                title: "Avg CVR",
+                field: "avgCvr",
+                hozAlign: "center",
+              
+                formatterParams: {
+                    decimal: 2,
+                
+            
+                },
+                formatter: function(cell) {
+                    let value = cell.getValue() || 0;
+                    // Remove % if present and parse as float
+                    if (typeof value === "string" && value.includes("%")) {
+                        value = value.replace("%", "");
+                    }
+                    value = parseFloat(value);
+                    if (isNaN(value)) value = 0;
+                    const element = document.createElement("span");
+                    // Show value with 2 decimals
+                    element.textContent = value.toFixed(1) + "%";
+                    if (value >= 0 && value <= 3) {
+                        element.style.color = "red"; // red text
+                    } else if (value > 3 && value <= 6) {
+                        element.style.backgroundColor = "yellow"; // yellow background
+                        element.style.color = "black";
+                        element.style.padding = "2px 4px";
+                        element.style.borderRadius = "4px";
+                    } else if (value > 6 && value <= 9) {
+                        element.style.color = "blue"; // blue text
+                    } else if (value > 9 && value <= 13) {
+                        element.style.color = "green"; // green text
+                    } else if (value > 41) {
+                        element.style.color = "purple"; // purple text (41 and above)
+                    }
+                    return element;
+                }
+            },
+            
+
+        {
+                    title: "Total Views",
+                    field: "total_views",
+                    hozAlign: "center",
+                    headerSort: false,
+                    formatter: function(cell) {
+                        const value = cell.getValue() || 0;
+                        return `<span class="text-danger">${Math.round(value)} </span>`;
+                    }
+                    
+                },
+
+                 {
+                    title: "Total Req Views",
+                    field: "total_req_view",
+                    hozAlign: "center",
+                    headerSort: false,
+                    formatter: function(cell) {
+                        const value = cell.getValue() || 0;
+                        return `<span class="text-dark">${Math.round(value)} </span>`;
+                    }
+                    
+                },
+
+                
+
+                {
+                    title: "Total L30 Count",
+                    field: "total_l30_count",
+                    hozAlign: "center",
+                    headerSort: false,
+                    formatter: function(cell) {
+                        const value = cell.getValue() || 0;
+                        return `<span class="text-success">${value} </span>`;
+                    }
+                },
+
+                {
+                    title: "Total L60 Count",
+                    field: "total_l60_count",
+                    hozAlign: "center",
+                    headerSort: false,
+                    formatter: function(cell) {
+                        const value = cell.getValue() || 0;
+                        return `<span class="text-success">${value} </span>`;
+                    }
+                },
+
+             
+
+               
+
                  {
                     title: "MSRP",
                     field: "MSRP",
@@ -2005,7 +1927,7 @@
             parent.COGS = (lp * inv).toFixed(2);
 
             // Recalculate avgPftPercent for parent
-               const marketplaces = [
+            const marketplaces = [
                 { price: parent.amz_price, l30: parent.amz_l30, factor: 0.70 },
                 { price: parent.ebay_price, l30: parent.ebay_l30, factor: 0.72 },
                 { price: parent.shopifyb2c_price, l30: parent.shopifyb2c_l30, factor: 0.75 },
@@ -2018,13 +1940,12 @@
                 { price: parent.walmart_price, l30: parent.walmart_l30, factor: 0.80 },
                 { price: parent.shein_price, l30: parent.shein_l30, factor: 0.89 },
                 { price: parent.aliexpress_price, l30: parent.aliexpress_l30, factor: 0.89 },
-                { price: parent.tiktok_price, l30: parent.tiktok_l30, factor: 0.64 },
-                { price: parent.bestbuy_price, l30: parent.bestbuy_l30, factor: 0.80 },
+                { price: parent.tiktok_price, l30: parent.tiktok_price, factor: 0.64 },
+                { price: parent.bestbuy_price, l30: parent.bestbuy_price, factor: 0.80 },
                 { price: parent.tiendamia_price, l30: parent.tiendamia_price, factor: 0.83 },
                 { price: parent.aliexpress_price, l30: parent.aliexpress_price, factor: 0.89 }
 
             ];
-
 
             let totalProfit = 0;
             let totalRevenue = 0;
@@ -2049,17 +1970,16 @@
         });
 
 
-                    // Create tree structure
+                    // Sort inside each group: child rows first, parent bottom
                     let finalData = [];
                     Object.values(grouped).forEach(rows => {
-                        const parent = rows.find(item => item.is_parent);
-                        const children = rows.filter(item => !item.is_parent).sort((a, b) => (a.SKU || "").localeCompare(b.SKU || ""));
-                        if (parent) {
-                            parent._children = children;
-                            finalData.push(parent);
-                        } else {
-                            finalData = finalData.concat(children);
-                        }
+                        rows.sort((a, b) => {
+                            if (a.is_parent !== b.is_parent) {
+                                return a.is_parent - b.is_parent; // parent last
+                            }
+                            return (a.SKU || "").localeCompare(b.SKU || "");
+                        });
+                        finalData = finalData.concat(rows);
                     });
 
                     setTimeout(() => {
@@ -2155,8 +2075,18 @@
         let currentParentFilter = null;
 
         function setCombinedFilters() {
-            table.setFilter(function(row) {
-                return true; // Show all rows by default
+            table.setFilter(function(data) {
+                // Apply default filters: hide INV=0 and PARENT SKUs
+                const sku = (data.SKU || "").toUpperCase();
+                const inv = parseFloat(data.INV) || 0;
+                
+                // Hide INV <= 0
+                if (inv <= 0) return false;
+                
+                // Hide PARENT SKUs
+                if (sku.includes("PARENT")) return false;
+                
+                return true;
             });
         }
 
@@ -2355,7 +2285,7 @@
                                     ${data.tiktok_seller_link ? `<div><strong>SL:</strong> <a href="${data.tiktok_seller_link}" target="_blank" class="text-info">Seller Link</a></div>` : ''}
                                     ${data.tiktok_buyer_link ? `<div><strong>BL:</strong> <a href="${data.tiktok_buyer_link}" target="_blank" class="text-success">Buyer Link</a></div>` : ''}
                                 ` : ''}
-                                ${r.prefix === 'aliexpress' ? `
+                                 ${r.prefix === 'aliexpress' ? `
                                     ${data.aliexpress_seller_link ? `<div><strong>SL:</strong> <a href="${data.aliexpress_seller_link}" target="_blank" class="text-info">Seller Link</a></div>` : ''}
                                     ${data.aliexpress_buyer_link ? `<div><strong>BL:</strong> <a href="${data.aliexpress_buyer_link}" target="_blank" class="text-success">Buyer Link</a></div>` : ''}
                                 ` : ''}
@@ -2436,7 +2366,7 @@
                             })()} 
                         </div>
                     </td>
-                     <td>
+                      <td>
                         <div class="value-indicator">
                         ${r.prefix === 'amz' ? Math.round(data.amz_req_view) ?? "-" : 
                             r.prefix === 'ebay' ? Math.round(data.ebay_req_view) ?? "-" :
@@ -2451,7 +2381,6 @@
                             r.prefix === 'aliexpress' ? Math.round(data.aliexpress_req_view) ?? "-" : "-"}
                         </div>
                     </td>
-
 
                     <td>
                         <div class="value-indicator">
@@ -2550,7 +2479,6 @@
                                 value = Math.round(data.aliexpress_spft);
                             }
 
-
                             if (value !== undefined) {
                                 if (value < 11) {
                                     textColor = '#ff0000';
@@ -2604,10 +2532,10 @@
                                 value = Math.round(data.tiendamia_sroi);
                             } else if (r.prefix === 'tiktok' && data.tiktok_sroi) {
                                 value = Math.round(data.tiktok_sroi);
-                            }
-                            else if (r.prefix === 'aliexpress' && data.aliexpress_sroi) {
+                            } else if (r.prefix === 'aliexpress' && data.aliexpress_sroi) {
                                 value = Math.round(data.aliexpress_sroi);
                             }
+
 
 
                             if (value !== undefined) {
@@ -3433,71 +3361,6 @@
                     });
                 }
           });
-
-        // Remark modal functions
-        function openRemarkModal(sku, currentRemark) {
-            document.getElementById('remarkSkuDisplay').textContent = sku;
-            document.getElementById('remarkTextarea').value = currentRemark || '';
-            document.getElementById('saveRemarkBtn').setAttribute('data-sku', sku);
-            
-            const modal = new bootstrap.Modal(document.getElementById('remarkModal'));
-            modal.show();
-        }
-
-        // Save remark function
-        document.getElementById('saveRemarkBtn').addEventListener('click', function() {
-            const sku = this.getAttribute('data-sku');
-            const remark = document.getElementById('remarkTextarea').value.trim();
-            const saveBtn = this;
-            
-            // Show loading state
-            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
-            saveBtn.disabled = true;
-            
-            // Make AJAX request to save remark
-            fetch('/pricing-master/save-remark', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    sku: sku,
-                    remark: remark
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success message
-                    alert('Remark saved successfully!');
-                    
-                    // Update the table data
-                    const rows = table.getRows();
-                    rows.forEach(row => {
-                        const rowData = row.getData();
-                        if (rowData.SKU === sku) {
-                            rowData.remark = remark;
-                            row.update(rowData);
-                        }
-                    });
-                    
-                    // Close modal
-                    bootstrap.Modal.getInstance(document.getElementById('remarkModal')).hide();
-                } else {
-                    alert('Error saving remark: ' + (data.message || 'Unknown error'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error saving remark. Please try again.');
-            })
-            .finally(() => {
-                // Reset button state
-                saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>Save Remark';
-                saveBtn.disabled = false;
-            });
-        });
 
        
     </script>

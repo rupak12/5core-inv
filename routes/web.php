@@ -1168,6 +1168,7 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
     Route::post('/pricing-master/save', [PricingMasterViewsController::class, 'save']);
     Route::get('/parent.pricing-masters', [PricingMasterViewsController::class, 'pricingMasterCopy']);
     Route::get('/calculate-cvr-masters', [PricingMasterViewsController::class, 'calculateCVRMasters']);
+    Route::get('/pricing-master-incremental', [PricingMasterViewsController::class, 'pricingMasterIncR']);
 
 
 

@@ -161,6 +161,23 @@
                 </div>
             </li>
 
+               <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#prcmasterinc" aria-expanded="false" aria-controls="prcmasterinc"
+                    class="side-nav-link">
+                    <i class="ri-user-line"></i>
+                    <span>Pricing Masters IncR</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="prcmasterinc">
+                    <ul class="side-nav-second-level">
+                        
+                        <li>
+                            <a href="{{ url('/pricing-master-incremental') }}"> Prc Master IncR </a>
+                        </li>
+                    </ul>
+                </div>
+
+            </li>
 
             <li class="side-nav-item">
                 <a data-bs-toggle="collapse" href="#sidebarPagess" aria-expanded="false" aria-controls="sidebarPagess"
