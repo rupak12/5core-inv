@@ -470,7 +470,7 @@ class PricingMasterViewsController extends Controller
                 'amz_l30'   => $amazon ? ($amazon->units_ordered_l30 ?? 0) : 0,
                 'amz_l60'   => $amazon ? ($amazon->units_ordered_l60 ?? 0) : 0,
                 'sessions_l30' => $amazon ? ($amazon->sessions_l30 ?? 0) : 0,
-                'amz_cvr'   => $amazon ? $this->calculateCVR($amazon->units_ordered_l30 ?? 0, $amazon->sessions_l30 ?? 0) : null,
+                'amz_cvr'   => $amazon ? $this->calculateCVR((float)($amazon->units_ordered_l30 ?? 0), (float)($amazon->sessions_l30 ?? 0)) : null,
                 'amz_buyer_link' => isset($amazonListingData[$sku]) ? ($amazonListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'amz_seller_link' => isset($amazonListingData[$sku]) ? ($amazonListingData[$sku]->value['seller_link'] ?? null) : null,
 
