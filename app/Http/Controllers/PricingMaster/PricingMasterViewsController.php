@@ -382,12 +382,12 @@ class PricingMasterViewsController extends Controller
                 ['data' => $temuMetric, 'l30' => 'quantity_purchased_l30', 'views' => 'product_clicks_l30'],
                 // ['data' => $reverb,     'l30' => 'r_l30',                  'views' => 'views'],
                 ['data' => $walmart,    'l30' => 'l30',                    'views' => 'views'],
-                ['data' => $tiktok,     'l30' => 'shopify_tiktokl30',                    'views' => 'views'],
+                ['data' => $tiktok,     'l30' => 'shopify_tiktokl30',      'views' => 'views'],
                 ['data' => $shein,      'l30' => 'shopify_sheinl30',       'views' => 'views_clicks'],
             ];
 
-            $l30_count = 0;        // Count of channels where L30 > 0 and views > 0
-            $views_sum = 0;        // Sum of views for those channels
+            $cvr_sum = 0;         // Sum of CVR values for channels with both L30 and views
+            $cvr_count = 0;       // Count of channels with both L30 and views
 
             foreach ($channels as $channel) {
                 $obj = $channel['data'];
@@ -395,60 +395,18 @@ class PricingMasterViewsController extends Controller
                     $l30 = $obj->{$channel['l30']} ?? 0;
                     $views = $obj->{$channel['views']} ?? 0;
 
+                    // Only count L30 data if the channel has views
                     if ($l30 > 0 && $views > 0) {
-                        $l30_count++;           // count channels
-                        $views_sum += $views;   // sum views
+                        $cvr = ($l30 / $views) * 100;  // Calculate CVR for this channel
+                        $cvr_sum += $cvr;
+                        $cvr_count++;
                     }
                 }
             }
 
-
-
-            $total_l30_count_data = 0;
-
-            // Count channels where L30 > 0, ignore views
-            if ($amazon && ($amazon->units_ordered_l30 ?? 0) > 0) {
-                $total_l30_count_data++;
-            }
-            if ($ebay && ($ebay->ebay_l30 ?? 0) > 0) {
-                $total_l30_count_data++;
-            }
-            if ($ebay2 && ($ebay2->ebay_l30 ?? 0) > 0) {
-                $total_l30_count_data++;
-            }
-            if ($ebay3 && ($ebay3->ebay_l30 ?? 0) > 0) {
-                $total_l30_count_data++;
-            }
-            if ($temuMetric && ($temuMetric->{'quantity_purchased_l30'} ?? 0) > 0) {
-                $total_l30_count_data++;
-            }
-            // if ($reverb && ($reverb->r_l30 ?? 0) > 0) {
-            //     $total_l30_count_data++;
-            // }
-            // Walmart excluded as it doesn't have views data
-            if ($tiktok && ($tiktok->shopify_tiktokl30 ?? 0) > 0) {
-                $total_l30_count_data++;
-            }
-            if ($shein && ($shein->shopify_sheinl30 ?? 0) > 0) {
-                $total_l30_count_data++;
-            }
-            if ($aliexpress && ($aliexpress->aliexpress_l30 ?? 0) > 0) {
-                $total_l30_count_data++;
-            }
-
-            // For $avgCvr, use all views
-            $views_sum =
-                ($amazon->sessions_l30 ?? 0) +
-                ($ebay->views ?? 0) +
-                ($ebay2->views ?? 0) +
-                ($ebay3->views ?? 0) +
-                ($temuMetric->{'product_clicks_l30'} ?? 0) +
-                // ($reverb->views ?? 0) +
-                ($tiktok->views ?? 0) +
-                ($shein->views_clicks ?? 0);
-
-            $avgCvr = $views_sum > 0
-                ? number_format(($l30_count / $views_sum) * 100, 1) . ' %'
+            // Calculate average CVR across all channels with valid data
+            $avgCvr = $cvr_count > 0
+                ? number_format($cvr_sum / $cvr_count, 1) . ' %'
                 : '0.0 %';
 
             $item = (object) [
@@ -471,7 +429,6 @@ class PricingMasterViewsController extends Controller
                 'inv' => $shopifyData[trim(strtoupper($sku))]->inv ?? 0,
                 'avgCvr' => $avgCvr,
                 'total_l30_count' => $total_l30_count,
-                'total_l30_count_data' => $total_l30_count_data,
                 'total_l60_count' => $total_l60_count,
 
                 'initial_cogs' => $lp != 0 ? $initialQuantity * $lp : 0,
