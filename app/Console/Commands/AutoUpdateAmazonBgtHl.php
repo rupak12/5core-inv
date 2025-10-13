@@ -109,35 +109,32 @@ class AutoUpdateAmazonBgtHl extends Command
 
             $acos = (float) ($row['acos_L30'] ?? 0);
 
-            // Basic SBGT
-            if ($acos >= 100) $sbgt = 1;
-            elseif ($acos >= 50) $sbgt = 2;
-            elseif ($acos >= 40) $sbgt = 3;
-            elseif ($acos >= 35) $sbgt = 4;
-            elseif ($acos >= 30) $sbgt = 5;
-            elseif ($acos >= 25) $sbgt = 6;
-            elseif ($acos >= 20) $sbgt = 7;
-            elseif ($acos >= 15) $sbgt = 8;
-            elseif ($acos >= 10) $sbgt = 9;
-            elseif ($acos > 0) $sbgt = 10;
-            else $sbgt = 3;
-
-            // OV DIL color calculation (example)
-            $l30 = (float) ($shopify->quantity ?? 0);
-            $inv = (float) ($shopify->inv ?? 0);
-            $dilColor = "";
-            if ($inv != 0) {
-                $dilDecimal = $l30 / $inv;
-                $dilColor = $this->getDilColor($dilDecimal);
+            if ($acos < 10) {
+                $sbgt = 10;        
+            } else if ($acos >= 10 && $acos < 15) {
+                $sbgt = 9;         
+            } else if ($acos >= 15 && $acos < 20) {
+                $sbgt = 8;         
+            } else if ($acos >= 20 && $acos <= 50) {
+                $sbgt = 2;        
+            } else {  
+                $sbgt = 1;
             }
 
-            // Double SBGT ONLY for exact thresholds
-            if (($dilColor === "red" && $tpft > 18) ||
-                ($dilColor === "yellow" && $tpft > 22) ||
-                ($dilColor === "green" && $tpft > 26) ||
-                ($dilColor === "pink" && $tpft > 30)) {
-                $sbgt = $sbgt * 2;
-            }
+            // $l30 = (float) ($shopify->quantity ?? 0);
+            // $inv = (float) ($shopify->inv ?? 0);
+            // $dilColor = "";
+            // if ($inv != 0) {
+            //     $dilDecimal = $l30 / $inv;
+            //     $dilColor = $this->getDilColor($dilDecimal);
+            // }
+
+            // if (($dilColor === "red" && $tpft > 18) ||
+            //     ($dilColor === "yellow" && $tpft > 22) ||
+            //     ($dilColor === "green" && $tpft > 26) ||
+            //     ($dilColor === "pink" && $tpft > 30)) {
+            //     $sbgt = $sbgt * 2;
+            // }
 
             $row['sbgt'] = $sbgt;
 

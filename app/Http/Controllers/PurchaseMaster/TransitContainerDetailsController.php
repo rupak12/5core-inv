@@ -52,6 +52,7 @@ class TransitContainerDetailsController extends Controller
             return [$normSku => $value];
         })->toArray();
 
+        // 🔥 Transform TransitContainerDetail Records
         $allRecords->transform(function ($record) use ($skuParentMap, $parentSupplierMap, $shopifyImages, $productValuesMap) {
             $sku = strtoupper(trim(preg_replace('/\s+/', ' ', $record->our_sku ?? '')));
 
