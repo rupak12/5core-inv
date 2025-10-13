@@ -8,6 +8,7 @@ use Aws\Signature\SignatureV4;
 use Aws\Credentials\Credentials;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\ProductStockMapping;
 
 class AmazonSpApiService
 {
@@ -138,7 +139,7 @@ class AmazonSpApiService
     }
 
 
-  public function getAmazonInventory()
+  public function getinventory()
 {
     try {
         
@@ -211,7 +212,9 @@ class AmazonSpApiService
             if (count($row) < count($headers)) continue;
 
             $data = array_combine($headers, $row);
+           
             if (($data['fulfillment-channel'] ?? '') !== 'DEFAULT') continue;
+            // if (($data['fulfillment-channel'] ?? '') !== 'AMAZON_NA') continue; //FBA 
 
             $asin = $data['asin1'] ?? null;
             $title = $data['item-name'] ?? null;
@@ -228,7 +231,22 @@ class AmazonSpApiService
             ];
         }
 
-        Log::info('Amazon Inventory fetched successfully.', ['count' => count($parsedData)]);
+        // Log::info('Amazon Inventory fetched successfully.', ['count' => count($parsedData)]);
+        foreach ($parsedData as $sku => $data) {
+            $sku = $data['sku'] ?? null;
+            $quantity = $data['quantity'] ?? 0;
+            
+            if (!$sku) {
+                Log::warning('Missing SKU in parsed Amazon data', $data);
+                continue;
+            }
+
+            ProductStockMapping::updateOrCreate(
+            ['sku' => $sku],
+            ['inventory_amazon' => $quantity]
+            );
+
+        }
         return $parsedData;
         // return response()->json(['success' => true, 'data' => $parsedData]);
     } catch (\Exception $e) {

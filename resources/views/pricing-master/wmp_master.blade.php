@@ -1240,12 +1240,12 @@ const table = new Tabulator("#forecast-table", {
                 if (value) {
                     const dateObj = new Date(value);
                     if (!isNaN(dateObj.getTime())) {
-                        const options = { day: '2-digit', month: 'short', year: 'numeric' };
+                        const options = { day: '2-digit', month: 'short' };
                         return `<span class="badge bg-info">${dateObj.toLocaleDateString('en-US', options)}</span>`;
                     } else if (/^\d{4}-\d{2}$/.test(value)) {
                         // Format YYYY-MM as MMM YYYY
                         const [year, month] = value.split('-');
-                        return `<span class="badge bg-info">${new Date(year, month - 1).toLocaleString('en-US', { month: 'short', year: 'numeric' })}</span>`;
+                        return `<span class="badge bg-info">${new Date(year, month - 1).toLocaleString('en-US', { month: 'short' })}</span>`;
                     }
                 }
                 return `<span class="text-muted">-</span>`;

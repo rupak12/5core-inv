@@ -5,7 +5,7 @@ namespace App\Services;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-
+use App\Models\ProductStockMapping;
 class DobaApiService
 {
     protected $baseUrl;
@@ -448,5 +448,112 @@ class DobaApiService
                 'content_to_sign' => $content,
             ];
         }
+    }
+
+    public function getinventoryData(){
+        $this->info("Fetching Doba Metrics...");
+        $page = 1;
+         do {
+            $timestamp = $this->getMillisecond();
+            $getContent = $this->getContent($timestamp);
+            $sign = $this->generateSignature($getContent);
+            
+            $response = Http::withHeaders([
+                'appKey' => env('DOBA_APP_KEY'),
+                'signType' => 'rsa2',
+                'timestamp' => $timestamp,
+                'sign' => $sign,
+                'Content-Type' => 'application/json',
+            ])->get('https://openapi.doba.com/api/goods/detail', [
+                'pageNumber' => $page,
+                'pageSize' => 100
+            ]);
+        
+            if (!$response->ok()) {
+                $this->error("API Failed: " . $response->body());
+                return;
+            }
+
+            $data = $response['businessData']['data']['dsGoodsDetailResultVOS'];
+            dd($data);
+            if (empty($data)) break;
+            foreach ($data as $product) {
+                foreach ($product['skus'] as $sku) {
+                    $item = $sku['stocks'][0] ?? null;
+
+                    if (!$item) continue;
+
+                    DobaMetric::updateOrCreate(
+                        ['sku' => $sku['skuCode']],
+                        [
+                            'item_id' => $item['itemNo'],
+                            'anticipated_income' => $item['anticipatedIncome'],
+                        ]
+                    );
+                }
+            }
+            $page++;
+        } while (count($data) === 100);
+    }
+
+
+    public function getinventory(){
+        $allStock=[];
+        Log::info("Fetching Doba Metrics...");
+        $page = 1;
+         do {
+            $timestamp = $this->getMillisecond();
+            $getContent = $this->getContent($timestamp);
+            $sign = $this->generateSignature($getContent);
+            
+            $response = Http::withoutVerifying()->withHeaders([
+                'appKey' => env('DOBA_APP_KEY'),
+                'signType' => 'rsa2',
+                'timestamp' => $timestamp,
+                'sign' => $sign,
+                'Content-Type' => 'application/json',
+            ])->get('https://openapi.doba.com/api/goods/detail', [
+                'pageNumber' => $page,
+                'pageSize' => 100
+            ]);
+        
+            if (!$response->ok()) {
+                 Log::error("API Failed: " . $response->body());
+                return;
+            }
+
+            $data = $response['businessData']['data']['dsGoodsDetailResultVOS'];
+            if (empty($data)) break;
+            foreach ($data as $product) {
+                foreach ($product['skus'] as $sku) {
+                    $item = $sku['stocks'][0] ?? null;
+                    $quantity=$item['availableInventory'];
+                    $itemsku=$sku['skuCode'];
+                    if (!$item) continue;
+
+                    $allStock[]=[
+                           'sku' => $itemsku,
+                        'quantity' => (int) $quantity,
+                    ];
+                    // DobaMetric::updateOrCreate(
+                    //     ['sku' => $sku['skuCode']],
+                    //     [
+                    //         'item_id' => $item['itemNo'],
+                    //         'anticipated_income' => $item['anticipatedIncome'],
+                    //     ]
+                    // );
+                }
+            }
+            $page++;
+        } while (count($data) === 100);
+        foreach ($allStock as $sku => $data) {
+              $sku = $data['sku'] ?? null;
+                $quantity = $data['quantity'];
+            ProductStockMapping::updateOrCreate(
+                ['sku' => $sku],
+                ['inventory_doba'=>$quantity,]
+            );
+        }
+        return $allStock;
     }
 }
