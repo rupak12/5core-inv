@@ -179,6 +179,24 @@
 
             </li>
 
+
+
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#fbaPricingMaster" aria-expanded="false" aria-controls="fbaPricingMaster"
+                    class="side-nav-link">
+                    <i class="ri-user-line"></i>
+                    <span>FBA Sales </span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="fbaPricingMaster">
+                    <ul class="side-nav-second-level">
+                        <li>
+                            <a href="{{ url('/fba-view-page') }}">FBA Sales Data</a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
             <li class="side-nav-item">
                 <a data-bs-toggle="collapse" href="#sidebarPagess" aria-expanded="false" aria-controls="sidebarPagess"
                     class="side-nav-link">

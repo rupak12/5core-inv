@@ -59,6 +59,16 @@ class FetchFbaMonthlySales extends Command
         $end = "{$year}-12-31T23:59:59-07:00";
         $interval = "{$start}--{$end}";
 
+        // L30 interval: last 30 days
+        $start30 = date('Y-m-d\TH:i:s-07:00', strtotime('-30 days'));
+        $end30 = date('Y-m-d\TH:i:s-07:00');
+        $interval30 = "{$start30}--{$end30}";
+
+        // L60 interval: last 60 days
+        $start60 = date('Y-m-d\TH:i:s-07:00', strtotime('-60 days'));
+        $end60 = date('Y-m-d\TH:i:s-07:00');
+        $interval60 = "{$start60}--{$end60}";
+
         // Iterate SKUs
         foreach ($skus as $sku) {
             try {
@@ -145,6 +155,48 @@ class FetchFbaMonthlySales extends Command
                     $avgPrice = $price ? floatval($price) : null;
                 }
 
+                // Fetch L30 data
+                $l30Units = 0;
+                $l30Revenue = 0.0;
+                try {
+                    $url30 = "{$endpoint}/sales/v1/orderMetrics?marketplaceIds={$marketplace}&interval={$interval30}&granularity=Total&sku={$sku}";
+                    $res30 = Http::withHeaders([
+                        'x-amz-access-token' => $accessToken,
+                        'Content-Type' => 'application/json',
+                    ])->get($url30);
+                    if ($res30->successful()) {
+                        $payload30 = $res30->json()['payload'] ?? [];
+                        if (!empty($payload30) && is_array($payload30)) {
+                            $l30Units = intval($payload30[0]['unitCount'] ?? 0);
+                            $l30Revenue = floatval($payload30[0]['orderedProductSales']['amount'] ?? 0);
+                        }
+                    }
+                    sleep(1);
+                } catch (\Throwable $e) {
+                    Log::error("L30 fetch error for SKU {$sku}: " . $e->getMessage());
+                }
+
+                // Fetch L60 data
+                $l60Units = 0;
+                $l60Revenue = 0.0;
+                try {
+                    $url60 = "{$endpoint}/sales/v1/orderMetrics?marketplaceIds={$marketplace}&interval={$interval60}&granularity=Total&sku={$sku}";
+                    $res60 = Http::withHeaders([
+                        'x-amz-access-token' => $accessToken,
+                        'Content-Type' => 'application/json',
+                    ])->get($url60);
+                    if ($res60->successful()) {
+                        $payload60 = $res60->json()['payload'] ?? [];
+                        if (!empty($payload60) && is_array($payload60)) {
+                            $l60Units = intval($payload60[0]['unitCount'] ?? 0);
+                            $l60Revenue = floatval($payload60[0]['orderedProductSales']['amount'] ?? 0);
+                        }
+                    }
+                    sleep(1);
+                } catch (\Throwable $e) {
+                    Log::error("L60 fetch error for SKU {$sku}: " . $e->getMessage());
+                }
+
                 // map to keys jan..dec
                 $dataToSave = [
                     'asin' => $asin,
@@ -162,7 +214,11 @@ class FetchFbaMonthlySales extends Command
                     'nov' => $months[11] ?? 0,
                     'dec' => $months[12] ?? 0,
                     'total_units' => $totalUnits,
-                    'avg_price' => $avgPrice
+                    'avg_price' => $avgPrice,
+                    'l30_units' => $l30Units,
+                    'l30_revenue' => $l30Revenue,
+                    'l60_units' => $l60Units,
+                    'l60_revenue' => $l60Revenue
                 ];
 
                 FbaMonthlySale::updateOrCreate(

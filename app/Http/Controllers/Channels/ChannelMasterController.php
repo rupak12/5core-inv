@@ -3458,7 +3458,73 @@ class ChannelMasterController extends Controller
             ];
         }
 
-        return response()->json(['chartData' => $chartData]);
+         // Calculate GPROFIT using Shopify order items + Product Master
+        $orderItems = DB::connection('apicentral')
+            ->table('shopify_order_items')
+            ->select('sku', 'quantity', 'price', 'order_date')
+            ->where('order_date', '>=', $l60Start)
+            ->get();
+
+        if ($orderItems->isEmpty()) {
+            foreach ($chartData as &$row) {
+                $row['gprofit'] = 0;
+            }
+            return response()->json(['chartData' => $chartData]);
+        }
+
+        // Load product_master LP & SHIP
+        $productMasters = ProductMaster::all()->keyBy(fn($item) => strtoupper($item->sku));
+
+        $totalSalesL30 = 0;
+        $totalProfitL30 = 0;
+
+        foreach ($orderItems as $item) {
+            $sku = strtoupper(trim($item->sku));
+            $price = (float) $item->price;
+            $qty = (int) $item->quantity;
+
+            // Only count L30 for profit (recent 30 days)
+            if ($item->order_date < $l30Start->toDateString()) {
+                continue;
+            }
+
+            $lp = 0;
+            $ship = 0;
+
+            if (isset($productMasters[$sku])) {
+                $pm = $productMasters[$sku];
+                $values = is_array($pm->Values)
+                    ? $pm->Values
+                    : (is_string($pm->Values) ? json_decode($pm->Values, true) : []);
+
+                $lp = $values['lp'] ?? $pm->lp ?? 0;
+                $ship = $values['ship'] ?? $pm->ship ?? 0;
+            }
+
+            $sales = $qty * $price;
+            $profit = ($price - $lp - $ship) * $qty;
+
+            $totalSalesL30 += $sales;
+            $totalProfitL30 += $profit;
+        }
+
+        $gProfitPct = $totalSalesL30 > 0 ? ($totalProfitL30 / $totalSalesL30) * 100 : 0;
+
+        // Add GProfit% (flat line or future extension: date-wise)
+        foreach ($chartData as &$row) {
+            $row['gprofit'] = round($gProfitPct, 2);
+        }
+
+        return response()->json([
+            'chartData' => $chartData,
+            'summary' => [
+                'total_sales_l30' => round($totalSalesL30, 2),
+                'total_profit_l30' => round($totalProfitL30, 2),
+                'gprofit' => round($gProfitPct, 2),
+            ],
+        ]);
+
+        // return response()->json(['chartData' => $chartData]);
     }
 
 

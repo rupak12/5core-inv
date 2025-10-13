@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 class FetchMacyProducts extends Command
 {
-    /**
+    /**  
      * The name and signature of the console command.
      *
      * @var string
