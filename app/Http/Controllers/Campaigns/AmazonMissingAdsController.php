@@ -102,7 +102,9 @@ class AmazonMissingAdsController extends Controller
                 }
             }
 
-            $result[] = (object) $row;
+            if($row['INV'] > 0 && $row['NRA'] != 'NRA'){
+                $result[] = (object) $row;
+            }
         }
 
         return response()->json([
