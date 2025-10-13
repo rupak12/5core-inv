@@ -1472,8 +1472,9 @@
                 $('#dobalisted').text(datainfo.doba.listed);
                 $('#temulisted').text(datainfo.temu.listed);
                 $('#macylisted').text(datainfo.macy.listed);
-                $('#ebay2macylisted').text(datainfo.ebay2.macylisted);
-                $('#ebay3macylisted').text(datainfo.ebay3.macylisted);
+                $('#ebay1listed').text(datainfo.ebay1.listed);
+                $('#ebay2listed').text(datainfo.ebay2.listed);
+                $('#ebay3listed').text(datainfo.ebay3.listed);
 
                 $('#shopifymatching').text(datainfo.shopify.matching);
                 $('#amazonmatching').text(datainfo.amazon.matching);
@@ -2026,105 +2027,61 @@ function buildStockTable(data) {
             <div class="table-responsive" style="max-height: 600px; overflow-y: auto; position: relative;">
                 <table class="table table-sm table-bordered align-middle sortable-table">
                     <thead class="table-light position-sticky" style="top: 0; z-index: 1000;">
-                        <tr> 
-                            <th>#</th>
+                        <tr>
                             <th>Channel</th>
-                            <th>Stock Status</th>                            
+                            <th>Stock Status</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td></td>
-                            <td>
-                                <img src="https://inventory.5coremanagement.com/uploads/shopify.png" alt="Shopify" class="channel-logo mb-1" style="width:30px; height:30px; object-fit:contain;">
-                                 <p>Shopify</p>
-                            </td>
-                           <td style="${(data.INV_shopify === 'Not Listed' || data.INV_amazon !== data.INV_shopify) ? 'color:red;' : ''}">${data.INV_shopify}</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>
-                             <img src="https://inventory.5coremanagement.com/uploads/amazon.png" alt="Amazon" class="channel-logo mb-1" style="width:30px; height:30px; object-fit:contain;">
-                                 <p>Amazon</p>    
-                            </td>
-                            <td style="${(data.INV_amazon === 'Not Listed' || data.INV_amazon !== data.INV_shopify) ? 'color:red;' : ''}">${data.INV_amazon}</td>   
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>
-                              <img src="https://inventory.5coremanagement.com/uploads/walmart.png" alt="Walmart" class="channel-logo mb-1" style="width:30px; height:30px; object-fit:contain;">
-                                 <p>Walmart</p>    
-                            </td>
-                           <td style="${(data.INV_walmart === 'Not Listed' || data.INV_amazon !== data.INV_walmart) ? 'color:red;' : ''}">${data.INV_walmart}</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>
-                              <img src="https://inventory.5coremanagement.com/uploads/reverb.png" alt="Reverb" class="channel-logo mb-1" style="width:30px; height:30px; object-fit:contain;">
-                                 <p>Reverb</p>    
-                            </td>
-                            <td style="${(data.INV_reverb === 'Not Listed' || data.INV_amazon !== data.INV_reverb) ? 'color:red;' : ''}">${data.INV_reverb}</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>
-                                <img src="https://inventory.5coremanagement.com/uploads/Shein.jpg" alt="Shein" class="channel-logo mb-1" style="width:30px; height:30px; object-fit:contain;">
-                                <p>Shein</p>    
-                            </td>
-                            <td style="${(data.INV_shein === 'Not Listed' || data.INV_amazon !== data.INV_shein) ? 'color:red;' : ''}">${data.INV_shein}</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>
-                                <img src="https://inventory.5coremanagement.com/uploads/doba.png" alt="Doba" class="channel-logo mb-1" style="width:50px; height:50px; object-fit:contain;">
-                                 <p>Doba</p>
-                            </td>
-                            <td style="${(data.INV_doba === 'Not Listed' || data.INV_amazon !== data.INV_doba) ? 'color:red;' : ''}">${data.INV_doba}</td>
-                        </tr>
-                       <tr>
-                            <td></td>
-                            <td>
-                                <img src="https://inventory.5coremanagement.com/uploads/doba.png" alt="Doba" class="channel-logo mb-1" style="width:50px; height:50px; object-fit:contain;">
-                                 <p>Temu</p>
-                            </td>
-                            <td style="${(data.INV_temu === 'Not Listed' || data.INV_amazon !== data.INV_temu) ? 'color:red;' : ''}">${data.INV_temu}</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>
-                                <img src="https://inventory.5coremanagement.com/uploads/doba.png" alt="Doba" class="channel-logo mb-1" style="width:50px; height:50px; object-fit:contain;">
-                                 <p>Macy</p>
-                            </td>
-                            <td style="${(data.INV_macy === 'Not Listed' || data.INV_amazon !== data.INV_macy) ? 'color:red;' : ''}">${data.INV_macy}</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>
-                                <img src="https://inventory.5coremanagement.com/uploads/doba.png" alt="Doba" class="channel-logo mb-1" style="width:50px; height:50px; object-fit:contain;">
-                                 <p>Ebay1</p>
-                            </td>
-                            <td style="${(data.INV_ebay1 === 'Not Listed' || data.INV_amazon !== data.INV_ebay1) ? 'color:red;' : ''}">${data.INV_ebay1}</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>
-                                <img src="https://inventory.5coremanagement.com/uploads/doba.png" alt="Doba" class="channel-logo mb-1" style="width:50px; height:50px; object-fit:contain;">
-                                 <p>Ebay2</p>
-                            </td>
-                            <td style="${(data.INV_ebay2 === 'Not Listed' || data.INV_amazon !== data.INV_ebay2) ? 'color:red;' : ''}">${data.INV_ebay2}</td>
-                        </tr>
-                         <tr>
-                            <td></td>
-                            <td>
-                                <img src="https://inventory.5coremanagement.com/uploads/doba.png" alt="Doba" class="channel-logo mb-1" style="width:50px; height:50px; object-fit:contain;">
-                                 <p>Ebay2</p>
-                            </td>
-                            <td style="${(data.INV_ebay3 === 'Not Listed' || data.INV_amazon !== data.INV_ebay3) ? 'color:red;' : ''}">${data.INV_ebay3}</td>
-                        </tr></tbody></table></div></div>`;
-    //    console.log(html);
+                    <tbody>`;
+
+    if (data.INV_shopify === 'Not Listed') {
+        html += `<tr>
+            <td>
+                <img src="https://inventory.5coremanagement.com/uploads/shopify.png" alt="Shopify" class="channel-logo mb-1" style="width:30px; height:30px; object-fit:contain;">
+                <p class="d-inline-block">Shopify</p>
+            </td>
+            <td style="${(data.INV_amazon !== data.INV_shopify) ? 'color:red;' : ''}">${data.INV_shopify}</td>
+        </tr>`;
+    }
+
+    // if (data.INV_amazon === 'Not Listed') {
+    //     html += `<tr>
+    //         <td>
+    //             <img src="https://inventory.5coremanagement.com/uploads/amazon.png" alt="Amazon" class="channel-logo mb-1" style="width:30px; height:30px; object-fit:contain;">
+    //             <p class="d-inline-block">Amazon</p>
+    //         </td>
+    //         <td style="${(data.INV_amazon !== data.INV_shopify) ? 'color:red;' : ''}">${data.INV_amazon}</td>
+    //     </tr>`;
+    // }
+
+    const channels = [
+        { key: 'INV_amazon', name: 'Amazon', img: 'amazon.png' },
+        { key: 'INV_walmart', name: 'Walmart', img: 'walmart.png' },
+        { key: 'INV_reverb', name: 'Reverb', img: 'reverb.png' },
+        { key: 'INV_shein', name: 'Shein', img: 'Shein.jpg' },
+        { key: 'INV_doba', name: 'Doba', img: 'doba.png' },
+        { key: 'INV_temu', name: 'Temu', img: 'temu.jpeg' },
+        { key: 'INV_macy', name: 'Macy', img: 'macy.png' },
+        { key: 'INV_ebay1', name: 'Ebay1', img: '1.png' },
+        { key: 'INV_ebay2', name: 'Ebay2', img: '2.png' },
+        { key: 'INV_ebay3', name: 'Ebay3', img: '3.png' },
+    ];
+
+    channels.forEach(channel => {
+        if (data[channel.key] === 'Not Listed') {
+            html += `<tr>
+                <td>
+                    <img src="https://inventory.5coremanagement.com/uploads/${channel.img}" alt="${channel.name}" class="channel-logo mb-1" style="width:50px; height:50px; object-fit:contain;">
+                    <p class="d-inline-block">${channel.name}</p>
+                </td>
+                <td style="${(data[channel.key] === 'Not Listed' || data.INV_shopify !== data[channel.key]) ? 'color:red;' : ''}">${data[channel.key]}</td>
+            </tr>`;
+        }
+    });
+
+    html += `</tbody></table></div></div>`;
     return html;
 }
-
 
 
 $(document).on('click', '#updatenotrequired', function (e) {
