@@ -548,7 +548,7 @@
                         <input type="radio" class="btn-check" name="dilFilter" id="dilFilter10" value="10">
                         <label class="btn btn-outline-danger" for="dilFilter10">Dil ≤ 10%</label>
                         <input type="radio" class="btn-check" name="dilFilter" id="dilFilter50" value="50">
-                        <label class="btn btn-outline-info" for="dilFilter50">Dil > 50%</label>
+                        <label class="btn btn-outline-info" for="dilFilter50">Dil < 50%</label>
                         <input type="radio" class="btn-check" name="dilFilter" id="dilFilterClear" value="clear" checked>
                         <label class="btn btn-outline-secondary" for="dilFilterClear">Clear</label>
                     </div>
@@ -1019,9 +1019,10 @@ const table = new Tabulator("#forecast-table", {
     width: "100%",
     height: "700px",
     pagination: true, 
-    paginationSize: 50,
+    paginationSize: 100,
     initialFilter: [
-        {field: "INV", type: ">", value: 0}
+        {field: "INV", type: ">", value: 0},
+        {field: "Dil%", type: "<", value: 50}
     ],
     initialSort: [{
         column: "inv_value",
@@ -1955,58 +1956,60 @@ let currentParentFilter = null;
 function setCombinedFilters() {
     const filters = [];
 
-    // Apply inventory filter
+    // Inventory filter
     const invFilter = document.querySelector("input[name='invFilter']:checked")?.value;
     if (invFilter === "zero") {
-        filters.push({ field: "INV", type: "=", value: 0 }); // Show only rows with INV = 0
+        filters.push({ field: "INV", type: "=", value: 0 });
     } else if (invFilter === "other") {
-        filters.push({ field: "INV", type: ">", value: 0 }); // Show only rows with INV > 0
+        filters.push({ field: "INV", type: ">", value: 0 });
     } else {
-        // Default: Exclude rows with INV = 0
         filters.push({ field: "INV", type: ">", value: 0 });
     }
 
-    // Apply dilution filter if active
+    // Dilution filter
     const dilFilter = document.querySelector("input[name='dilFilter']:checked")?.value;
     if (dilFilter === "10") {
-        filters.push([
-            { field: "Dil%", type: "<=", value: 10 },
-            function(row) {
-                // Exclude -1 Dil%
-                return parseFloat(row.getData()["Dil%"]) !== -1;
-            }
-        ]);
+        filters.push({ field: "Dil%", type: "<=", value: 10 });
+        table.setSort([{ column: "Dil%", dir: "asc" }]);
     } else if (dilFilter === "50") {
-        filters.push({ field: "Dil%", type: "<=", value: 50 }); 
+        filters.push({ field: "Dil%", type: "<=", value: 50 });
+        table.setSort([{ column: "Dil%", dir: "asc" }]);
+    } else {
+        // Always sort Dil% lowest to highest
+        table.setSort([{ column: "Dil%", dir: "asc" }]);
     }
 
-    // Apply CVR filter if active
+    // If dilution filter is 50%, hide rows with Dil% == 50
+    if (dilFilter === "50") {
+        filters.push({ field: "Dil%", type: "<", value: 50 });
+    }
+
+    // CVR filter
     const cvrFilter = document.querySelector("input[name='cvrFilter']:checked")?.value;
     if (cvrFilter === "low") {
         filters.push({ field: "avgCvr", type: "<", value: 5 });
     }
 
-    // Apply margin filter if active
+    // Margin filter
     const marginFilter = document.querySelector("input[name='marginFilter']:checked")?.value;
     if (marginFilter === "high") {
         filters.push({ field: "avgPftPercent", type: ">", value: 20 });
     }
 
-    // Apply parent or view filter
+    // View filter
     if (currentViewFilter === "parent") {
         filters.push({ field: "is_parent", type: "=", value: 1 });
         table.getColumn("Parent").show();
-        table.setSort([{ column: "inv_value", dir: "desc" }]);
+        table.setSort([{ column: "Dil%", dir: "asc" }]);
     } else if (currentViewFilter === "sku") {
         filters.push({ field: "is_parent", type: "=", value: 0 });
         table.getColumn("SKU").show();
-        table.setSort([{ column: "SKU", dir: "asc" }]);
+        table.setSort([{ column: "Dil%", dir: "asc" }]);
     } else if (currentViewFilter === "both") {
-        // Show both Parent and SKU columns, no extra filter
         table.getColumn("Parent").show();
         table.getColumn("SKU").show();
         table.clearFilter();
-        table.setSort([{ column: "inv_value", dir: "desc" }]);
+        table.setSort([{ column: "Dil%", dir: "asc" }]);
     }
 
     // Apply all filters
