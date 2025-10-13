@@ -489,8 +489,13 @@
                             const tpft = parseFloat(row.TPFT) || 0;
                             var tpftInt = Math.floor(tpft);
                             var sbgt;
+
+                            const spend = parseFloat(row.spend_L30) || 0;
+                            const sales = parseFloat(row.ad_sales_L30) || 0;
                             
-                            if (acos < 10) {
+                            if (spend > 0 && sales === 0) {
+                                sbgt = 1;
+                            } else if (acos < 10) {
                                 sbgt = 10;        
                             } else if (acos >= 10 && acos < 15) {
                                 sbgt = 9;         

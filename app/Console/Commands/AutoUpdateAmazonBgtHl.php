@@ -97,6 +97,9 @@ class AutoUpdateAmazonBgtHl extends Command
                 ? round(($matchedCampaignL30->cost / $matchedCampaignL30->sales) * 100, 2)
                 : 0;
 
+            $row['spend_l30']       = $matchedCampaignL30->spend ?? 0;
+            $row['ad_sales_l30']    = $matchedCampaignL30->sales30d ?? 0;
+
             $acos = (float) ($row['acos_L30'] ?? 0);
 
             $tpft = 0;
@@ -108,8 +111,12 @@ class AutoUpdateAmazonBgtHl extends Command
             $row['TPFT'] = $tpft;
 
             $acos = (float) ($row['acos_L30'] ?? 0);
+            $spend = (float) ($row['spend_l30'] ?? 0);
+            $sales = (float) ($row['ad_sales_l30'] ?? 0);
 
-            if ($acos < 10) {
+            if($spend > 0 && $sales === 0) {
+                $sbgt = 1;
+            }else if ($acos < 10) {
                 $sbgt = 10;        
             } else if ($acos >= 10 && $acos < 15) {
                 $sbgt = 9;         
