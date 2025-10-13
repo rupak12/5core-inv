@@ -484,7 +484,6 @@ class PricingMasterViewsController extends Controller
                 $total_l30_count_data++;
             }
 
-<<<<<<< Updated upstream
             // For $avgCvr, use views only from qualifying channels (same as l30_sum)
             $views_sum =
                 (($amazon && ($amazon->units_ordered_l30 ?? 0) > 0 && ($amazon->sessions_l30 ?? 0) > 0) ? ($amazon->sessions_l30 ?? 0) : 0) +
@@ -494,16 +493,6 @@ class PricingMasterViewsController extends Controller
                 (($temuMetric && ($temuMetric->{'quantity_purchased_l30'} ?? 0) > 0 && ($temuMetric->{'product_clicks_l30'} ?? 0) > 0) ? ($temuMetric->{'product_clicks_l30'} ?? 0) : 0) +
                 (($tiktok && ($tiktok->shopify_tiktokl30 ?? 0) > 0 && ($tiktok->views ?? 0) > 0) ? ($tiktok->views ?? 0) : 0) +
                 (($shein && ($shein->shopify_sheinl30 ?? 0) > 0 && ($shein->views_clicks ?? 0) > 0) ? ($shein->views_clicks ?? 0) : 0);
-=======
-            $views_sum = ($amazon->sessions_l30 ?? 0) +
-                ($ebay->views ?? 0) +
-                ($ebay2->views ?? 0) +
-                ($ebay3->views ?? 0) +
-                ($temuMetric->{'product_clicks_l30'} ?? 0) +
-                ($reverb->views ?? 0) +
-                ($tiktok->views ?? 0) +
-                ($shein->views_clicks ?? 0);
->>>>>>> Stashed changes
 
             $avgCvr = $views_sum > 0
                 ? number_format(($l30_sum / $views_sum) * 100, 1) . ' %'
@@ -638,20 +627,12 @@ class PricingMasterViewsController extends Controller
                 'shopifyb2c_seller_link' => isset($shopifyb2cListingData[$sku]) ? ($shopifyb2cListingData[$sku]->value['seller_link'] ?? null) : null,
                 // Shein
                 'shein_price' => $shein ? ($shein->price ?? 0) : 0,
-<<<<<<< Updated upstream
                 'shein_l30'   => $shein ? ($shein->shopify_sheinl30 ?? $shein->l30 ?? 0) : 0,
                 'shein_l60'   => $shein ? ($shein->shopify_sheinl60 ?? $shein->l60 ?? 0) : 0,
                 'shein_dil'   => $shein ? ($shein->dil ?? 0) : 0,
                 'shein_views_clicks' => $shein ? ($shein->views_clicks ?? 0) : 0,
                 'shein_pft'   => $shein && ($shein->price ?? 0) > 0 ? (($shein->price * 0.89 - $lp - $ship) / $shein->price) : 0,
                 'shein_roi'   => $shein && $lp > 0 && ($shein->price ?? 0) > 0 ? (($shein->price * 0.89 - $lp - $ship) / $lp) : 0,
-=======
-                'shein_l30' => $shein ? ($shein->shopify_sheinl30 ?? $shein->l30 ?? 0) : 0,
-                'shein_l60' => $shein ? ($shein->shopify_sheinl60 ?? $shein->l60 ?? 0) : 0,
-                'shein_dil' => $shein ? ($shein->dil ?? 0) : 0,
-                'shein_pft' => $shein && ($shein->price ?? 0) > 0 ? (($shein->price * 0.89 - $lp - $ship) / $shein->price) : 0,
-                'shein_roi' => $shein && $lp > 0 && ($shein->price ?? 0) > 0 ? (($shein->price * 0.89 - $lp - $ship) / $lp) : 0,
->>>>>>> Stashed changes
                 'shein_req_view' => $shein && $shein->views && $shein->l30 ? (($inv / 90) * 30) / (($shein->l30 / $shein->views)) : 0,
                 'shein_buyer_link' => isset($sheinListingData[$sku]) ? ($sheinListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'shein_seller_link' => isset($sheinListingData[$sku]) ? ($sheinListingData[$sku]->value['seller_link'] ?? null) : null,
