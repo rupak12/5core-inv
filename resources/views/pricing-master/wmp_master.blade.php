@@ -1,4 +1,4 @@
-@extends('layouts.vertical', ['title' => 'Inventory by Sales Value'])
+@extends('layouts.vertical', ['title' => 'WMP Master'])
 
 @section('css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -480,8 +480,8 @@
 
 @section('content')
     @include('layouts.shared.page-title', [
-        'page_title' => 'Inventory by Sales Value',
-        'sub_title' => 'Inventory by Sales Value',
+        'page_title' => 'WMP Master',
+        'sub_title' => 'WMP Master',
     ])
 
     <!-- Image Preview -->
