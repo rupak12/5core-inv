@@ -400,7 +400,7 @@ class PricingMasterViewsController extends Controller
             $total_l30_count = ($tiktok ? ($tiktok->shopify_tiktokl30 ?? 0) : 0) +
                 ($shein ? ($shein->shopify_sheinl30 ?? 0) : 0) +
                 ($amazon ? ($amazon->units_ordered_l30 ?? 0) : 0) +
-                ($ebay ? ($ebay->ebay_l30 ?? 0) : 0) +
+                ($ebay ? ($ebay->ebay_data_l30 ?? 0) : 0) +
                 ($ebay2 ? ($ebay2->ebay_l30 ?? 0) : 0) +
                 ($ebay3 ? ($ebay3->ebay_l30 ?? 0) : 0) +
                 ($temuMetric ? ($temuMetric->quantity_purchased_l30 ?? 0) : 0) +
@@ -415,7 +415,7 @@ class PricingMasterViewsController extends Controller
             $total_l60_count = ($tiktok ? ($tiktok->shopify_tiktokl60 ?? 0) : 0) +
                 ($shein ? ($shein->shopify_sheinl60 ?? 0) : 0) +
                 ($amazon ? ($amazon->units_ordered_l60 ?? 0) : 0) +
-                ($ebay ? ($ebay->ebay_l60 ?? 0) : 0) +
+                ($ebay ? ($ebay->ebay_data_l60 ?? 0) : 0) +
                 ($ebay2 ? ($ebay2->ebay_l60 ?? 0) : 0) +
                 ($ebay3 ? ($ebay3->ebay_l60 ?? 0) : 0) +
                 ($temuMetric ? ($temuMetric->quantity_purchased_l60 ?? 0) : 0) +
@@ -430,7 +430,7 @@ class PricingMasterViewsController extends Controller
             // Calculate avg CVR
             $channels = [
                 ['data' => $amazon, 'l30' => 'units_ordered_l30', 'views' => 'sessions_l30'],
-                ['data' => $ebay, 'l30' => 'ebay_l30', 'views' => 'views'],
+                ['data' => $ebay, 'l30' => 'ebay_data_l60', 'views' => 'views'],
                 ['data' => $ebay2, 'l30' => 'ebay_l30', 'views' => 'views'],
                 ['data' => $ebay3, 'l30' => 'ebay_l30', 'views' => 'views'],
                 ['data' => $temuMetric, 'l30' => 'quantity_purchased_l30', 'views' => 'product_clicks_l30'],
@@ -459,13 +459,13 @@ class PricingMasterViewsController extends Controller
             if ($amazon && ($amazon->units_ordered_l30 ?? 0) > 0) {
                 $total_l30_count_data++;
             }
-            if ($ebay && ($ebay->ebay_l30 ?? 0) > 0) {
+            if ($ebay && ($ebay->ebay_data_l30 ?? 0) > 0) {
                 $total_l30_count_data++;
             }
-            if ($ebay2 && ($ebay2->ebay_l30 ?? 0) > 0) {
+            if ($ebay2 && ($ebay2->ebay_data_l30 ?? 0) > 0) {
                 $total_l30_count_data++;
             }
-            if ($ebay3 && ($ebay3->ebay_l30 ?? 0) > 0) {
+            if ($ebay3 && ($ebay3->ebay_data_l30 ?? 0) > 0) {
                 $total_l30_count_data++;
             }
             if ($temuMetric && ($temuMetric->{'quantity_purchased_l30'} ?? 0) > 0) {
@@ -487,9 +487,9 @@ class PricingMasterViewsController extends Controller
             // For $avgCvr, use views only from qualifying channels (same as l30_sum)
             $views_sum =
                 (($amazon && ($amazon->units_ordered_l30 ?? 0) > 0 && ($amazon->sessions_l30 ?? 0) > 0) ? ($amazon->sessions_l30 ?? 0) : 0) +
-                (($ebay && ($ebay->ebay_l30 ?? 0) > 0 && ($ebay->views ?? 0) > 0) ? ($ebay->views ?? 0) : 0) +
-                (($ebay2 && ($ebay2->ebay_l30 ?? 0) > 0 && ($ebay2->views ?? 0) > 0) ? ($ebay2->views ?? 0) : 0) +
-                (($ebay3 && ($ebay3->ebay_l30 ?? 0) > 0 && ($ebay3->views ?? 0) > 0) ? ($ebay3->views ?? 0) : 0) +
+                (($ebay && ($ebay->ebay_data_l30 ?? 0) > 0 && ($ebay->views ?? 0) > 0) ? ($ebay->views ?? 0) : 0) +
+                (($ebay2 && ($ebay2->ebay_data_l30 ?? 0) > 0 && ($ebay2->views ?? 0) > 0) ? ($ebay2->views ?? 0) : 0) +
+                (($ebay3 && ($ebay3->ebay_data_l30 ?? 0) > 0 && ($ebay3->views ?? 0) > 0) ? ($ebay3->views ?? 0) : 0) +
                 (($temuMetric && ($temuMetric->{'quantity_purchased_l30'} ?? 0) > 0 && ($temuMetric->{'product_clicks_l30'} ?? 0) > 0) ? ($temuMetric->{'product_clicks_l30'} ?? 0) : 0) +
                 (($tiktok && ($tiktok->shopify_tiktokl30 ?? 0) > 0 && ($tiktok->views ?? 0) > 0) ? ($tiktok->views ?? 0) : 0) +
                 (($shein && ($shein->shopify_sheinl30 ?? 0) > 0 && ($shein->views_clicks ?? 0) > 0) ? ($shein->views_clicks ?? 0) : 0);
@@ -540,16 +540,16 @@ class PricingMasterViewsController extends Controller
                     ? (($inv / 90) * 30) / (($amazon->units_ordered_l30 / $amazon->sessions_l30))
                     : 0,
                 // eBay
-                'ebay_price' => $ebay ? ($ebay->ebay_price ?? 0) : 0,
-                'ebay_l30' => $ebay ? ($ebay->ebay_l30 ?? 0) : 0,
-                'ebay_l60' => $ebay ? ($ebay->ebay_l60 ?? 0) : 0,
+                'ebay_price' => $ebay ? ($ebay->ebay_data_price ?? 0) : 0,
+                'ebay_l30' => $ebay ? ($ebay->ebay_data_l30 ?? 0) : 0,
+                'ebay_l60' => $ebay ? ($ebay->ebay_data_l60 ?? 0) : 0,
                 'ebay_views' => $ebay ? ($ebay->views ?? 0) : 0,
                 'ebay_price_lmpa' => $lmp ? ($lmp->lowest_price ?? 0) : ($ebay ? ($ebay->price_lmpa ?? 0) : 0),
-                'ebay_cvr' => $ebay ? $this->calculateCVR($ebay->ebay_l30 ?? 0, $ebay->views ?? 0) : null,
+                'ebay_cvr' => $ebay ? $this->calculateCVR($ebay->ebay_data_l30 ?? 0, $ebay->views ?? 0) : null,
                 'ebay_pft' => $ebay && ($ebay->ebay_price ?? 0) > 0 ? (($ebay->ebay_price * 0.72 - $lp - $ship) / $ebay->ebay_price) : 0,
                 'ebay_roi' => $ebay && $lp > 0 && ($ebay->ebay_price ?? 0) > 0 ? (($ebay->ebay_price * 0.72 - $lp - $ship) / $lp) : 0,
-                'ebay_req_view' => $ebay && $ebay->views > 0 && $ebay->ebay_l30 > 0
-                    ? (($inv / 90) * 30) / (($ebay->ebay_l30 / $ebay->views))
+                'ebay_req_view' => $ebay && $ebay->views > 0 && $ebay->ebay_data_l30 > 0
+                    ? (($inv / 90) * 30) / (($ebay->ebay_data_l30 / $ebay->ebay_data_views))
                     : 0,
                 'ebay_buyer_link' => isset($ebayListingData[$sku]) ? ($ebayListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'ebay_seller_link' => isset($ebayListingData[$sku]) ? ($ebayListingData[$sku]->value['seller_link'] ?? null) : null,
