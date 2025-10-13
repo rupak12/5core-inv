@@ -513,15 +513,15 @@
                         const parent = rowData.Parent ?? '';
 
                         return `<div 
-                        class="editable-qty" 
-                        contenteditable="true" 
-                        data-field="Transit" 
-                        data-original="${value ?? ''}" 
-                        data-sku='${sku}' 
-                        data-parent='${parent}' 
-                        style="outline:none; min-width:40px; text-align:center; font-weight:bold;">
-                        ${value ?? ''}
-                    </div>`;
+                            class="editable-qty" 
+                            contenteditable="true" 
+                            data-field="Transit" 
+                            data-original="${value ?? ''}" 
+                            data-sku='${sku}' 
+                            data-parent='${parent}' 
+                            style="outline:none; min-width:40px; text-align:center; font-weight:bold;">
+                            ${value ?? ''}
+                        </div>`;
                     }
                 },
                 {

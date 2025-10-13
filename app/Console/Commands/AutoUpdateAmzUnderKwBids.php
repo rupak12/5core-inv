@@ -40,17 +40,6 @@ class AutoUpdateAmzUnderKwBids extends Command
         $campaignIds = collect($campaigns)->pluck('campaign_id')->toArray();
         $newBids = collect($campaigns)->pluck('sbid')->toArray();
 
-        // $numbered = [];
-        // foreach ($campaigns as $index => $campaign) {
-        //     $numbered[] = [
-        //         'no'   => $index + 1,  // numbering start from 1
-        //         'sku'  => $campaign->sku ?? '', // agar sku chahiye to
-        //         'data' => $campaign,
-        //     ];
-        // }
-
-        // Log::info("Response (with numbering)", $numbered);
-
         $result = $updateKwBids->updateAutoCampaignKeywordsBid($campaignIds, $newBids);
         $this->info("Update Result: " . json_encode($result));
 
@@ -120,9 +109,9 @@ class AutoUpdateAmzUnderKwBids extends Command
             $l1_cpc = floatval($row['l1_cpc']);
             $l7_cpc = floatval($row['l7_cpc']);
             if ($l1_cpc > $l7_cpc) {
-                $row['sbid'] = round($l1_cpc * 1.05, 2);
+                $row['sbid'] = floor($l1_cpc * 1.05 * 100) / 100;
             } else {
-                $row['sbid'] = round($l7_cpc * 1.05, 2);
+                $row['sbid'] = floor($l7_cpc * 1.05 * 100) / 100;
             }
 
             $budget = floatval($row['campaignBudgetAmount']);

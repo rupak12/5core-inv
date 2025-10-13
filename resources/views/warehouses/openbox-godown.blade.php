@@ -305,7 +305,7 @@
                         <div class="wave"></div>
                         <div class="wave"></div>
                         <div class="wave"></div>
-                        <div class="loading-text">Loading Incoming Data...</div>
+                        <div class="loading-text">Loading Openbox Warehouse Data...</div>
                     </div>
                 </div>
             </div>
@@ -560,7 +560,7 @@
 
                     row.innerHTML = `
                         <td>${item.sku || '-'}</td>
-                        <td>${item.verified_stock || '-'}</td>
+                        <td>${item.verified_stock || item.quantity }</td>
                         <td>${item.warehouse.name  || '-'}</td>
                         <td>${item.approved_by || '-'}</td>
                         <td>${item.approved_at || '-'}</td>

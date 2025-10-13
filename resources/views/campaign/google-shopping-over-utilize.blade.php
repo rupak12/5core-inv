@@ -420,11 +420,9 @@
                             var cpc_L1 = parseFloat(row.cpc_L1) || 0;
                             var cpc_L7 = parseFloat(row.cpc_L7) || 0;
                             var sbid;
-                            if(cpc_L1 > cpc_L7) {
-                                sbid = (cpc_L1 * 0.95).toFixed(2);
-                            }else{
-                                sbid = (cpc_L1 * 0.95).toFixed(2);
-                            }
+
+                            sbid = (cpc_L1 * 0.95).toFixed(2);
+
                             return sbid;
                         },
                     },
@@ -446,11 +444,9 @@
                                 var cpc_L1 = parseFloat(row.cpc_L1) || 0;
                                 var cpc_L7 = parseFloat(row.cpc_L7) || 0;
                                 var sbid;
-                                if(cpc_L1 > cpc_L7) {
-                                    sbid = (cpc_L1 * 0.95).toFixed(2);
-                                }else{
-                                    sbid = (cpc_L1 * 0.95).toFixed(2);
-                                }
+                                
+                                sbid = (cpc_L1 * 0.95).toFixed(2);
+
                                 updateBid(sbid, rowData.campaign_id);
                             }
                         }
