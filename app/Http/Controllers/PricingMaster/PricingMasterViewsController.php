@@ -484,7 +484,6 @@ class PricingMasterViewsController extends Controller
                 $total_l30_count_data++;
             }
 
-<<<<<<< Updated upstream
             // For $avgCvr, use views only from qualifying channels (same as l30_sum)
             $views_sum =
                 (($amazon && ($amazon->units_ordered_l30 ?? 0) > 0 && ($amazon->sessions_l30 ?? 0) > 0) ? ($amazon->sessions_l30 ?? 0) : 0) +
@@ -494,16 +493,6 @@ class PricingMasterViewsController extends Controller
                 (($temuMetric && ($temuMetric->{'quantity_purchased_l30'} ?? 0) > 0 && ($temuMetric->{'product_clicks_l30'} ?? 0) > 0) ? ($temuMetric->{'product_clicks_l30'} ?? 0) : 0) +
                 (($tiktok && ($tiktok->shopify_tiktokl30 ?? 0) > 0 && ($tiktok->views ?? 0) > 0) ? ($tiktok->views ?? 0) : 0) +
                 (($shein && ($shein->shopify_sheinl30 ?? 0) > 0 && ($shein->views_clicks ?? 0) > 0) ? ($shein->views_clicks ?? 0) : 0);
-=======
-            $views_sum = ($amazon->sessions_l30 ?? 0) +
-                ($ebay->views ?? 0) +
-                ($ebay2->views ?? 0) +
-                ($ebay3->views ?? 0) +
-                ($temuMetric->{'product_clicks_l30'} ?? 0) +
-                ($reverb->views ?? 0) +
-                ($tiktok->views ?? 0) +
-                ($shein->views_clicks ?? 0);
->>>>>>> Stashed changes
 
             $avgCvr = $views_sum > 0
                 ? number_format(($l30_sum / $views_sum) * 100, 1) . ' %'
