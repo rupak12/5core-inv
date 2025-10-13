@@ -543,79 +543,80 @@
                 }
             });
 
-            table.on("tableBuilt", function() {
+            table.on("tableBuilt", function () {
 
                 function combinedFilter(data) {
-                    let acos = parseFloat(data.acos || 0);
-                    let budget = parseFloat(data.campaignBudgetAmount) || 0;
-                    let l7_spend = parseFloat(data.l7_spend) || 0;
-                    let l1_spend = parseFloat(data.l1_spend) || 0;
 
-                    let ub7 = budget > 0 ? (l7_spend / (budget * 7)) * 100 : 0;
-                    let ub1 = budget > 0 ? (l1_spend / budget) * 100 : 0;
+                    // 🔍 Global Search (campaignName + SKU)
+                    let searchVal = ($("#global-search").val() || "").toLowerCase().trim();
+                    if (searchVal) {
+                        let campaignName = (data.campaignName || "").toLowerCase();
+                        let sku = (data.sku || "").toLowerCase();
+                        if (!campaignName.includes(searchVal) && !sku.includes(searchVal)) {
+                            return false;
+                        }
+                    }
 
-                    // if (!(ub7 >= 70 && ub7 <= 90)) return false;
-
-                    let searchVal = $("#global-search").val()?.toLowerCase() || "";
-                    if (searchVal && !(data.campaignName?.toLowerCase().includes(searchVal))) {
+                    // 🟡 Status Filter
+                    let statusVal = ($("#status-filter").val() || "").trim();
+                    if (statusVal && (data.campaignStatus || "").trim() !== statusVal) {
                         return false;
                     }
 
-                    let statusVal = $("#status-filter").val();
-                    if (statusVal && data.campaignStatus !== statusVal) {
-                        return false;
-                    }
-
+                    // 🧮 INV Filter
                     let invFilterVal = $("#inv-filter").val();
-                    if (!invFilterVal) {
-                        if (parseFloat(data.INV) === 0) return false;
-                    } else if (invFilterVal === "INV_0") {
-                        if (parseFloat(data.INV) !== 0) return false;
-                    } else if (invFilterVal === "OTHERS") {
-                        if (parseFloat(data.INV) === 0) return false;
-                    }
+                    let inv = parseFloat(data.INV) || 0;
 
-                    let nraFilterVal = $("#nra-filter").val();
+                    if (invFilterVal === "INV_0" && inv !== 0) return false;
+                    if (invFilterVal === "OTHERS" && inv === 0) return false;
+
+                    // 🟣 NRA Filter
+                    let nraFilterVal = ($("#nra-filter").val() || "").trim();
                     if (nraFilterVal) {
+                        // Try to read from live DOM select, fallback to row data
                         let rowSelect = document.querySelector(
                             `select[data-sku="${data.sku}"][data-field="NR"]`
                         );
-                        let rowVal = rowSelect ? rowSelect.value : "";
-                        if (!rowVal) rowVal = data.NR || "";
-
-                        if (rowVal !== nraFilterVal) return false;
+                        let rowVal = (rowSelect && rowSelect.value) ? rowSelect.value : (data.NR || "");
+                        if ((rowVal || "").trim() !== nraFilterVal) {
+                            return false;
+                        }
                     }
 
                     return true;
                 }
 
-                table.setFilter(combinedFilter);
+                function applyCombinedFilter() {
+                    table.clearFilter(true); // clear all previous filters
+                    table.setFilter(combinedFilter); // apply combined filter fresh
+                    updateCampaignStats(); // update numbers
+                }
 
                 function updateCampaignStats() {
-                    let total = table.getDataCount();
-                    let filtered = table.getDataCount("active");
-                    let currentPage = table.getRows("active").length;
-
+                    let total = table.getDataCount();            // all rows
+                    let filtered = table.getDataCount("active"); // filtered rows
+                    let currentPage = table.getRows("active").length; // visible rows on current page
                     let percentage = total > 0 ? ((filtered / total) * 100).toFixed(0) : 0;
 
-                    document.getElementById("total-campaigns").innerText = currentPage;
-                    document.getElementById("percentage-campaigns").innerText = percentage + "%";
+                    $("#total-campaigns").text(currentPage);
+                    $("#percentage-campaigns").text(percentage + "%");
                 }
+
+                applyCombinedFilter();
 
                 table.on("dataFiltered", updateCampaignStats);
                 table.on("pageLoaded", updateCampaignStats);
                 table.on("dataProcessed", updateCampaignStats);
 
-                $("#global-search").on("keyup", function() {
-                    table.setFilter(combinedFilter);
+                $("#global-search").on("keyup", function () {
+                    applyCombinedFilter();
                 });
 
-                $("#status-filter, #inv-filter, #nra-filter").on("change", function() {
-                    table.setFilter(combinedFilter);
+                $("#status-filter, #inv-filter, #nra-filter").on("change", function () {
+                    applyCombinedFilter();
                 });
-
-                updateCampaignStats();
             });
+
 
             document.addEventListener("click", function(e) {
                 if (e.target.classList.contains("toggle-cols-btn")) {

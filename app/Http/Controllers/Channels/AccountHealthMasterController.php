@@ -18,6 +18,7 @@ use App\Models\VoilanceRate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use App\Services\EbayApiService;
 
 class AccountHealthMasterController extends Controller
 {
@@ -1111,56 +1112,112 @@ class AccountHealthMasterController extends Controller
         return redirect()->back()->with('flash_message', 'Report saved successfully.');
     }
 
-    public function fetchAtoZClaimsRates()
-    {
-        $excludedChannels = [
-            'Shopify B2B',
-            'Shopify B2C',
-            'Newegg B2B',
-            'Sears',
-            'Zendrop',
-            'Business 5Core',
-            'Flea Market',
-            'Music Schools',
-            'Schools',
-            'Sports Classes',
-            'Sports Shops',
-            'Marine Shops',
-            'Instituional Sales',
-            'Range Me',
-            'Wholesale Central',
-            'Wish'
+    // public function fetchAtoZClaimsRates()
+    // {
+    //     $excludedChannels = [
+    //         'Shopify B2B',
+    //         'Shopify B2C',
+    //         'Newegg B2B',
+    //         'Sears',
+    //         'Zendrop',
+    //         'Business 5Core',
+    //         'Flea Market',
+    //         'Music Schools',
+    //         'Schools',
+    //         'Sports Classes',
+    //         'Sports Shops',
+    //         'Marine Shops',
+    //         'Instituional Sales',
+    //         'Range Me',
+    //         'Wholesale Central',
+    //         'Wish'
+    //     ];
+
+    //     $channels = ChannelMaster::whereNotIn('channel', $excludedChannels)->get();
+    //     $odrRates = AtoZClaimsRate::with('channel')
+    //         ->orderBy('report_date', 'desc')
+    //         ->get()
+    //         ->keyBy('channel_id');
+
+    //     $formatted = $channels->map(function ($channel) use ($odrRates) {
+    //         $odr = $odrRates[$channel->id] ?? null;
+
+    //         return [
+    //             'id' => $odr?->id ?? null,
+    //             'channel' => $channel->channel,
+    //             'allowed' => $odr?->allowed ?? '',
+    //             'current' => $odr?->current ?? '',
+    //             'report_date' => $odr?->report_date ?? '',
+    //             'prev_1' => $odr?->prev_1 ?? '',
+    //             'prev_1_date' => $odr?->prev_1_date ?? '',
+    //             'prev_2' => $odr?->prev_1 ?? '',
+    //             'prev_2_date' => $odr?->prev_2_date ?? '',
+    //             'what' => $odr?->what ?? '',
+    //             'why' => $odr?->why ?? '',
+    //             'action' => $odr?->action ?? '',
+    //             'c_action' => $odr?->c_action ?? '',
+    //             'account_health_links' => $odr?->account_health_links ?? '',
+    //         ];
+    //     });
+
+    //     return response()->json($formatted);
+    // }
+       public function fetchAtoZClaimsRates()
+{
+    $excludedChannels = [
+        'Shopify B2B',
+        'Shopify B2C',
+        'Newegg B2B',
+        'Sears',
+        'Zendrop',
+        'Business 5Core',
+        'Flea Market',
+        'Music Schools',
+        'Schools',
+        'Sports Classes',
+        'Sports Shops',
+        'Marine Shops',
+        'Instituional Sales',
+        'Range Me',
+        'Wholesale Central',
+        'Wish'
+    ];
+
+    $channels = ChannelMaster::whereNotIn('channel', $excludedChannels)->get();
+
+    $odrRates = AtoZClaimsRate::with('channel')
+        ->orderBy('report_date', 'desc')
+        ->get()
+        ->keyBy('channel_id');
+
+    $formatted = $channels->map(function ($channel) use ($odrRates) {
+        $odr = $odrRates[$channel->id] ?? null;
+
+        return [
+            'id' => $odr?->id ?? null,
+            'channel' => $channel->channel,
+            'allowed' => $odr?->allowed ?? '',
+            'current' => $odr?->current ?? '',
+            'report_date' => $odr?->report_date ?? '',
+            'prev_1' => $odr?->prev_1 ?? '',
+            'prev_1_date' => $odr?->prev_1_date ?? '',
+            'prev_2' => $odr?->prev_2 ?? '',
+            'prev_2_date' => $odr?->prev_2_date ?? '',
+            'what' => $odr?->what ?? '',
+            'why' => $odr?->why ?? '',
+            'action' => $odr?->action ?? '',
+            'c_action' => $odr?->c_action ?? '',
+            'account_health_links' => $odr?->account_health_links ?? '',
         ];
+    });
+    $ebayService = new EbayApiService();
+    $vtrResult = $ebayService->getValidTrackingRate();
 
-        $channels = ChannelMaster::whereNotIn('channel', $excludedChannels)->get();
-        $odrRates = AtoZClaimsRate::with('channel')
-            ->orderBy('report_date', 'desc')
-            ->get()
-            ->keyBy('channel_id');
-
-        $formatted = $channels->map(function ($channel) use ($odrRates) {
-            $odr = $odrRates[$channel->id] ?? null;
-
-            return [
-                'id' => $odr?->id ?? null,
-                'channel' => $channel->channel,
-                'allowed' => $odr?->allowed ?? '',
-                'current' => $odr?->current ?? '',
-                'report_date' => $odr?->report_date ?? '',
-                'prev_1' => $odr?->prev_1 ?? '',
-                'prev_1_date' => $odr?->prev_1_date ?? '',
-                'prev_2' => $odr?->prev_1 ?? '',
-                'prev_2_date' => $odr?->prev_2_date ?? '',
-                'what' => $odr?->what ?? '',
-                'why' => $odr?->why ?? '',
-                'action' => $odr?->action ?? '',
-                'c_action' => $odr?->c_action ?? '',
-                'account_health_links' => $odr?->account_health_links ?? '',
-            ];
-        });
-
-        return response()->json($formatted);
-    }
+    return response()->json([
+        'atoz_claims' => $formatted,
+        'ebay_vtr' => $vtrResult, 
+    ]);
+}
 
     public function updateAtoZClaimsRate(Request $request)
     {

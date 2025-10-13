@@ -1258,98 +1258,7 @@
                     }
 
                  ,
-
-            {
-                title: "Avg CVR",
-                field: "avgCvr",
-                hozAlign: "center",
-              
-                formatterParams: {
-                    decimal: 2,
-                
-            
-                },
-                formatter: function(cell) {
-                    let value = cell.getValue() || 0;
-                    // Remove % if present and parse as float
-                    if (typeof value === "string" && value.includes("%")) {
-                        value = value.replace("%", "");
-                    }
-                    value = parseFloat(value);
-                    if (isNaN(value)) value = 0;
-                    const element = document.createElement("span");
-                    // Show value with 2 decimals
-                    element.textContent = value.toFixed(1) + "%";
-                    if (value >= 0 && value <= 3) {
-                        element.style.color = "red"; // red text
-                    } else if (value > 3 && value <= 6) {
-                        element.style.backgroundColor = "yellow"; // yellow background
-                        element.style.color = "black";
-                        element.style.padding = "2px 4px";
-                        element.style.borderRadius = "4px";
-                    } else if (value > 6 && value <= 9) {
-                        element.style.color = "blue"; // blue text
-                    } else if (value > 9 && value <= 13) {
-                        element.style.color = "green"; // green text
-                    } else if (value > 41) {
-                        element.style.color = "purple"; // purple text (41 and above)
-                    }
-                    return element;
-                }
-            },
-            
-
-        {
-                    title: "Total Views",
-                    field: "total_views",
-                    hozAlign: "center",
-                    headerSort: false,
-                    formatter: function(cell) {
-                        const value = cell.getValue() || 0;
-                        return `<span class="text-danger">${Math.round(value)} </span>`;
-                    }
-                    
-                },
-
-                 {
-                    title: "Total Req Views",
-                    field: "total_req_view",
-                    hozAlign: "center",
-                    headerSort: false,
-                    formatter: function(cell) {
-                        const value = cell.getValue() || 0;
-                        return `<span class="text-dark">${Math.round(value)} </span>`;
-                    }
-                    
-                },
-
-                
-
-                {
-                    title: "Total L30 Count",
-                    field: "total_l30_count",
-                    hozAlign: "center",
-                    headerSort: false,
-                    formatter: function(cell) {
-                        const value = cell.getValue() || 0;
-                        return `<span class="text-success">${value} </span>`;
-                    }
-                },
-
-                {
-                    title: "Total L60 Count",
-                    field: "total_l60_count",
-                    hozAlign: "center",
-                    headerSort: false,
-                    formatter: function(cell) {
-                        const value = cell.getValue() || 0;
-                        return `<span class="text-success">${value} </span>`;
-                    }
-                },
-
-             
-
-                {
+                  {
                     title: "AVG PRC",
                     field: "avgPrice",
                     hozAlign: "center",
@@ -1775,6 +1684,98 @@
                         visible: true
                     }
                     ,
+
+            {
+                title: "Avg CVR",
+                field: "avgCvr",
+                hozAlign: "center",
+              
+                formatterParams: {
+                    decimal: 2,
+                
+            
+                },
+                formatter: function(cell) {
+                    let value = cell.getValue() || 0;
+                    // Remove % if present and parse as float
+                    if (typeof value === "string" && value.includes("%")) {
+                        value = value.replace("%", "");
+                    }
+                    value = parseFloat(value);
+                    if (isNaN(value)) value = 0;
+                    const element = document.createElement("span");
+                    // Show value with 2 decimals
+                    element.textContent = value.toFixed(1) + "%";
+                    if (value >= 0 && value <= 3) {
+                        element.style.color = "red"; // red text
+                    } else if (value > 3 && value <= 6) {
+                        element.style.backgroundColor = "yellow"; // yellow background
+                        element.style.color = "black";
+                        element.style.padding = "2px 4px";
+                        element.style.borderRadius = "4px";
+                    } else if (value > 6 && value <= 9) {
+                        element.style.color = "blue"; // blue text
+                    } else if (value > 9 && value <= 13) {
+                        element.style.color = "green"; // green text
+                    } else if (value > 41) {
+                        element.style.color = "purple"; // purple text (41 and above)
+                    }
+                    return element;
+                }
+            },
+            
+
+        {
+                    title: "Total Views",
+                    field: "total_views",
+                    hozAlign: "center",
+                    headerSort: false,
+                    formatter: function(cell) {
+                        const value = cell.getValue() || 0;
+                        return `<span class="text-danger">${Math.round(value)} </span>`;
+                    }
+                    
+                },
+
+                 {
+                    title: "Total Req Views",
+                    field: "total_req_view",
+                    hozAlign: "center",
+                    headerSort: false,
+                    formatter: function(cell) {
+                        const value = cell.getValue() || 0;
+                        return `<span class="text-dark">${Math.round(value)} </span>`;
+                    }
+                    
+                },
+
+                
+
+                {
+                    title: "Total L30 Count",
+                    field: "total_l30_count",
+                    hozAlign: "center",
+                    headerSort: false,
+                    formatter: function(cell) {
+                        const value = cell.getValue() || 0;
+                        return `<span class="text-success">${value} </span>`;
+                    }
+                },
+
+                {
+                    title: "Total L60 Count",
+                    field: "total_l60_count",
+                    hozAlign: "center",
+                    headerSort: false,
+                    formatter: function(cell) {
+                        const value = cell.getValue() || 0;
+                        return `<span class="text-success">${value} </span>`;
+                    }
+                },
+
+             
+
+               
 
                  {
                     title: "MSRP",

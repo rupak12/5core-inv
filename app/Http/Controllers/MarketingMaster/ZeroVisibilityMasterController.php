@@ -224,6 +224,8 @@ class ZeroVisibilityMasterController extends Controller
             'doba'      => 'DobaZeroController',
             'walmart'      => 'WalmartZeroController',
             'shein'      => 'SheinZeroController',
+            'bestbuyusa' => 'BestbuyUSAZeroController',
+            'aliexpress' => 'AliexpressZeroController',
             // Add more mappings as needed
         ];
 

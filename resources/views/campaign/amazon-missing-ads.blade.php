@@ -171,7 +171,7 @@
                         <!-- Title -->
                         <h4 class="fw-bold text-primary mb-3 d-flex align-items-center">
                             <i class="fa-solid fa-chart-line me-2"></i>
-                            Amazon Missing Ads
+                            Amazon Missing Ads - <span class="text-danger ms-1 fs-3" id="total-missing-ads"></span>
                         </h4>
 
                         <!-- Filters Row -->
@@ -214,7 +214,7 @@
                                         </div>
                                         
                                         <div class="stats-box">
-                                            <div class="stats-label">Both Missing Ads</div>
+                                            <div class="stats-label">Kw Missing <br/> PT Missing</div>
                                             <div id="both-missing" class="stats-value danger">0</div>
                                         </div>
 
@@ -487,7 +487,7 @@
                                     `;
                                 } else {
                                     return `
-                                        <span style="color: red;">Both Missing</span>
+                                        <span style="color: red;">Kw Missing <br/> PT Missing</span>
                                         <i class="fa fa-info-circle text-primary toggle-missingAds-btn" 
                                             style="cursor:pointer; margin-left:8px;">
                                         </i>
@@ -575,6 +575,7 @@
                     let bothRunning = 0;
                     let kwRunning = 0;
                     let ptRunning = 0;
+                    let totalMissingAds = 0;
 
                     visibleData.forEach(row => {
                         let kw = row.kw_campaign_name || "";
@@ -589,6 +590,10 @@
                         // New running counts
                         if (kw) kwRunning++;
                         if (pt) ptRunning++;
+
+                        // Total Missing Ads Count
+                        totalMissingAds = `( ${ptMissing + kwMissing + (bothMissing)} ) `;
+
                     });
 
                     // Update HTML
@@ -597,6 +602,7 @@
                     $("#kw-missing").text(kwMissing);
                     $("#pt-missing").text(ptMissing);
                     $("#both-running").text(bothRunning);
+                    $("#total-missing-ads").text(totalMissingAds);
 
                     // New stats
                     $("#kw-running").text(kwRunning);

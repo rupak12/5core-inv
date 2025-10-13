@@ -76,6 +76,7 @@ use App\Models\TiktokSheet;
 use App\Models\TopDawgSheetdata;
 use App\Models\WaifairProductSheet;
 use App\Models\WalmartMetrics;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -331,11 +332,11 @@ class ChannelMasterController extends Controller
 
         $query = EbayMetric::where('sku', 'not like', '%Parent%');
 
-        $l30Orders = $query->sum('ebay_l30');
-        $l60Orders = $query->sum('ebay_l60');
+        $l30Orders = $query->sum('ebay_data_l30');
+        $l60Orders = $query->sum('ebay_data_l60');
 
-        $l30Sales  = (clone $query)->selectRaw('SUM(ebay_l30 * ebay_price) as total')->value('total') ?? 0;
-        $l60Sales  = (clone $query)->selectRaw('SUM(ebay_l60 * ebay_price) as total')->value('total') ?? 0;
+        $l30Sales  = (clone $query)->selectRaw('SUM(ebay_data_l30 * ebay_data_price) as total')->value('total') ?? 0;
+        $l60Sales  = (clone $query)->selectRaw('SUM(ebay_data_l60 * ebay_data_price) as total')->value('total') ?? 0;
 
         $growth = $l30Sales > 0 ? (($l30Sales - $l60Sales) / $l30Sales) * 100 : 0;
 
@@ -349,7 +350,7 @@ class ChannelMasterController extends Controller
         });
 
         // Calculate total profit
-        $ebayRows     = $query->get(['sku', 'ebay_price', 'ebay_l30','ebay_l60']);
+        $ebayRows     = $query->get(['sku', 'ebay_data_price', 'ebay_data_l30','ebay_data_l60']);
         $totalProfit  = 0;
         $totalProfitL60  = 0;
         $totalCogs       = 0;
@@ -357,9 +358,9 @@ class ChannelMasterController extends Controller
 
         foreach ($ebayRows as $row) {
             $sku       = strtoupper($row->sku);
-            $price     = (float) $row->ebay_price;
-            $unitsL30  = (int) $row->ebay_l30;
-            $unitsL60  = (int) $row->ebay_l60;
+            $price     = (float) $row->ebay_data_price;
+            $unitsL30  = (int) $row->ebay_data_l30;
+            $unitsL60  = (int) $row->ebay_data_l60;
 
             $soldAmount = $unitsL30 * $price;
             if ($soldAmount <= 0) {
@@ -432,6 +433,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -553,6 +555,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -670,6 +673,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -786,6 +790,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -903,6 +908,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -1019,6 +1025,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -1137,6 +1144,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -1254,6 +1262,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
         
         return response()->json([
@@ -1371,6 +1380,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -1489,6 +1499,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -1606,6 +1617,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -1724,6 +1736,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -1841,6 +1854,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -1958,6 +1972,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -2075,6 +2090,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -2192,6 +2208,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -2309,6 +2326,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -2426,6 +2444,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -2543,6 +2562,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -2660,6 +2680,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -2777,6 +2798,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -2894,6 +2916,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -3011,6 +3034,7 @@ class ChannelMasterController extends Controller
             'W/Ads'      => $channelData->w_ads ?? 0,
             'NR'         => $channelData->nr ?? 0,
             'Update'     => $channelData->update ?? 0,
+            'cogs'       => round($totalCogs, 2),
         ];
 
         return response()->json([
@@ -3384,6 +3408,59 @@ class ChannelMasterController extends Controller
             return 0;
         }
     }
+
+
+    public function getSalesTrendData()
+    {
+        $today = now();
+        $l30Start = $today->copy()->subDays(30);
+        $l60Start = $today->copy()->subDays(60);
+
+        // Get daily sales for last 60 days
+        $salesData = DB::connection('apicentral')
+            ->table('shopify_order_items')
+            ->select(
+                DB::raw('DATE(order_date) as date'),
+                DB::raw('SUM(quantity * price) as total_sales')
+            )
+            ->where('order_date', '>=', $l60Start)
+            ->groupBy(DB::raw('DATE(order_date)'))
+            ->orderBy('date', 'asc')
+            ->get();
+
+        // Split into two datasets (L30 & L60)
+        $l30Data = [];
+        $l60Data = [];
+
+        foreach ($salesData as $row) {
+            $date = Carbon::parse($row->date)->format('Y-m-d');
+            if ($row->date >= $l30Start->toDateString()) {
+                $l30Data[$date] = $row->total_sales;
+            } else {
+                $l60Data[$date] = $row->total_sales;
+            }
+        }
+
+        // Prepare consistent date series
+        $period = new \DatePeriod(
+            $l60Start,
+            new \DateInterval('P1D'),
+            $today
+        );
+
+        $chartData = [];
+        foreach ($period as $date) {
+            $formatted = $date->format('Y-m-d');
+            $chartData[] = [
+                'date' => $formatted,
+                'l30_sales' => $l30Data[$formatted] ?? 0,
+                'l60_sales' => $l60Data[$formatted] ?? 0,
+            ];
+        }
+
+        return response()->json(['chartData' => $chartData]);
+    }
+
 
 
 }

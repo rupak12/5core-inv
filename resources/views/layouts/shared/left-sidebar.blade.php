@@ -161,6 +161,23 @@
                 </div>
             </li>
 
+               <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#prcmasterinc" aria-expanded="false" aria-controls="prcmasterinc"
+                    class="side-nav-link">
+                    <i class="ri-user-line"></i>
+                    <span>Pricing Masters IncR</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="prcmasterinc">
+                    <ul class="side-nav-second-level">
+                        
+                        <li>
+                            <a href="{{ url('/pricing-master-incremental') }}"> Prc Master IncR </a>
+                        </li>
+                    </ul>
+                </div>
+
+            </li>
 
             <li class="side-nav-item">
                 <a data-bs-toggle="collapse" href="#sidebarPagess" aria-expanded="false" aria-controls="sidebarPagess"
@@ -186,6 +203,10 @@
 
                         <li>
                             <a href="{{ url('calculate-cvr-masters') }}">CVR Masters</a>
+                        </li>
+
+                         <li>
+                            <a href="{{ url('calculate-wmp-masters') }}">WMP Masters</a>
                         </li>
 
                         <li>
@@ -1999,6 +2020,65 @@
 
                                     <li>
                                         <a href="{{ url('ebayThreePricingCVR') }}">Ebay 3 Pricing - CVR</a>
+                                    </li>
+                                    <li>
+                                        <a data-bs-toggle="collapse" href="#ebay3AcosSubmenu" aria-expanded="false"
+                                            aria-controls="ebay3AcosSubmenu">
+                                            <span>ACOS Control</span>
+                                            <span class="menu-arrow"></span>
+                                        </a>
+                                        <div class="collapse" id="ebay3AcosSubmenu">
+                                            <ul class="side-nav-fourth-level">
+                                                <li>
+                                                    <a href="{{ route('ebay3-over-uti-acos-pink') }}">Over ACOS
+                                                        PINK</a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('ebay3-over-uti-acos-green') }}">Over ACOS
+                                                        GREEN</a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('ebay3-over-uti-acos-red') }}">Over ACOS
+                                                        RED</a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('ebay3-under-uti-acos-pink') }}">Under ACOS
+                                                            PINK</a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('ebay3-under-uti-acos-green') }}">Under ACOS
+                                                            GREEN</a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('ebay3-under-uti-acos-red') }}">Under ACOS
+                                                            RED</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('ebay3.pink.dil.ads') }}">Pink Dil Ads</a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('ebay3.over.utilized') }}">OVER UTIL.</a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('ebay3.under.utilized') }}">UNDER UTIL.</a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('ebay3.correctly.utilized') }}">CORRECTLY UTIL.</a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('ebay3.pmt.ads') }}">PMT Ads</a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('ebay3.keywords.ads') }}">Keywords Ads</a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('ebay3.keywords.ads.less-than-thirty') }}">Ads < $30</a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('ebay3.make.new.kw.ads') }}">Make New KW Ads</a>
                                     </li>
                                 </ul>
                             </div>

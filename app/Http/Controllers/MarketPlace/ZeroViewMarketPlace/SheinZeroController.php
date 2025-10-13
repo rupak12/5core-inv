@@ -128,13 +128,13 @@ class SheinZeroController extends Controller
         return $zeroViewCount;
     }
 
-     public function getLivePendingAndZeroViewCounts()
+    public function getLivePendingAndZeroViewCounts()
     {
         $productMasters = ProductMaster::whereNull('deleted_at')->get();
         $skus = $productMasters->pluck('sku')->unique()->toArray();
 
         $shopifyData = ShopifySku::whereIn('sku', $skus)->get()->keyBy('sku');
-        $ebayDataViews = SheinListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
+        $shienDataViews = SheinListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
 
         $ebayMetrics = SheinSheetData::whereIn('sku', $skus)->get()->keyBy('sku');
 
@@ -150,7 +150,7 @@ class SheinZeroController extends Controller
             $isParent = stripos($sku, 'PARENT') !== false;
             if ($isParent) continue;
 
-            $status = $ebayDataViews[$sku]->value ?? null;
+            $status = $shienDataViews[$sku]->value ?? null;
             if (is_string($status)) {
                 $status = json_decode($status, true);
             }
