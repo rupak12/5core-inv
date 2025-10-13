@@ -18,6 +18,7 @@ use App\Models\AmazonDatasheet;
 use App\Models\AmazonDataView;
 use Exception;
 use App\Models\DobaDataView;
+use App\Models\WmpMarkAsDone;
 use App\Models\DobaMetric;
 use App\Models\EbayMetric;
 use App\Models\PricingMaster;
@@ -125,56 +126,134 @@ class PricingMasterViewsController extends Controller
         ]);
     }
 
+    public function calculateWMPMasters(Request $request)
+    {
+        $mode = $request->query('mode');
+        $demo = $request->query('demo');
+
+        $processedData = $this->processPricingData();
+
+        return view('pricing-master.wmp_master', [
+            'mode' => $mode,
+            'demo' => $demo,
+
+            'records' => $processedData,
+        ]);
+    }
 
 
+    public function pricingMasterIncR(Request $request)
+    {
+        $mode = $request->query('mode');
+        $demo = $request->query('demo');
 
+        $processedData = $this->processPricingData();
+
+        return view('pricing-master.pricing_master_incr', [
+            'mode' => $mode,
+            'demo' => $demo,
+            'records' => $processedData,
+        ]);
+    }
+
+
+    public function wmpMarkAsDone(Request $request)
+    {
+        $parent = $request->input('parent');
+        $sku = $request->input('sku');
+        $date = $request->input('date');
+
+        if (!$sku) {
+            return response()->json(['error' => 'SKU is required'], 400);
+        }
+
+        try {
+            if ($date === 'false') {
+                WmpMarkAsDone::where('sku', $sku)->where('parent', $parent)->delete();
+                return response()->json(['success' => true, 'deleted' => true]);
+            } else {
+                // Mark as done
+                $wmpRecord = WmpMarkAsDone::updateOrCreate(
+                    ['sku' => $sku, 'parent' => $parent],
+                    [
+                        'done_date' => now()->toDateString(),
+                        'is_done' => true,
+                    ]
+                );
+
+                if (!$wmpRecord) {
+                    Log::error("WmpMarkAsDone::updateOrCreate returned null for SKU: $sku, parent: $parent");
+                    return response()->json(['error' => 'Failed to update record'], 500);
+                }
+
+                return response()->json(['success' => true, 'record' => $wmpRecord]);
+            }
+        } catch (Exception $e) {
+            Log::error("Failed to mark WMP as done for SKU: $sku", [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'error' => 'Failed to update record',
+                'exception' => $e->getMessage()
+            ], 500);
+        }
+    }
 
 
     protected function processPricingData($searchTerm = '')
     {
-
+        // Fetch all product data
         $productData = ProductMaster::whereNull('deleted_at')
-
             ->orderBy('id', 'asc')
             ->get();
 
-        $skus = $productData
+        // Get all SKUs (including those with "PARENT" for WmpMarkAsDone)
+        $allSkus = $productData
+            ->pluck('sku')
+            ->unique()
+            ->toArray();
+
+        // Get SKUs excluding "PARENT" for other queries
+        $nonParentSkus = $productData
             ->pluck('sku')
             ->filter(function ($sku) {
                 return stripos($sku, 'PARENT') === false;
             })
             ->unique()
             ->toArray();
-        $shopifyData = ShopifySku::whereIn('sku', $skus)->get()->keyBy(function ($item) {
+
+        // Fetch WmpMarkAsDone data for all SKUs (including parents)
+        $markAsDoneData = WmpMarkAsDone::whereIn('sku', $allSkus)->get()->keyBy('sku');
+
+        // Fetch other data using non-parent SKUs
+        $shopifyData = ShopifySku::whereIn('sku', $nonParentSkus)->get()->keyBy(function ($item) {
             return trim(strtoupper($item->sku));
         });
+        $amazonData = AmazonDatasheet::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $amazonListingData = AmazonListingStatus::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
 
-        $amazonData  = AmazonDatasheet::whereIn('sku', $skus)->get()->keyBy('sku');
-        $amazonListingData = AmazonListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
-        $ebayData    = EbayMetric::whereIn('sku', $skus)->get()->keyBy('sku');
-        $ebayListingData = EbayListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
-        $temuListingData = TemuListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
-        $ebayTwoListingData = EbayTwoListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
-        $ebayThreeListingData = EbayThreeListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
-        $shopifyb2cListingData = Shopifyb2cListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
-        $dobaListingData = DobaListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
-        $macysListingStatus = MacysListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
-        $reverbListingData = ReverbListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
-        $walmartListingData = WalmartListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
-        $sheinListingData = SheinListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
-        $bestbuyUsaListingData = BestbuyUSAListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
-        $dobaListingData = DobaListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
-        $tiendamiaListingData = TiendamiaListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
-        $tiktokListingData = TiktokShopListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
-        $aliexpressListingData = AliexpressListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
-
-
-
+        $ebayListingData = EbayListingStatus::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
         // $dobaData    = DobaMetric::whereIn('sku', $skus)->get()->keyBy('sku');
-        $pricingData = PricingMaster::whereIn('sku', $skus)->get()->keyBy('sku');
-        $macyData    = MacyProduct::whereIn('sku', $skus)->get()->keyBy('sku');
-        $reverbData  = ReverbProduct::whereIn('sku', $skus)->get()->keyBy('sku');
-        $tiktokLookup = TiktokSheet::whereIn('sku', $skus)->get()->keyBy('sku');
+        $ebayData    = EbayMetric::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $temuListingData = TemuListingStatus::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $ebayTwoListingData = EbayTwoListingStatus::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $ebayThreeListingData = EbayThreeListingStatus::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $shopifyb2cListingData = Shopifyb2cListingStatus::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $dobaListingData = DobaListingStatus::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $macysListingStatus = MacysListingStatus::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $reverbListingData = ReverbListingStatus::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $walmartListingData = WalmartListingStatus::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $sheinListingData = SheinListingStatus::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $bestbuyUsaListingData = BestbuyUSAListingStatus::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $tiendamiaListingData = TiendamiaListingStatus::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $tiktokListingData = TiktokShopListingStatus::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $aliexpressListingData = AliexpressListingStatus::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+
+        $pricingData = PricingMaster::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $macyData = MacyProduct::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $reverbData = ReverbProduct::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $tiktokLookup = TiktokSheet::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
         $walmartLookup = DB::connection('apicentral')
             ->table('walmart_api_data as api')
             ->select(
@@ -184,10 +263,9 @@ class PricingMasterViewsController extends Controller
                 DB::raw('COALESCE(m.l60, 0) as l60')
             )
             ->leftJoin('walmart_metrics as m', 'api.sku', '=', 'm.sku')
-            ->whereIn('api.sku', $skus)
+            ->whereIn('api.sku', $nonParentSkus)
             ->get()
             ->keyBy('sku');
-
 
         $dobaData = DB::connection('apicentral')
             ->table('doba_api_data as api_doba')
@@ -198,82 +276,76 @@ class PricingMasterViewsController extends Controller
                 DB::raw('COALESCE(doba_m.l60, 0) as l60')
             )
             ->leftJoin('doba_metrics as doba_m', 'api_doba.spu', '=', 'doba_m.sku')
-            ->whereIn('api_doba.spu', $skus)
+            ->whereIn('api_doba.spu', $nonParentSkus)
             ->get()
             ->keyBy('sku');
-
-
-        // $ebay2Lookup = Ebay2Metric::whereIn('sku', $skus)->get()->keyBy('sku');
 
         $ebay2Lookup = DB::connection('apicentral')
             ->table('ebay2_metrics')
             ->select('sku', 'ebay_price', 'ebay_l30', 'ebay_l60', 'views')
-            ->whereIn('sku', $skus)
+            ->whereIn('sku', $nonParentSkus)
             ->get()
             ->keyBy('sku');
 
+        $ebay3Lookup = Ebay3Metric::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $temuMetricLookup = TemuMetric::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $amazonDataView = AmazonDataView::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $ebayDataView = EbayDataView::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $shopifyb2cDataView = Shopifyb2cDataView::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $dobaDataView = DobaDataView::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $temuDataView = TemuDataView::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $reverbDataView = ReverbViewData::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $macyDataView = MacyDataView::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $sheinDataView = SheinDataView::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $sheinData = SheinSheetData::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $bestbuyUsaLookup = BestbuyUsaProduct::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $bestbuyUsaDataView = BestbuyUSADataView::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $tiendamiaLookup = TiendamiaProduct::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $tiendamiaDataView = TiendamiaDataView::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $aliexpressDataView = AliexpressDataView::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+        $aliexpressLookup = AliExpressSheetData::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
 
-
-        $ebay3Lookup = Ebay3Metric::whereIn('sku', $skus)->get()->keyBy('sku');
-        $temuMetricLookup = TemuMetric::whereIn('sku', $skus)->get()->keyBy('sku');
-        $amazonDataView = AmazonDataView::whereIn('sku', $skus)->get()->keyBy('sku');
-        $ebayDataView = EbayDataView::whereIn('sku', $skus)->get()->keyBy('sku');
-        $shopifyb2cDataView = Shopifyb2cDataView::whereIn('sku', $skus)->get()->keyBy('sku');
-        $dobaDataView = DobaDataView::whereIn('sku', $skus)->get()->keyBy('sku');
-        $temuDataView = TemuDataView::whereIn('sku', $skus)->get()->keyBy('sku');
-        $reverbDataView = ReverbViewData::whereIn('sku', $skus)->get()->keyBy('sku');
-        $macyDataView = MacyDataView::whereIn('sku', $skus)->get()->keyBy('sku');
-        $sheinDataView = SheinDataView::whereIn('sku', $skus)->get()->keyBy('sku');
-        $sheinData = SheinSheetData::whereIn('sku', $skus)->get()->keyBy('sku');
-        $bestbuyUsaLookup = BestbuyUsaProduct::whereIn('sku', $skus)->get()->keyBy('sku');
-        $bestbuyUsaDataView = BestbuyUSADataView::whereIn('sku', $skus)->get()->keyBy('sku');
-        $tiendamiaLookup = TiendamiaProduct::whereIn('sku', $skus)->get()->keyBy('sku');
-        $tiendamiaDataView = TiendamiaDataView::whereIn('sku', $skus)->get()->keyBy('sku');
-        $aliexpressDataView = AliexpressDataView::whereIn('sku', $skus)->get()->keyBy('sku');
-        $aliexpressLookup = AliExpressSheetData::whereIn('sku', $skus)->get()->keyBy('sku');
-
-        // Fetch LMPA data from 5core_repricer database - get lowest price per SKU (excluding 0 prices)
+        // Fetch LMPA and LMP data
         $lmpaLookup = collect();
         try {
             $lmpaLookup = DB::connection('repricer')
                 ->table('lmpa_data')
                 ->select('sku', DB::raw('MIN(price) as lowest_price'))
                 ->where('price', '>', 0)
-                ->whereIn('sku', $skus)
+                ->whereIn('sku', $nonParentSkus)
                 ->groupBy('sku')
                 ->get()
                 ->keyBy('sku');
         } catch (Exception $e) {
             Log::warning('Could not fetch LMPA data from repricer database: ' . $e->getMessage());
-            // Fallback to empty collection - will use Amazon's price_lmpa instead
         }
 
-        // Fetch LMP data from 5core_repricer database for eBay - get lowest price per SKU (excluding 0 prices)
         $lmpLookup = collect();
         try {
             $lmpLookup = DB::connection('repricer')
                 ->table('lmp_data')
                 ->select('sku', DB::raw('MIN(price) as lowest_price'))
                 ->where('price', '>', 0)
-                ->whereIn('sku', $skus)
+                ->whereIn('sku', $nonParentSkus)
                 ->groupBy('sku')
                 ->get()
                 ->keyBy('sku');
         } catch (Exception $e) {
             Log::warning('Could not fetch LMP data from repricer database: ' . $e->getMessage());
-            // Fallback to empty collection - will use eBay's price_lmpa instead
         }
-
-
 
         $processedData = [];
 
         foreach ($productData as $product) {
             $sku = $product->sku;
 
+            // Apply search term filter
             if (!empty($searchTerm) && stripos($sku, $searchTerm) === false && stripos($product->parent, $searchTerm) === false) {
                 continue;
             }
+
+            // Fetch markAsDone data for the SKU
+            $markAsDone = $markAsDoneData[$sku] ?? null;
 
             $isParent = stripos($sku, 'PARENT') !== false;
             $values = is_string($product->Values) ? json_decode($product->Values, true) : $product->Values;
@@ -282,31 +354,31 @@ class PricingMasterViewsController extends Controller
             }
 
             $msrp = (float) ($values['msrp'] ?? 0);
-            $map  = (float) ($values['map'] ?? 0);
-            $lp   = (float) ($values['lp'] ?? 0);
+            $map = (float) ($values['map'] ?? 0);
+            $lp = (float) ($values['lp'] ?? 0);
             $ship = (float) ($values['ship'] ?? 0);
             $temuship = (float) ($values['temu_ship'] ?? 0);
             $ebay2ship = (float) ($values['ebay2_ship'] ?? 0);
             $initialQuantity = (float) ($values['initial_quantity'] ?? 0);
 
-            $amazon  = $amazonData[$sku] ?? null;
-            $ebay    = $ebayData[$sku] ?? null;
-            $doba    = $dobaData[$sku] ?? null;
+            // Fetch data for non-parent SKUs
+            $amazon = $amazonData[$sku] ?? null;
+            $ebay = $ebayData[$sku] ?? null;
+            $doba = $dobaData[$sku] ?? null;
             $pricing = $pricingData[$sku] ?? null;
-            $macy    = $macyData[$sku] ?? null;
-            $reverb  = $reverbData[$sku] ?? null;
+            $macy = $macyData[$sku] ?? null;
+            $reverb = $reverbData[$sku] ?? null;
             $temuMetric = $temuMetricLookup[$sku] ?? null;
             $walmart = $walmartLookup[$sku] ?? null;
-            $ebay2   = $ebay2Lookup[$sku] ?? null;
-            $ebay3   = $ebay3Lookup[$sku] ?? null;
-            $lmpa    = $lmpaLookup[$sku] ?? null;
-            $lmp     = $lmpLookup[$sku] ?? null;
-            $shein   = $sheinData[$sku] ?? null;
+            $ebay2 = $ebay2Lookup[$sku] ?? null;
+            $ebay3 = $ebay3Lookup[$sku] ?? null;
+            $lmpa = $lmpaLookup[$sku] ?? null;
+            $lmp = $lmpLookup[$sku] ?? null;
+            $shein = $sheinData[$sku] ?? null;
             $bestbuyUsa = $bestbuyUsaLookup[$sku] ?? null;
             $tiendamia = $tiendamiaLookup[$sku] ?? null;
             $tiktok = $tiktokLookup[$sku] ?? null;
             $aliexpress = $aliexpressLookup[$sku] ?? null;
-
 
             // Get Shopify data for L30 and INV
             $shopifyItem = $shopifyData[trim(strtoupper($sku))] ?? null;
@@ -314,6 +386,7 @@ class PricingMasterViewsController extends Controller
             $l30 = $shopifyItem ? ($shopifyItem->quantity ?? 0) : 0;
             $shopify_l30 = $shopifyItem ? ($shopifyItem->shopify_l30 ?? 0) : 0;
 
+            // Calculate total views
             $total_views = ($amazon ? ($amazon->sessions_l30 ?? 0) : 0) +
                 ($ebay ? ($ebay->views ?? 0) : 0) +
                 ($ebay2 ? ($ebay2->views ?? 0) : 0) +
@@ -339,11 +412,7 @@ class PricingMasterViewsController extends Controller
                 ($doba ? ($doba->l30 ?? 0) : 0) +
                 ($aliexpress ? ($aliexpress->aliexpress_l30 ?? 0) : 0);
 
-
-
-
-            $total_l60_count =
-                ($tiktok ? ($tiktok->shopify_tiktokl60 ?? 0) : 0) +
+            $total_l60_count = ($tiktok ? ($tiktok->shopify_tiktokl60 ?? 0) : 0) +
                 ($shein ? ($shein->shopify_sheinl60 ?? 0) : 0) +
                 ($amazon ? ($amazon->units_ordered_l60 ?? 0) : 0) +
                 ($ebay ? ($ebay->ebay_l60 ?? 0) : 0) +
@@ -358,22 +427,19 @@ class PricingMasterViewsController extends Controller
                 ($doba ? ($doba->l60 ?? 0) : 0) +
                 ($aliexpress ? ($aliexpress->aliexpress_l60 ?? 0) : 0);
 
-
-
-            // Calculate avg CVR only for channels where L30 > 0 and views > 0
+            // Calculate avg CVR
             $channels = [
-                ['data' => $amazon,     'l30' => 'units_ordered_l30',      'views' => 'sessions_l30'],
-                ['data' => $ebay,       'l30' => 'ebay_l30',               'views' => 'views'],
-                ['data' => $ebay2,      'l30' => 'ebay_l30',               'views' => 'views'],
-                ['data' => $ebay3,      'l30' => 'ebay_l30',               'views' => 'views'],
+                ['data' => $amazon, 'l30' => 'units_ordered_l30', 'views' => 'sessions_l30'],
+                ['data' => $ebay, 'l30' => 'ebay_l30', 'views' => 'views'],
+                ['data' => $ebay2, 'l30' => 'ebay_l30', 'views' => 'views'],
+                ['data' => $ebay3, 'l30' => 'ebay_l30', 'views' => 'views'],
                 ['data' => $temuMetric, 'l30' => 'quantity_purchased_l30', 'views' => 'product_clicks_l30'],
-                ['data' => $reverb,     'l30' => 'r_l30',                  'views' => 'views'],
                 ['data' => $walmart,    'l30' => 'l30',                    'views' => 'views'],
                 ['data' => $tiktok,     'l30' => 'shopify_tiktokl30',                    'views' => 'views'],
                 ['data' => $shein,      'l30' => 'shopify_sheinl30',       'views' => 'views_clicks'],
             ];
 
-            $l30_count = 0;        // Count of channels where L30 > 0 and views > 0
+            $l30_sum = 0;        // Sum of L30 for channels where L30 > 0 and views > 0
             $views_sum = 0;        // Sum of views for those channels
 
             foreach ($channels as $channel) {
@@ -383,17 +449,13 @@ class PricingMasterViewsController extends Controller
                     $views = $obj->{$channel['views']} ?? 0;
 
                     if ($l30 > 0 && $views > 0) {
-                        $l30_count++;           // count channels
+                        $l30_sum += $l30;           // sum l30
                         $views_sum += $views;   // sum views
                     }
                 }
             }
 
-
-
             $total_l30_count_data = 0;
-
-            // Count channels where L30 > 0, ignore views
             if ($amazon && ($amazon->units_ordered_l30 ?? 0) > 0) {
                 $total_l30_count_data++;
             }
@@ -412,7 +474,6 @@ class PricingMasterViewsController extends Controller
             if ($reverb && ($reverb->r_l30 ?? 0) > 0) {
                 $total_l30_count_data++;
             }
-            // Walmart excluded as it doesn't have views data
             if ($tiktok && ($tiktok->shopify_tiktokl30 ?? 0) > 0) {
                 $total_l30_count_data++;
             }
@@ -423,34 +484,36 @@ class PricingMasterViewsController extends Controller
                 $total_l30_count_data++;
             }
 
-            // For $avgCvr, use all views
+            // For $avgCvr, use views only from qualifying channels (same as l30_sum)
             $views_sum =
-                ($amazon->sessions_l30 ?? 0) +
-                ($ebay->views ?? 0) +
-                ($ebay2->views ?? 0) +
-                ($ebay3->views ?? 0) +
-                ($temuMetric->{'product_clicks_l30'} ?? 0) +
-                ($reverb->views ?? 0) +
-                ($tiktok->views ?? 0) +
-                ($shein->views_clicks ?? 0);
+                (($amazon && ($amazon->units_ordered_l30 ?? 0) > 0 && ($amazon->sessions_l30 ?? 0) > 0) ? ($amazon->sessions_l30 ?? 0) : 0) +
+                (($ebay && ($ebay->ebay_l30 ?? 0) > 0 && ($ebay->views ?? 0) > 0) ? ($ebay->views ?? 0) : 0) +
+                (($ebay2 && ($ebay2->ebay_l30 ?? 0) > 0 && ($ebay2->views ?? 0) > 0) ? ($ebay2->views ?? 0) : 0) +
+                (($ebay3 && ($ebay3->ebay_l30 ?? 0) > 0 && ($ebay3->views ?? 0) > 0) ? ($ebay3->views ?? 0) : 0) +
+                (($temuMetric && ($temuMetric->{'quantity_purchased_l30'} ?? 0) > 0 && ($temuMetric->{'product_clicks_l30'} ?? 0) > 0) ? ($temuMetric->{'product_clicks_l30'} ?? 0) : 0) +
+                (($tiktok && ($tiktok->shopify_tiktokl30 ?? 0) > 0 && ($tiktok->views ?? 0) > 0) ? ($tiktok->views ?? 0) : 0) +
+                (($shein && ($shein->shopify_sheinl30 ?? 0) > 0 && ($shein->views_clicks ?? 0) > 0) ? ($shein->views_clicks ?? 0) : 0);
 
             $avgCvr = $views_sum > 0
-                ? number_format(($l30_count / $views_sum) * 100, 1) . ' %'
+                ? number_format(($l30_sum / $views_sum) * 100, 1) . ' %'
                 : '0.0 %';
 
             $item = (object) [
-                'SKU'     => $sku,
-                'Parent'  => $product->parent,
-                'remark'  => $product->remark,
-                'L30'     => $l30,
+                'SKU' => $sku,
+                'Parent' => $product->parent,
+                'remark' => $product->remark,
+                'mark_done_date' => $markAsDone && $markAsDone->is_done ? $markAsDone->done_date : null,
+                'is_done' => $markAsDone ? $markAsDone->is_done : false,
+                'lrd_date' => $values['lrd_date'] ?? null,
+                'L30' => $l30,
                 'shopify_l30' => $shopify_l30,
                 'total_views' => $total_views,
-                'INV'     => $inv,
-                'Dil%'    => $inv > 0 ? round((($shopifyItem->quantity ?? 0) / $inv) * 100) : 0,
-                'MSRP'    => $msrp,
-                'MAP'     => $map,
-                'LP'      => $lp,
-                'SHIP'    => $ship,
+                'INV' => $inv,
+                'Dil%' => $inv > 0 ? round((($shopifyItem->quantity ?? 0) / $inv) * 100) : 0,
+                'MSRP' => $msrp,
+                'MAP' => $map,
+                'LP' => $lp,
+                'SHIP' => $ship,
                 'temu_ship' => $temuship,
                 'ebay2_ship' => $ebay2ship,
                 'initial_quantity' => $initialQuantity,
@@ -460,147 +523,114 @@ class PricingMasterViewsController extends Controller
                 'total_l30_count' => $total_l30_count,
                 'total_l30_count_data' => $total_l30_count_data,
                 'total_l60_count' => $total_l60_count,
-
                 'initial_cogs' => $lp != 0 ? $initialQuantity * $lp : 0,
                 'current_cogs' => $lp != 0 ? $inv * $lp : 0,
-                // 'avg_inventory' will be set after $item is created
-
                 // Amazon
                 'amz_price' => $amazon ? ($amazon->price ?? 0) : 0,
-                'amz_l30'   => $amazon ? ($amazon->units_ordered_l30 ?? 0) : 0,
-                'amz_l60'   => $amazon ? ($amazon->units_ordered_l60 ?? 0) : 0,
+                'amz_l30' => $amazon ? ($amazon->units_ordered_l30 ?? 0) : 0,
+                'amz_l60' => $amazon ? ($amazon->units_ordered_l60 ?? 0) : 0,
                 'sessions_l30' => $amazon ? ($amazon->sessions_l30 ?? 0) : 0,
-                'amz_cvr'   => $amazon ? $this->calculateCVR((float)($amazon->units_ordered_l30 ?? 0), (float)($amazon->sessions_l30 ?? 0)) : null,
+                'amz_cvr' => $amazon ? $this->calculateCVR((float)($amazon->units_ordered_l30 ?? 0), (float)($amazon->sessions_l30 ?? 0)) : null,
                 'amz_buyer_link' => isset($amazonListingData[$sku]) ? ($amazonListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'amz_seller_link' => isset($amazonListingData[$sku]) ? ($amazonListingData[$sku]->value['seller_link'] ?? null) : null,
-
                 'price_lmpa' => $lmpa ? ($lmpa->lowest_price ?? 0) : ($amazon ? ($amazon->price_lmpa ?? 0) : 0),
-                'amz_pft'   => $amazon && ($amazon->price ?? 0) > 0 ? (($amazon->price * 0.70 - $lp - $ship) / $amazon->price) : 0,
-                'amz_roi'   => $amazon && $lp > 0 && ($amazon->price ?? 0) > 0 ? (($amazon->price * 0.70 - $lp - $ship) / $lp) : 0,
+                'amz_pft' => $amazon && ($amazon->price ?? 0) > 0 ? (($amazon->price * 0.70 - $lp - $ship) / $amazon->price) : 0,
+                'amz_roi' => $amazon && $lp > 0 && ($amazon->price ?? 0) > 0 ? (($amazon->price * 0.70 - $lp - $ship) / $lp) : 0,
                 'amz_req_view' => $amazon && $amazon->sessions_l30 > 0 && $amazon->units_ordered_l30 > 0
                     ? (($inv / 90) * 30) / (($amazon->units_ordered_l30 / $amazon->sessions_l30))
                     : 0,
-
-
                 // eBay
                 'ebay_price' => $ebay ? ($ebay->ebay_price ?? 0) : 0,
-                'ebay_l30'   => $ebay ? ($ebay->ebay_l30 ?? 0) : 0,
-                'ebay_l60'   => $ebay ? ($ebay->ebay_l60 ?? 0) : 0,
+                'ebay_l30' => $ebay ? ($ebay->ebay_l30 ?? 0) : 0,
+                'ebay_l60' => $ebay ? ($ebay->ebay_l60 ?? 0) : 0,
                 'ebay_views' => $ebay ? ($ebay->views ?? 0) : 0,
                 'ebay_price_lmpa' => $lmp ? ($lmp->lowest_price ?? 0) : ($ebay ? ($ebay->price_lmpa ?? 0) : 0),
-                'ebay_cvr'   => $ebay ? $this->calculateCVR($ebay->ebay_l30 ?? 0, $ebay->views ?? 0) : null,
-                'ebay_pft'   => $ebay && ($ebay->ebay_price ?? 0) > 0 ? (($ebay->ebay_price * 0.72 - $lp - $ship) / $ebay->ebay_price) : 0,
-                'ebay_roi'   => $ebay && $lp > 0 && ($ebay->ebay_price ?? 0) > 0 ? (($ebay->ebay_price * 0.72 - $lp - $ship) / $lp) : 0,
-
+                'ebay_cvr' => $ebay ? $this->calculateCVR($ebay->ebay_l30 ?? 0, $ebay->views ?? 0) : null,
+                'ebay_pft' => $ebay && ($ebay->ebay_price ?? 0) > 0 ? (($ebay->ebay_price * 0.72 - $lp - $ship) / $ebay->ebay_price) : 0,
+                'ebay_roi' => $ebay && $lp > 0 && ($ebay->ebay_price ?? 0) > 0 ? (($ebay->ebay_price * 0.72 - $lp - $ship) / $lp) : 0,
                 'ebay_req_view' => $ebay && $ebay->views > 0 && $ebay->ebay_l30 > 0
                     ? (($inv / 90) * 30) / (($ebay->ebay_l30 / $ebay->views))
                     : 0,
                 'ebay_buyer_link' => isset($ebayListingData[$sku]) ? ($ebayListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'ebay_seller_link' => isset($ebayListingData[$sku]) ? ($ebayListingData[$sku]->value['seller_link'] ?? null) : null,
-                // 'ebay_buyer_link' --- IGNORE ---
-
-
                 // Doba
                 'doba_price' => $doba ? ($doba->doba_price ?? 0) : 0,
-                'doba_l30'   => $doba ? ($doba->l30 ?? 0) : 0,
-                'doba_l60'   => $doba ? ($doba->l60 ?? 0) : 0,
-
-                'doba_pft'   => $doba && ($doba->doba_price ?? 0) > 0 ? (($doba->doba_price * 0.95 - $lp - $ship) / $doba->doba_price) : 0,
-                'doba_roi'   => $doba && $lp > 0 && ($doba->doba_price ?? 0) > 0 ? (($doba->doba_price * 0.95 - $lp - $ship) / $lp) : 0,
+                'doba_l30' => $doba ? ($doba->l30 ?? 0) : 0,
+                'doba_l60' => $doba ? ($doba->l60 ?? 0) : 0,
+                'doba_pft' => $doba && ($doba->doba_price ?? 0) > 0 ? (($doba->doba_price * 0.95 - $lp - $ship) / $doba->doba_price) : 0,
+                'doba_roi' => $doba && $lp > 0 && ($doba->doba_price ?? 0) > 0 ? (($doba->doba_price * 0.95 - $lp - $ship) / $lp) : 0,
                 'doba_buyer_link' => isset($dobaListingData[$sku]) ? ($dobaListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'doba_seller_link' => isset($dobaListingData[$sku]) ? ($dobaListingData[$sku]->value['seller_link'] ?? null) : null,
-
                 // Macy
                 'macy_price' => $macy ? ($macy->price ?? 0) : 0,
-                'macy_l30'   => $macy ? ($macy->m_l30 ?? 0) : 0,
-                'macy_pft'   => $macy && $macy->price > 0 ? (($macy->price * 0.77 - $lp - $ship) / $macy->price) : 0,
-                'macy_roi'   => $macy && $lp > 0 && $macy->price > 0 ? (($macy->price * 0.77 - $lp - $ship) / $lp) : 0,
+                'macy_l30' => $macy ? ($macy->m_l30 ?? 0) : 0,
+                'macy_pft' => $macy && $macy->price > 0 ? (($macy->price * 0.77 - $lp - $ship) / $macy->price) : 0,
+                'macy_roi' => $macy && $lp > 0 && $macy->price > 0 ? (($macy->price * 0.77 - $lp - $ship) / $lp) : 0,
                 'macy_buyer_link' => isset($macysListingStatus[$sku]) ? ($macysListingStatus[$sku]->value['buyer_link'] ?? null) : null,
                 'macy_seller_link' => isset($macysListingStatus[$sku]) ? ($macysListingStatus[$sku]->value['seller_link'] ?? null) : null,
-
                 // Reverb
                 'reverb_price' => $reverb ? ($reverb->price ?? 0) : 0,
-                'reverb_l30'   => $reverb ? ($reverb->r_l30 ?? 0) : 0,
-                'reverb_l60'   => $reverb ? ($reverb->r_l60 ?? 0) : 0,
+                'reverb_l30' => $reverb ? ($reverb->r_l30 ?? 0) : 0,
+                'reverb_l60' => $reverb ? ($reverb->r_l60 ?? 0) : 0,
                 'reverb_views' => $reverb ? ($reverb->views ?? 0) : 0,
-                'reverb_pft'   => $reverb && $reverb->price > 0 ? (($reverb->price * 0.77 - $lp - $ship) / $reverb->price) : 0,
-                'reverb_roi'   => $reverb && $lp > 0 && $reverb->price > 0 ? (($reverb->price * 0.77 - $lp - $ship) / $lp) : 0,
+                'reverb_pft' => $reverb && $reverb->price > 0 ? (($reverb->price * 0.77 - $lp - $ship) / $reverb->price) : 0,
+                'reverb_roi' => $reverb && $lp > 0 && $reverb->price > 0 ? (($reverb->price * 0.77 - $lp - $ship) / $lp) : 0,
                 'reverb_req_view' => $reverb && $reverb->views > 0 && $reverb->r_l30 > 0 ? (($inv / 90) * 30) / (($reverb->r_l30 / $reverb->views)) : 0,
                 'reverb_cvr' => $reverb ? $this->calculateCVR($reverb->r_l30 ?? 0, $reverb->views ?? 0) : null,
-
                 'reverb_buyer_link' => isset($reverbListingData[$sku]) ? ($reverbListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'reverb_seller_link' => isset($reverbListingData[$sku]) ? ($reverbListingData[$sku]->value['seller_link'] ?? null) : null,
-
                 // Temu
-                'temu_price' => $temuMetric ? (float) ($temuMetric->{'temu_sheet_price'} ?? 0) : 0,
-                'temu_l30'   => $temuMetric ? (float) ($temuMetric->{'quantity_purchased_l30'} ?? 0) : 0,
-                'temu_l60'   => $temuMetric ? (float) ($temuMetric->{'quantity_purchased_l60'} ?? 0) : 0,
-                'temu_dil'   => $temuMetric ? (float) ($temuMetric->{'dil'} ?? 0) : 0,
-                'temu_views' => $temuMetric ? (float) ($temuMetric->{'product_clicks_l30'} ?? 0) : 0,
-
-                'temu_pft'   => $temuMetric && ($temuMetric->temu_sheet_price ?? 0) > 0 ? (($temuMetric->temu_sheet_price * 0.87 - $lp - $temuship) / $temuMetric->temu_sheet_price) : 0,
-                'temu_roi'   => $temuMetric && $lp > 0 && ($temuMetric->temu_sheet_price ?? 0) > 0 ? (($temuMetric->temu_sheet_price * 0.87 - $lp - $temuship) / $lp) : 0,
-                'temu_cvr' => $temuMetric
-                    ? $this->calculateCVR($temuMetric->{'quantity_purchased_l30'} ?? 0, $temuMetric->{'product_clicks_l30'} ?? 0)
-                    : null,
-
-                'temu_req_view' => $temuMetric && ($temuMetric->{'quantity_purchased_l30'} ?? 0) > 0
-                    ? ($inv * 20)
-                    : 0,
+                'temu_price' => $temuMetric ? (float) ($temuMetric->temu_sheet_price ?? 0) : 0,
+                'temu_l30' => $temuMetric ? (float) ($temuMetric->quantity_purchased_l30 ?? 0) : 0,
+                'temu_l60' => $temuMetric ? (float) ($temuMetric->quantity_purchased_l60 ?? 0) : 0,
+                'temu_dil' => $temuMetric ? (float) ($temuMetric->dil ?? 0) : 0,
+                'temu_views' => $temuMetric ? (float) ($temuMetric->product_clicks_l30 ?? 0) : 0,
+                'temu_pft' => $temuMetric && ($temuMetric->temu_sheet_price ?? 0) > 0 ? (($temuMetric->temu_sheet_price * 0.87 - $lp - $temuship) / $temuMetric->temu_sheet_price) : 0,
+                'temu_roi' => $temuMetric && $lp > 0 && ($temuMetric->temu_sheet_price ?? 0) > 0 ? (($temuMetric->temu_sheet_price * 0.87 - $lp - $temuship) / $lp) : 0,
+                'temu_cvr' => $temuMetric ? $this->calculateCVR($temuMetric->quantity_purchased_l30 ?? 0, $temuMetric->product_clicks_l30 ?? 0) : null,
+                'temu_req_view' => $temuMetric && ($temuMetric->quantity_purchased_l30 ?? 0) > 0 ? ($inv * 20) : 0,
                 'temu_buyer_link' => isset($temuListingData[$sku]) ? ($temuListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'temu_seller_link' => isset($temuListingData[$sku]) ? ($temuListingData[$sku]->value['seller_link'] ?? null) : null,
-
                 // Walmart
                 'walmart_price' => $walmart ? ($walmart->price ?? 0) : 0,
-                'walmart_l30'   => $walmart ?  ($walmart->l30 ?? 0) : 0,
-                'walmart_l60'   => $walmart ? ($walmart->l60 ?? 0) : 0,
-                'walmart_dil'   => $walmart ?    ($walmart->dil ?? 0) : 0,
-                'walmart_pft'   => $walmart && ($walmart->price ?? 0) > 0 ? (($walmart->price * 0.80 - $lp - $ship) / $walmart->price) : 0,
-                'walmart_roi'   => $walmart && $lp > 0 && ($walmart->price ?? 0) > 0 ? (($walmart->price * 0.80 - $lp - $ship) / $lp) : 0,
+                'walmart_l30' => $walmart ? ($walmart->l30 ?? 0) : 0,
+                'walmart_l60' => $walmart ? ($walmart->l60 ?? 0) : 0,
+                'walmart_dil' => $walmart ? ($walmart->dil ?? 0) : 0,
+                'walmart_pft' => $walmart && ($walmart->price ?? 0) > 0 ? (($walmart->price * 0.80 - $lp - $ship) / $walmart->price) : 0,
+                'walmart_roi' => $walmart && $lp > 0 && ($walmart->price ?? 0) > 0 ? (($walmart->price * 0.80 - $lp - $ship) / $lp) : 0,
                 'walmart_buyer_link' => isset($walmartListingData[$sku]) ? ($walmartListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'walmart_seller_link' => isset($walmartListingData[$sku]) ? ($walmartListingData[$sku]->value['seller_link'] ?? null) : null,
-
                 // eBay2
                 'ebay2_price' => $ebay2 ? ($ebay2->ebay_price ?? 0) : 0,
-                'ebay2_l30'   => $ebay2 ? ($ebay2->ebay_l30 ?? 0) : 0,
-                'ebay2_l60'   => $ebay2 ? ($ebay2->ebay_l60 ?? 0) : 0,
+                'ebay2_l30' => $ebay2 ? ($ebay2->ebay_l30 ?? 0) : 0,
+                'ebay2_l60' => $ebay2 ? ($ebay2->ebay_l60 ?? 0) : 0,
                 'ebay2_views' => $ebay2 ? ($ebay2->views ?? 0) : 0,
-                'ebay2_dil'   => $ebay2 ? (float) ($ebay2->{'dil'} ?? 0) : 0,
-                'ebay2_pft'   => $ebay2 && ($ebay2->ebay_price ?? 0) > 0 ? (($ebay2->ebay_price * 0.80 - $lp - $ship) / $ebay2->ebay_price) : 0,
-                'ebay2_roi'   => $ebay2 && $lp > 0 && ($ebay2->ebay_price ?? 0) > 0 ? (($ebay2->ebay_price * 0.80 - $lp - $ship) / $lp) : 0,
-                'ebay2_req_view' => $ebay2 && $ebay2->views > 0 && $ebay2->ebay_l30
-                    ? (($inv / 90) * 30) / (($ebay2->ebay_l30 / $ebay2->views))
-                    : 0,
-
-
-
+                'ebay2_dil' => $ebay2 ? (float) ($ebay2->dil ?? 0) : 0,
+                'ebay2_pft' => $ebay2 && ($ebay2->ebay_price ?? 0) > 0 ? (($ebay2->ebay_price * 0.80 - $lp - $ship) / $ebay2->ebay_price) : 0,
+                'ebay2_roi' => $ebay2 && $lp > 0 && ($ebay2->ebay_price ?? 0) > 0 ? (($ebay2->ebay_price * 0.80 - $lp - $ship) / $lp) : 0,
+                'ebay2_req_view' => $ebay2 && $ebay2->views > 0 && $ebay2->ebay_l30 ? (($inv / 90) * 30) / (($ebay2->ebay_l30 / $ebay2->views)) : 0,
                 'ebay2_buyer_link' => isset($ebayTwoListingData[$sku]) ? ($ebayTwoListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'ebay2_seller_link' => isset($ebayTwoListingData[$sku]) ? ($ebayTwoListingData[$sku]->value['seller_link'] ?? null) : null,
-
                 // eBay3
                 'ebay3_price' => $ebay3 ? ($ebay3->ebay_price ?? 0) : 0,
-                'ebay3_l30'   => $ebay3 ? ($ebay3->ebay_l30 ?? 0) : 0,
-                'ebay3_l60'   => $ebay3 ? ($ebay3->ebay_l60 ?? 0) : 0,
+                'ebay3_l30' => $ebay3 ? ($ebay3->ebay_l30 ?? 0) : 0,
+                'ebay3_l60' => $ebay3 ? ($ebay3->ebay_l60 ?? 0) : 0,
                 'ebay3_views' => $ebay3 ? ($ebay3->views ?? 0) : 0,
-                'ebay3_dil'   => $ebay3 ? (float) ($ebay3->{'dil'} ?? 0) : 0,
-                'ebay3_cvr'   => $ebay3 ? $this->calculateCVR($ebay3->ebay_l30 ?? 0, $ebay3->views ?? 0) : null,
-                'ebay3_pft'   => $ebay3 && ($ebay3->ebay_price ?? 0) > 0 ? (($ebay3->ebay_price * 0.71 - $lp - $ship) / $ebay3->ebay_price) : 0,
-                'ebay3_roi'   => $ebay3 && $lp > 0 && ($ebay3->ebay_price ?? 0) > 0 ? (($ebay3->ebay_price * 0.71 - $lp - $ship) / $lp) : 0,
-                'ebay3_req_view' => $ebay3 && $ebay3->views && $ebay3->ebay_l30
-                    ? (($inv / 90) * 30) / (($ebay3->ebay_l30 / $ebay3->views))
-                    : 0,
-
+                'ebay3_dil' => $ebay3 ? (float) ($ebay3->dil ?? 0) : 0,
+                'ebay3_cvr' => $ebay3 ? $this->calculateCVR($ebay3->ebay_l30 ?? 0, $ebay3->views ?? 0) : null,
+                'ebay3_pft' => $ebay3 && ($ebay3->ebay_price ?? 0) > 0 ? (($ebay3->ebay_price * 0.71 - $lp - $ship) / $ebay3->ebay_price) : 0,
+                'ebay3_roi' => $ebay3 && $lp > 0 && ($ebay3->ebay_price ?? 0) > 0 ? (($ebay3->ebay_price * 0.71 - $lp - $ship) / $lp) : 0,
+                'ebay3_req_view' => $ebay3 && $ebay3->views && $ebay3->ebay_l30 ? (($inv / 90) * 30) / (($ebay3->ebay_l30 / $ebay3->views)) : 0,
                 'ebay3_buyer_link' => isset($ebayThreeListingData[$sku]) ? ($ebayThreeListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'ebay3_seller_link' => isset($ebayThreeListingData[$sku]) ? ($ebayThreeListingData[$sku]->value['seller_link'] ?? null) : null,
-
                 'shopifyb2c_buyer_link' => isset($shopifyb2cListingData[$sku]) ? ($shopifyb2cListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'shopifyb2c_seller_link' => isset($shopifyb2cListingData[$sku]) ? ($shopifyb2cListingData[$sku]->value['seller_link'] ?? null) : null,
-
                 // Shein
                 'shein_price' => $shein ? ($shein->price ?? 0) : 0,
                 'shein_l30'   => $shein ? ($shein->shopify_sheinl30 ?? $shein->l30 ?? 0) : 0,
                 'shein_l60'   => $shein ? ($shein->shopify_sheinl60 ?? $shein->l60 ?? 0) : 0,
                 'shein_dil'   => $shein ? ($shein->dil ?? 0) : 0,
+                'shein_views_clicks' => $shein ? ($shein->views_clicks ?? 0) : 0,
                 'shein_pft'   => $shein && ($shein->price ?? 0) > 0 ? (($shein->price * 0.89 - $lp - $ship) / $shein->price) : 0,
                 'shein_roi'   => $shein && $lp > 0 && ($shein->price ?? 0) > 0 ? (($shein->price * 0.89 - $lp - $ship) / $lp) : 0,
                 'shein_req_view' => $shein && $shein->views && $shein->l30 ? (($inv / 90) * 30) / (($shein->l30 / $shein->views)) : 0,
@@ -608,58 +638,49 @@ class PricingMasterViewsController extends Controller
                 'shein_seller_link' => isset($sheinListingData[$sku]) ? ($sheinListingData[$sku]->value['seller_link'] ?? null) : null,
                 'shein_link1' => $shein ? ($shein->link1 ?? null) : null,
                 'shein_cvr' => $shein ? $this->calculateCVR($shein->shopify_sheinl30 ?? 0, ($shein->views_clicks ?? 0) * 3.7) : null,
-
                 // Bestbuy
                 'bestbuy_price' => $bestbuyUsa ? ($bestbuyUsa->price ?? 0) : 0,
-                'bestbuy_l30'   => $bestbuyUsa ? ($bestbuyUsa->m_l30 ?? 0) : 0,
-                'bestbuy_l60'   => $bestbuyUsa ? ($bestbuyUsa->m_l60 ?? 0) : 0,
-                'bestbuy_pft'   => $bestbuyUsa && ($bestbuyUsa->price ?? 0) > 0 ? (($bestbuyUsa->price * 0.80 - $lp - $ship) / $bestbuyUsa->price) : 0,
-                'bestbuy_roi'   => $bestbuyUsa && $lp > 0 && ($bestbuyUsa->price ?? 0) > 0 ? (($bestbuyUsa->price * 0.80 - $lp - $ship) / $lp) : 0,
-                'bestbuy_req_view' => 0, // No views data
-                'bestbuy_cvr' => null, // No views data
+                'bestbuy_l30' => $bestbuyUsa ? ($bestbuyUsa->m_l30 ?? 0) : 0,
+                'bestbuy_l60' => $bestbuyUsa ? ($bestbuyUsa->m_l60 ?? 0) : 0,
+                'bestbuy_pft' => $bestbuyUsa && ($bestbuyUsa->price ?? 0) > 0 ? (($bestbuyUsa->price * 0.80 - $lp - $ship) / $bestbuyUsa->price) : 0,
+                'bestbuy_roi' => $bestbuyUsa && $lp > 0 && ($bestbuyUsa->price ?? 0) > 0 ? (($bestbuyUsa->price * 0.80 - $lp - $ship) / $lp) : 0,
+                'bestbuy_req_view' => 0,
+                'bestbuy_cvr' => null,
                 'bestbuy_buyer_link' => isset($bestbuyUsaListingData[$sku]) ? ($bestbuyUsaListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'bestbuy_seller_link' => isset($bestbuyUsaListingData[$sku]) ? ($bestbuyUsaListingData[$sku]->value['seller_link'] ?? null) : null,
-
                 // Tiendamia
                 'tiendamia_price' => $tiendamia ? ($tiendamia->price ?? 0) : 0,
-                'tiendamia_l30'   => $tiendamia ? ($tiendamia->m_l30 ?? 0) : 0,
-                'tiendamia_l60'   => $tiendamia ? ($tiendamia->m_l60 ?? 0) : 0,
-                'tiendamia_pft'   => $tiendamia && ($tiendamia->price ?? 0) > 0 ? (($tiendamia->price * 0.83 - $lp - $ship) / $tiendamia->price) : 0,
-                'tiendamia_roi'   => $tiendamia && $lp > 0 && ($tiendamia->price ?? 0) > 0 ? (($tiendamia->price * 0.83 - $lp - $ship) / $lp) : 0,
-                'tiendamia_req_view' => 0, // No views data
-                'tiendamia_cvr' => null, // No views data
+                'tiendamia_l30' => $tiendamia ? ($tiendamia->m_l30 ?? 0) : 0,
+                'tiendamia_l60' => $tiendamia ? ($tiendamia->m_l60 ?? 0) : 0,
+                'tiendamia_pft' => $tiendamia && ($tiendamia->price ?? 0) > 0 ? (($tiendamia->price * 0.83 - $lp - $ship) / $tiendamia->price) : 0,
+                'tiendamia_roi' => $tiendamia && $lp > 0 && ($tiendamia->price ?? 0) > 0 ? (($tiendamia->price * 0.83 - $lp - $ship) / $lp) : 0,
+                'tiendamia_req_view' => 0,
+                'tiendamia_cvr' => null,
                 'tiendamia_buyer_link' => isset($tiendamiaListingData[$sku]) ? ($tiendamiaListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'tiendamia_seller_link' => isset($tiendamiaListingData[$sku]) ? ($tiendamiaListingData[$sku]->value['seller_link'] ?? null) : null,
-
-                // TikTok                          
+                // TikTok
                 'tiktok_price' => $tiktok ? ($tiktok->price ?? 0) : 0,
-                'tiktok_l30'   => $tiktok ? ($tiktok->shopify_tiktokl30 ?? 0) : 0,
-                'tiktok_l60'   => $tiktok ? ($tiktok->shopify_tiktokl60 ?? 0) : 0,
+                'tiktok_l30' => $tiktok ? ($tiktok->shopify_tiktokl30 ?? 0) : 0,
+                'tiktok_l60' => $tiktok ? ($tiktok->shopify_tiktokl60 ?? 0) : 0,
                 'tiktok_views' => $tiktok ? ($tiktok->views ?? 0) : 0,
-                'tiktok_pft'   => $tiktok && ($tiktok->price ?? 0) > 0 ? (($tiktok->price * 0.64 - $lp - $ship) / $tiktok->price) : 0,
-                'tiktok_roi'   => $tiktok && $lp > 0 && ($tiktok->price ?? 0) > 0 ? (($tiktok->price * 0.64 - $lp - $ship) / $lp) : 0,
-
-                'tiktok_req_view' => $tiktok && $tiktok->views > 0 && $tiktok->shopify_tiktokl30
-                    ? (($inv / 90) * 30) / (($tiktok->shopify_tiktokl30 / $tiktok->views))
-                    : 0,
-                'tiktok_cvr'   => $tiktok ? $this->calculateCVR($tiktok->shopify_tiktokl30 ?? 0, $tiktok->views ?? 0) : null,
+                'tiktok_pft' => $tiktok && ($tiktok->price ?? 0) > 0 ? (($tiktok->price * 0.64 - $lp - $ship) / $tiktok->price) : 0,
+                'tiktok_roi' => $tiktok && $lp > 0 && ($tiktok->price ?? 0) > 0 ? (($tiktok->price * 0.64 - $lp - $ship) / $lp) : 0,
+                'tiktok_req_view' => $tiktok && $tiktok->views > 0 && $tiktok->shopify_tiktokl30 ? (($inv / 90) * 30) / (($tiktok->shopify_tiktokl30 / $tiktok->views)) : 0,
+                'tiktok_cvr' => $tiktok ? $this->calculateCVR($tiktok->shopify_tiktokl30 ?? 0, $tiktok->views ?? 0) : null,
                 'tiktok_buyer_link' => isset($tiktokListingData[$sku]) ? ($tiktokListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'tiktok_seller_link' => isset($tiktokListingData[$sku]) ? ($tiktokListingData[$sku]->value['seller_link'] ?? null) : null,
-
                 // AliExpress
                 'aliexpress_price' => $aliexpress ? ($aliexpress->price ?? 0) : 0,
-                'aliexpress_l30'   => $aliexpress ? ($aliexpress->aliexpress_l30 ?? 0) : 0,
-                'aliexpress_l60'   => $aliexpress ? ($aliexpress->aliexpress_l60 ?? 0) : 0,
-                'aliexpress_pft'   => $aliexpress && ($aliexpress->price ?? 0) > 0 ? (($aliexpress->price * 0.89 - $lp - $ship) / $aliexpress->price) : 0,
-                'aliexpress_roi'   => $aliexpress && $lp > 0 && ($aliexpress->price ?? 0) > 0 ? (($aliexpress->price * 0.89 - $lp - $ship) / $lp) : 0,
+                'aliexpress_l30' => $aliexpress ? ($aliexpress->aliexpress_l30 ?? 0) : 0,
+                'aliexpress_l60' => $aliexpress ? ($aliexpress->aliexpress_l60 ?? 0) : 0,
+                'aliexpress_pft' => $aliexpress && ($aliexpress->price ?? 0) > 0 ? (($aliexpress->price * 0.89 - $lp - $ship) / $aliexpress->price) : 0,
+                'aliexpress_roi' => $aliexpress && $lp > 0 && ($aliexpress->price ?? 0) > 0 ? (($aliexpress->price * 0.89 - $lp - $ship) / $lp) : 0,
                 'aliexpress_buyer_link' => isset($aliexpressListingData[$sku]) ? ($aliexpressListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'aliexpress_seller_link' => isset($aliexpressListingData[$sku]) ? ($aliexpressListingData[$sku]->value['seller_link'] ?? null) : null,
-
-                // Direct assignments for blade template
+                // Direct assignments
                 'views_clicks' => $shein ? ($shein->views_clicks ?? 0) : 0,
                 'lmp' => $shein ? ($shein->lmp ?? 0) : 0,
                 'shopify_sheinl30' => $shein ? ($shein->shopify_sheinl30 ?? 0) : 0,
-
                 'total_req_view' => (
                     ($ebay && $ebay->views && $ebay->ebay_l30 ? ($inv * 20) : 0) +
                     ($ebay2 && $ebay2->views && $ebay2->ebay_l30 ? ($inv * 20) : 0) +
@@ -667,180 +688,61 @@ class PricingMasterViewsController extends Controller
                     ($amazon && $amazon->sessions_l30 && $amazon->units_ordered_l30 ? ($inv * 20) : 0) +
                     ($shein && $shein->views_clicks && $shein->shopify_sheinl30 ? ($inv * 20) : 0) +
                     ($reverb && $reverb->views && $reverb->r_l30 ? ($inv * 20) : 0) +
-                    ($temuMetric && ($temuMetric->{'product_clicks_l30'} ?? 0) && ($temuMetric->{'quantity_purchased_l30'} ?? 0) ? ($inv * 20) : 0)
+                    ($temuMetric && ($temuMetric->product_clicks_l30 ?? 0) && ($temuMetric->quantity_purchased_l30 ?? 0) ? ($inv * 20) : 0)
                 ),
-
-
-                //  100 / cvr * inv not cvr percentage                             
-
-
-
-
-
-
-
-
-
-
-
-
-                // Amazon DataView values
-                'amz_sprice' => isset($amazonDataView[$sku]) ?
-                    (is_array($amazonDataView[$sku]->value) ?
-                        ($amazonDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($amazonDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
-                'amz_spft' => isset($amazonDataView[$sku]) ?
-                    (is_array($amazonDataView[$sku]->value) ?
-                        ($amazonDataView[$sku]->value['SPFT'] ?? null) : (json_decode($amazonDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
-                'amz_sroi' => isset($amazonDataView[$sku]) ?
-                    (is_array($amazonDataView[$sku]->value) ?
-                        ($amazonDataView[$sku]->value['SROI'] ?? null) : (json_decode($amazonDataView[$sku]->value, true)['SROI'] ?? null)) : null,
-
-                'shopifyb2c_sprice' => isset($shopifyb2cDataView[$sku]) ?
-                    (is_array($shopifyb2cDataView[$sku]->value) ?
-                        ($shopifyb2cDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($shopifyb2cDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
-                'shopifyb2c_spft' => isset($shopifyb2cDataView[$sku]) ?
-                    (is_array($shopifyb2cDataView[$sku]->value) ?
-                        ($shopifyb2cDataView[$sku]->value['SPFT'] ?? null) : (json_decode($shopifyb2cDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
-                'shopifyb2c_sroi' => isset($shopifyb2cDataView[$sku]) ?
-                    (is_array($shopifyb2cDataView[$sku]->value) ?
-                        ($shopifyb2cDataView[$sku]->value['SROI'] ?? null) : (json_decode($shopifyb2cDataView[$sku]->value, true)['SROI'] ?? null)) : null,
-
-                // eBay DataView values
-                'ebay_sprice' => isset($ebayDataView[$sku]) ?
-                    (is_array($ebayDataView[$sku]->value) ?
-                        ($ebayDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
-                'ebay_spft' => isset($ebayDataView[$sku]) ?
-                    (is_array($ebayDataView[$sku]->value) ?
-                        ($ebayDataView[$sku]->value['SPFT'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
-                'ebay_sroi' => isset($ebayDataView[$sku]) ?
-                    (is_array($ebayDataView[$sku]->value) ?
-                        ($ebayDataView[$sku]->value['SROI'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SROI'] ?? null)) : null,
-
-                'ebay2_sprice' => isset($ebayDataView[$sku]) ?
-                    (is_array($ebayDataView[$sku]->value) ?
-                        ($ebayDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
-                'ebay2_spft' => isset($ebayDataView[$sku]) ?
-                    (is_array($ebayDataView[$sku]->value) ?
-                        ($ebayDataView[$sku]->value['SPFT'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
-                'ebay2_sroi' => isset($ebayDataView[$sku]) ?
-                    (is_array($ebayDataView[$sku]->value) ?
-                        ($ebayDataView[$sku]->value['SROI'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SROI'] ?? null)) : null,
-
-                'ebay3_sprice' => isset($ebayDataView[$sku]) ?
-                    (is_array($ebayDataView[$sku]->value) ?
-                        ($ebayDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
-                'ebay3_spft' => isset($ebayDataView[$sku]) ?
-                    (is_array($ebayDataView[$sku]->value) ?
-                        ($ebayDataView[$sku]->value['SPFT'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
-                'ebay3_sroi' => isset($ebayDataView[$sku]) ?
-                    (is_array($ebayDataView[$sku]->value) ?
-                        ($ebayDataView[$sku]->value['SROI'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SROI'] ?? null)) : null,
-
-
-                'doba_sprice' => isset($dobaDataView[$sku]) ?
-                    (is_array($dobaDataView[$sku]->value) ?
-                        ($dobaDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($dobaDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
-                'doba_final_price' => isset($dobaDataView[$sku]) ?
-                    (is_array($dobaDataView[$sku]->value) ?
-                        ($dobaDataView[$sku]->value['FINAL_PRICE'] ?? null) : (json_decode($dobaDataView[$sku]->value, true)['FINAL_PRICE'] ?? null)) : null,
-                'doba_spft' => isset($dobaDataView[$sku]) ? (is_array($dobaDataView[$sku]->value) ?
-                    ($dobaDataView[$sku]->value['SPFT'] ?? null) : (json_decode($dobaDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
-                'doba_sroi' => isset($dobaDataView[$sku]) ?
-                    (is_array($dobaDataView[$sku]->value) ?
-                        ($dobaDataView[$sku]->value['SROI'] ?? null) : (json_decode($dobaDataView[$sku]->value, true)['SROI'] ?? null)) : null,
-
-
-                'temu_sprice' => isset($temuDataView[$sku]) ?
-                    (is_array($temuDataView[$sku]->value) ?
-                        ($temuDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($temuDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
-                'temu_spft' => isset($temuDataView[$sku]) ? (is_array($temuDataView[$sku]->value) ?
-                    ($temuDataView[$sku]->value['SPFT'] ?? null) : (json_decode($temuDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
-                'temu_sroi' => isset($temuDataView[$sku]) ?
-                    (is_array($temuDataView[$sku]->value) ?
-                        ($temuDataView[$sku]->value['SROI'] ?? null) : (json_decode($temuDataView[$sku]->value, true)['SROI'] ?? null)) : null,
-
-                'reverb_sprice' => isset($reverbDataView[$sku]) ?
-                    (is_array($reverbDataView[$sku]->value) ?
-                        ($reverbDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($reverbDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
-                'reverb_spft' => isset($reverbDataView[$sku]) ? (is_array($reverbDataView[$sku]->value) ?
-                    ($reverbDataView[$sku]->value['SPFT'] ?? null) : (json_decode($reverbDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
-                'reverb_sroi' => isset($reverbDataView[$sku]) ? (is_array($reverbDataView[$sku]->value) ?
-                    ($reverbDataView[$sku]->value['SROI'] ?? null) : (json_decode($reverbDataView[$sku]->value, true)['SROI'] ?? null)) : null,
-
-                'macy_sprice' => isset($macyDataView[$sku]) ?
-                    (is_array($macyDataView[$sku]->value) ?
-                        ($macyDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($macyDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
-                'macy_spft' => isset($macyDataView[$sku]) ? (is_array($macyDataView[$sku]->value) ?
-                    ($macyDataView[$sku]->value['SPFT'] ?? null) : (json_decode($macyDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
-                'macy_sroi' => isset($macyDataView[$sku]) ?
-                    (is_array($macyDataView[$sku]->value) ?
-                        ($macyDataView[$sku]->value['SROI'] ?? null) : (json_decode($macyDataView[$sku]->value, true)['SROI'] ?? null)) : null,
-
-                'shein_sprice' => isset($sheinDataView[$sku]) ?
-                    (is_array($sheinDataView[$sku]->value) ?
-                        ($sheinDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($sheinDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
-                'shein_spft' => isset($sheinDataView[$sku]) ? (is_array($sheinDataView[$sku]->value) ?
-                    ($sheinDataView[$sku]->value['SPFT'] ?? null) : (json_decode($sheinDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
-                'shein_sroi' => isset($sheinDataView[$sku]) ?
-                    (is_array($sheinDataView[$sku]->value) ?
-                        ($sheinDataView[$sku]->value['SROI'] ?? null) : (json_decode($sheinDataView[$sku]->value, true)['SROI'] ?? null)) : null,
-
-                'bestbuy_sprice' => isset($bestbuyUsaDataView[$sku]) ?
-                    (is_array($bestbuyUsaDataView[$sku]->value) ?
-                        ($bestbuyUsaDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($bestbuyUsaDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
-                'bestbuy_spft' => isset($bestbuyUsaDataView[$sku]) ? (is_array($bestbuyUsaDataView[$sku]->value) ?
-                    ($bestbuyUsaDataView[$sku]->value['SPFT'] ?? null) : (json_decode($bestbuyUsaDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
-                'bestbuy_sroi' => isset($bestbuyUsaDataView[$sku]) ?
-                    (is_array($bestbuyUsaDataView[$sku]->value) ?
-                        ($bestbuyUsaDataView[$sku]->value['SROI'] ?? null) : (json_decode($bestbuyUsaDataView[$sku]->value, true)['SROI'] ?? null)) : null,
-
-                'tiendamia_sprice' => isset($tiendamiaDataView[$sku]) ?
-                    (is_array($tiendamiaDataView[$sku]->value) ?
-                        ($tiendamiaDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($tiendamiaDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
-                'tiendamia_spft' => isset($tiendamiaDataView[$sku]) ? (is_array($tiendamiaDataView[$sku]->value) ?
-                    ($tiendamiaDataView[$sku]->value['SPFT'] ?? null) : (json_decode($tiendamiaDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
-                'tiendamia_sroi' => isset($tiendamiaDataView[$sku]) ?
-                    (is_array($tiendamiaDataView[$sku]->value) ?
-                        ($tiendamiaDataView[$sku]->value['SROI'] ?? null) : (json_decode($tiendamiaDataView[$sku]->value, true)['SROI'] ?? null)) : null,
-
-
-
-
-                'tiktok_sprice' => isset($tiktokDataView[$sku]) ?
-                    (is_array($tiktokDataView[$sku]->value) ?
-                        ($tiktokDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($tiktokDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
-                'tiktok_spft' => isset($tiktokDataView[$sku]) ? (is_array($tiktokDataView[$sku]->value) ?
-                    ($tiktokDataView[$sku]->value['SPFT'] ?? null) : (json_decode($tiktokDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
-                'tiktok_sroi' => isset($tiktokDataView[$sku]) ?
-                    (is_array($tiktokDataView[$sku]->value) ?
-                        ($tiktokDataView[$sku]->value['SROI'] ?? null) : (json_decode($tiktokDataView[$sku]->value, true)['SROI'] ?? null)) : null,
-
-
-
-                'aliexpress_sprice' => isset($aliexpressDataView[$sku]) ?
-                    (is_array($aliexpressDataView[$sku]->value) ?
-                        ($aliexpressDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($aliexpressDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
-                'aliexpress_spft' => isset($aliexpressDataView[$sku]) ? (is_array($aliexpressDataView[$sku]->value) ?
-                    ($aliexpressDataView[$sku]->value['SPFT'] ?? null) : (json_decode($aliexpressDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
-                'aliexpress_sroi' => isset($aliexpressDataView[$sku]) ?
-                    (is_array($aliexpressDataView[$sku]->value) ?
-                        ($aliexpressDataView[$sku]->value['SROI'] ?? null) : (json_decode($aliexpressDataView[$sku]->value, true)['SROI'] ?? null)) : null,
-
-
-
+                // DataView values
+                'amz_sprice' => isset($amazonDataView[$sku]) ? (is_array($amazonDataView[$sku]->value) ? ($amazonDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($amazonDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'amz_spft' => isset($amazonDataView[$sku]) ? (is_array($amazonDataView[$sku]->value) ? ($amazonDataView[$sku]->value['SPFT'] ?? null) : (json_decode($amazonDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'amz_sroi' => isset($amazonDataView[$sku]) ? (is_array($amazonDataView[$sku]->value) ? ($amazonDataView[$sku]->value['SROI'] ?? null) : (json_decode($amazonDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+                'shopifyb2c_sprice' => isset($shopifyb2cDataView[$sku]) ? (is_array($shopifyb2cDataView[$sku]->value) ? ($shopifyb2cDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($shopifyb2cDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'shopifyb2c_spft' => isset($shopifyb2cDataView[$sku]) ? (is_array($shopifyb2cDataView[$sku]->value) ? ($shopifyb2cDataView[$sku]->value['SPFT'] ?? null) : (json_decode($shopifyb2cDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'shopifyb2c_sroi' => isset($shopifyb2cDataView[$sku]) ? (is_array($shopifyb2cDataView[$sku]->value) ? ($shopifyb2cDataView[$sku]->value['SROI'] ?? null) : (json_decode($shopifyb2cDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+                'ebay_sprice' => isset($ebayDataView[$sku]) ? (is_array($ebayDataView[$sku]->value) ? ($ebayDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'ebay_spft' => isset($ebayDataView[$sku]) ? (is_array($ebayDataView[$sku]->value) ? ($ebayDataView[$sku]->value['SPFT'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'ebay_sroi' => isset($ebayDataView[$sku]) ? (is_array($ebayDataView[$sku]->value) ? ($ebayDataView[$sku]->value['SROI'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+                'ebay2_sprice' => isset($ebayDataView[$sku]) ? (is_array($ebayDataView[$sku]->value) ? ($ebayDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'ebay2_spft' => isset($ebayDataView[$sku]) ? (is_array($ebayDataView[$sku]->value) ? ($ebayDataView[$sku]->value['SPFT'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'ebay2_sroi' => isset($ebayDataView[$sku]) ? (is_array($ebayDataView[$sku]->value) ? ($ebayDataView[$sku]->value['SROI'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+                'ebay3_sprice' => isset($ebayDataView[$sku]) ? (is_array($ebayDataView[$sku]->value) ? ($ebayDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'ebay3_spft' => isset($ebayDataView[$sku]) ? (is_array($ebayDataView[$sku]->value) ? ($ebayDataView[$sku]->value['SPFT'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'ebay3_sroi' => isset($ebayDataView[$sku]) ? (is_array($ebayDataView[$sku]->value) ? ($ebayDataView[$sku]->value['SROI'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+                'doba_sprice' => isset($dobaDataView[$sku]) ? (is_array($dobaDataView[$sku]->value) ? ($dobaDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($dobaDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'doba_final_price' => isset($dobaDataView[$sku]) ? (is_array($dobaDataView[$sku]->value) ? ($dobaDataView[$sku]->value['FINAL_PRICE'] ?? null) : (json_decode($dobaDataView[$sku]->value, true)['FINAL_PRICE'] ?? null)) : null,
+                'doba_spft' => isset($dobaDataView[$sku]) ? (is_array($dobaDataView[$sku]->value) ? ($dobaDataView[$sku]->value['SPFT'] ?? null) : (json_decode($dobaDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'doba_sroi' => isset($dobaDataView[$sku]) ? (is_array($dobaDataView[$sku]->value) ? ($dobaDataView[$sku]->value['SROI'] ?? null) : (json_decode($dobaDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+                'temu_sprice' => isset($temuDataView[$sku]) ? (is_array($temuDataView[$sku]->value) ? ($temuDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($temuDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'temu_spft' => isset($temuDataView[$sku]) ? (is_array($temuDataView[$sku]->value) ? ($temuDataView[$sku]->value['SPFT'] ?? null) : (json_decode($temuDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'temu_sroi' => isset($temuDataView[$sku]) ? (is_array($temuDataView[$sku]->value) ? ($temuDataView[$sku]->value['SROI'] ?? null) : (json_decode($temuDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+                'reverb_sprice' => isset($reverbDataView[$sku]) ? (is_array($reverbDataView[$sku]->value) ? ($reverbDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($reverbDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'reverb_spft' => isset($reverbDataView[$sku]) ? (is_array($reverbDataView[$sku]->value) ? ($reverbDataView[$sku]->value['SPFT'] ?? null) : (json_decode($reverbDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'reverb_sroi' => isset($reverbDataView[$sku]) ? (is_array($reverbDataView[$sku]->value) ? ($reverbDataView[$sku]->value['SROI'] ?? null) : (json_decode($reverbDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+                'macy_sprice' => isset($macyDataView[$sku]) ? (is_array($macyDataView[$sku]->value) ? ($macyDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($macyDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'macy_spft' => isset($macyDataView[$sku]) ? (is_array($macyDataView[$sku]->value) ? ($macyDataView[$sku]->value['SPFT'] ?? null) : (json_decode($macyDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'macy_sroi' => isset($macyDataView[$sku]) ? (is_array($macyDataView[$sku]->value) ? ($macyDataView[$sku]->value['SROI'] ?? null) : (json_decode($macyDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+                'shein_sprice' => isset($sheinDataView[$sku]) ? (is_array($sheinDataView[$sku]->value) ? ($sheinDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($sheinDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'shein_spft' => isset($sheinDataView[$sku]) ? (is_array($sheinDataView[$sku]->value) ? ($sheinDataView[$sku]->value['SPFT'] ?? null) : (json_decode($sheinDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'shein_sroi' => isset($sheinDataView[$sku]) ? (is_array($sheinDataView[$sku]->value) ? ($sheinDataView[$sku]->value['SROI'] ?? null) : (json_decode($sheinDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+                'bestbuy_sprice' => isset($bestbuyUsaDataView[$sku]) ? (is_array($bestbuyUsaDataView[$sku]->value) ? ($bestbuyUsaDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($bestbuyUsaDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'bestbuy_spft' => isset($bestbuyUsaDataView[$sku]) ? (is_array($bestbuyUsaDataView[$sku]->value) ? ($bestbuyUsaDataView[$sku]->value['SPFT'] ?? null) : (json_decode($bestbuyUsaDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'bestbuy_sroi' => isset($bestbuyUsaDataView[$sku]) ? (is_array($bestbuyUsaDataView[$sku]->value) ? ($bestbuyUsaDataView[$sku]->value['SROI'] ?? null) : (json_decode($bestbuyUsaDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+                'tiendamia_sprice' => isset($tiendamiaDataView[$sku]) ? (is_array($tiendamiaDataView[$sku]->value) ? ($tiendamiaDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($tiendamiaDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'tiendamia_spft' => isset($tiendamiaDataView[$sku]) ? (is_array($tiendamiaDataView[$sku]->value) ? ($tiendamiaDataView[$sku]->value['SPFT'] ?? null) : (json_decode($tiendamiaDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'tiendamia_sroi' => isset($tiendamiaDataView[$sku]) ? (is_array($tiendamiaDataView[$sku]->value) ? ($tiendamiaDataView[$sku]->value['SROI'] ?? null) : (json_decode($tiendamiaDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+                'tiktok_sprice' => isset($tiktokDataView[$sku]) ? (is_array($tiktokDataView[$sku]->value) ? ($tiktokDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($tiktokDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'tiktok_spft' => isset($tiktokDataView[$sku]) ? (is_array($tiktokDataView[$sku]->value) ? ($tiktokDataView[$sku]->value['SPFT'] ?? null) : (json_decode($tiktokDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'tiktok_sroi' => isset($tiktokDataView[$sku]) ? (is_array($tiktokDataView[$sku]->value) ? ($tiktokDataView[$sku]->value['SROI'] ?? null) : (json_decode($tiktokDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+                'aliexpress_sprice' => isset($aliexpressDataView[$sku]) ? (is_array($aliexpressDataView[$sku]->value) ? ($aliexpressDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($aliexpressDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'aliexpress_spft' => isset($aliexpressDataView[$sku]) ? (is_array($aliexpressDataView[$sku]->value) ? ($aliexpressDataView[$sku]->value['SPFT'] ?? null) : (json_decode($aliexpressDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'aliexpress_sroi' => isset($aliexpressDataView[$sku]) ? (is_array($aliexpressDataView[$sku]->value) ? ($aliexpressDataView[$sku]->value['SROI'] ?? null) : (json_decode($aliexpressDataView[$sku]->value, true)['SROI'] ?? null)) : null,
             ];
 
-
-
-            // Set avg_inventory after $item is created calcution 
+            // Set inventory calculations
             $item->avg_inventory = $lp != 0 ? (($item->initial_cogs + $item->current_cogs) / 2) : 0;
             $item->initial_calculated_cogs = $item->initial_cogs - $item->current_cogs;
             $item->inventory_turnover_ratio = $item->initial_calculated_cogs != 0 ? ($item->initial_calculated_cogs / $item->avg_inventory) : 0;
             $item->stock_rotation_days = $item->inventory_turnover_ratio != 0 ? 365 / $item->inventory_turnover_ratio : 0;
 
-
-
-            // Add shopifyb2c fields after $item is created
+            // Add shopifyb2c fields
             $shopify = $shopifyData[trim(strtoupper($sku))] ?? null;
             $item->shopifyb2c_price = $shopify ? $shopify->price : 0;
             $item->shopifyb2c_l30 = $shopify ? $shopify->quantity : 0;
@@ -850,15 +752,11 @@ class PricingMasterViewsController extends Controller
             $item->shopifyb2c_roi = ($lp > 0 && $item->shopifyb2c_price > 0) ? (($item->shopifyb2c_price * 0.75 - $lp - $ship) / $lp) : 0;
 
             // Add inv_value and COGS calculations
-            // inv_value = INV × shopifyb2c_price (total inventory worth at selling price)
             $item->inv_value = $inv * $item->shopifyb2c_price;
-
-            // COGS = LP × INV (cost of goods sold - total cost of current inventory)
             $item->COGS = $lp * $inv;
 
             // Add analysis action buttons
             $item->l30_analysis = '<button class="btn btn-sm btn-info" onclick="showL30Modal(this)" data-sku="' . $item->SKU . '">L30</button>';
-
 
             $processedData[] = $item;
         }
