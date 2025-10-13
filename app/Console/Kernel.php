@@ -203,6 +203,17 @@ class Kernel extends ConsoleKernel
         $schedule->command('sbid:update')
             ->dailyAt('00:01') 
             ->timezone('Asia/Kolkata');
+
+        // FBA Commands - Daily Updates
+        $schedule->command('app:fetch-fba-reports')
+            ->dailyAt('01:00')
+            ->timezone('America/Los_Angeles');
+        $schedule->command('app:fetch-fba-inventory --insert --prices')
+            ->dailyAt('01:30')
+            ->timezone('America/Los_Angeles');
+        $schedule->command('app:fetch-fba-monthly-sales')
+            ->dailyAt('02:00')
+            ->timezone('America/Los_Angeles');
     }
 
     /**
