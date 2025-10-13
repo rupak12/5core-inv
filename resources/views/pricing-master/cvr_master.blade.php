@@ -544,19 +544,11 @@
                         <label class="btn btn-outline-success" for="filterOther">Other</label>
                     </div>
 
-                    <div class="btn-group" id="dil-filter" role="group" aria-label="Dilution Filter">
-                        <input type="radio" class="btn-check" name="dilFilter" id="dilFilterAll" value="all">
-                        <label class="btn btn-outline-primary" for="dilFilterAll">All Dil</label>
-                        <input type="radio" class="btn-check" name="dilFilter" id="dilFilterVeryLow" value="verylow">
-                        <label class="btn btn-outline-danger" for="dilFilterVeryLow">Very Low Dil (≤ 10%)</label>
-                        <input type="radio" class="btn-check" name="dilFilter" id="dilFilterLow" value="low">
-                        <label class="btn btn-outline-warning" for="dilFilterLow">Low Dil (11-15%)</label>
-                        <input type="radio" class="btn-check" name="dilFilter" id="dilFilterMedium" value="medium">
-                        <label class="btn btn-outline-info" for="dilFilterMedium">Medium Dil (16-20%)</label>
-                        <input type="radio" class="btn-check" name="dilFilter" id="dilFilterHigh" value="high">
-                        <label class="btn btn-outline-success" for="dilFilterHigh">High Dil (21-40%)</label>
-                        <input type="radio" class="btn-check" name="dilFilter" id="dilFilterVeryHigh" value="veryhigh">
-                        <label class="btn btn-outline-secondary" for="dilFilterVeryHigh">Very High Dil (> 40%)</label>
+                   <div class="btn-group" id="dil-filter" role="group" aria-label="Dilution Filter">
+                        <input type="radio" class="btn-check" name="dilFilter" id="dilFilter10" value="10">
+                        <label class="btn btn-outline-danger" for="dilFilter10">Dil ≤ 10%</label>
+                        <input type="radio" class="btn-check" name="dilFilter" id="dilFilter50" value="50">
+                        <label class="btn btn-outline-info" for="dilFilter50">Dil < 50%</label>
                         <input type="radio" class="btn-check" name="dilFilter" id="dilFilterClear" value="clear" checked>
                         <label class="btn btn-outline-secondary" for="dilFilterClear">Clear</label>
                     </div>
@@ -1128,48 +1120,22 @@
         // Filter by Dilution radio buttons for dil
         document.querySelectorAll("input[name='dilFilter']").forEach(input => {
             input.addEventListener("change", function() {
-                let value = this.value;
-
-                if (value === "clear") {
-                    table.clearFilter("Dil%");
-                } else if (value === "all") {
-                    table.clearFilter("Dil%");
-                } else if (value === "verylow") {
-                    table.setFilter(function(data) {
-                        const dil = parseFloat(data["Dil%"]) || 0;
-                        const inv = parseFloat(data.INV) || 0;
-                        const sku = (data.SKU || "").toUpperCase();
-                        return dil <= 10 && inv > 0 && !sku.includes("PARENT");
-                    });
-                } else if (value === "low") {
-                    table.setFilter(function(data) {
-                        const dil = parseFloat(data["Dil%"]) || 0;
-                        const inv = parseFloat(data.INV) || 0;
-                        const sku = (data.SKU || "").toUpperCase();
-                        return dil >= 11 && dil <= 15 && inv > 0 && !sku.includes("PARENT");
-                    });
-                } else if (value === "medium") {
-                    table.setFilter(function(data) {
-                        const dil = parseFloat(data["Dil%"]) || 0;
-                        const inv = parseFloat(data.INV) || 0;
-                        const sku = (data.SKU || "").toUpperCase();
-                        return dil >= 16 && dil <= 20 && inv > 0 && !sku.includes("PARENT");
-                    });
-                } else if (value === "high") {
-                    table.setFilter(function(data) {
-                        const dil = parseFloat(data["Dil%"]) || 0;
-                        const inv = parseFloat(data.INV) || 0;
-                        const sku = (data.SKU || "").toUpperCase();
-                        return dil >= 21 && dil <= 40 && inv > 0 && !sku.includes("PARENT");
-                    });
-                } else if (value === "veryhigh") {
-                    table.setFilter(function(data) {
-                        const dil = parseFloat(data["Dil%"]) || 0;
-                        const inv = parseFloat(data.INV) || 0;
-                        const sku = (data.SKU || "").toUpperCase();
-                        return dil > 40 && inv > 0 && !sku.includes("PARENT");
-                    });
-                }
+            const dilFilter = document.querySelector("input[name='dilFilter']:checked")?.value;
+            // Always sort Dil% lowest to highest
+            table.setSort([{ column: "Dil%", dir: "asc" }]);
+            if (dilFilter === "clear") {
+                table.clearFilter("Dil%");
+            } else if (dilFilter === "10") {
+                table.setFilter(function(data) {
+                const dil = parseFloat(data["Dil%"]) || 0;
+                return dil <= 10;
+                });
+            } else if (dilFilter === "50") {
+                table.setFilter(function(data) {
+                const dil = parseFloat(data["Dil%"]) || 0;
+                return dil < 50;
+                });
+            }
             });
         });
 
