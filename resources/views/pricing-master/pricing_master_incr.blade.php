@@ -1143,6 +1143,9 @@
           
             pagination: true, 
             paginationSize: 50,
+            initialSort: [
+                {column: "avgCvr", dir: "asc"}
+            ],
         
              rowFormatter: function(row) {
                 const data = row.getData();
@@ -1708,6 +1711,7 @@
                 title: "Avg CVR",
                 field: "avgCvr",
                 hozAlign: "center",
+                headerSort: true,
               
                 formatterParams: {
                     decimal: 2,

@@ -380,13 +380,12 @@ class PricingMasterViewsController extends Controller
                 ['data' => $ebay2,      'l30' => 'ebay_l30',               'views' => 'views'],
                 ['data' => $ebay3,      'l30' => 'ebay_l30',               'views' => 'views'],
                 ['data' => $temuMetric, 'l30' => 'quantity_purchased_l30', 'views' => 'product_clicks_l30'],
-                ['data' => $reverb,     'l30' => 'r_l30',                  'views' => 'views'],
                 ['data' => $walmart,    'l30' => 'l30',                    'views' => 'views'],
                 ['data' => $tiktok,     'l30' => 'shopify_tiktokl30',                    'views' => 'views'],
                 ['data' => $shein,      'l30' => 'shopify_sheinl30',       'views' => 'views_clicks'],
             ];
 
-            $l30_count = 0;        // Count of channels where L30 > 0 and views > 0
+            $l30_sum = 0;        // Sum of L30 for channels where L30 > 0 and views > 0
             $views_sum = 0;        // Sum of views for those channels
 
             foreach ($channels as $channel) {
@@ -396,7 +395,7 @@ class PricingMasterViewsController extends Controller
                     $views = $obj->{$channel['views']} ?? 0;
 
                     if ($l30 > 0 && $views > 0) {
-                        $l30_count++;           // count channels
+                        $l30_sum += $l30;           // sum l30
                         $views_sum += $views;   // sum views
                     }
                 }
@@ -436,19 +435,18 @@ class PricingMasterViewsController extends Controller
                 $total_l30_count_data++;
             }
 
-            // For $avgCvr, use all views
+            // For $avgCvr, use views only from qualifying channels (same as l30_sum)
             $views_sum =
-                ($amazon->sessions_l30 ?? 0) +
-                ($ebay->views ?? 0) +
-                ($ebay2->views ?? 0) +
-                ($ebay3->views ?? 0) +
-                ($temuMetric->{'product_clicks_l30'} ?? 0) +
-                ($reverb->views ?? 0) +
-                ($tiktok->views ?? 0) +
-                ($shein->views_clicks ?? 0);
+                (($amazon && ($amazon->units_ordered_l30 ?? 0) > 0 && ($amazon->sessions_l30 ?? 0) > 0) ? ($amazon->sessions_l30 ?? 0) : 0) +
+                (($ebay && ($ebay->ebay_l30 ?? 0) > 0 && ($ebay->views ?? 0) > 0) ? ($ebay->views ?? 0) : 0) +
+                (($ebay2 && ($ebay2->ebay_l30 ?? 0) > 0 && ($ebay2->views ?? 0) > 0) ? ($ebay2->views ?? 0) : 0) +
+                (($ebay3 && ($ebay3->ebay_l30 ?? 0) > 0 && ($ebay3->views ?? 0) > 0) ? ($ebay3->views ?? 0) : 0) +
+                (($temuMetric && ($temuMetric->{'quantity_purchased_l30'} ?? 0) > 0 && ($temuMetric->{'product_clicks_l30'} ?? 0) > 0) ? ($temuMetric->{'product_clicks_l30'} ?? 0) : 0) +
+                (($tiktok && ($tiktok->shopify_tiktokl30 ?? 0) > 0 && ($tiktok->views ?? 0) > 0) ? ($tiktok->views ?? 0) : 0) +
+                (($shein && ($shein->shopify_sheinl30 ?? 0) > 0 && ($shein->views_clicks ?? 0) > 0) ? ($shein->views_clicks ?? 0) : 0);
 
             $avgCvr = $views_sum > 0
-                ? number_format(($l30_count / $views_sum) * 100, 1) . ' %'
+                ? number_format(($l30_sum / $views_sum) * 100, 1) . ' %'
                 : '0.0 %';
 
             $item = (object) [
@@ -614,6 +612,7 @@ class PricingMasterViewsController extends Controller
                 'shein_l30'   => $shein ? ($shein->shopify_sheinl30 ?? $shein->l30 ?? 0) : 0,
                 'shein_l60'   => $shein ? ($shein->shopify_sheinl60 ?? $shein->l60 ?? 0) : 0,
                 'shein_dil'   => $shein ? ($shein->dil ?? 0) : 0,
+                'shein_views_clicks' => $shein ? ($shein->views_clicks ?? 0) : 0,
                 'shein_pft'   => $shein && ($shein->price ?? 0) > 0 ? (($shein->price * 0.89 - $lp - $ship) / $shein->price) : 0,
                 'shein_roi'   => $shein && $lp > 0 && ($shein->price ?? 0) > 0 ? (($shein->price * 0.89 - $lp - $ship) / $lp) : 0,
                 'shein_req_view' => $shein && $shein->views && $shein->l30 ? (($inv / 90) * 30) / (($shein->l30 / $shein->views)) : 0,
