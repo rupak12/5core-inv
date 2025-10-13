@@ -472,6 +472,8 @@
                         <i class="fas fa-plus-circle me-2"></i> Add Channel
                     </button>
 
+                    <button id="showSalesGraph" class="btn btn-success" style="background: linear-gradient(135deg, #06d6a0, #118ab2); border: none;"> 📈 Show Daily Sales Graph</button>
+
                     <div class="d-inline-flex align-items-center ms-2">
                         <div class="badge bg-primary text-white px-3 py-2 me-2"
                             style="font-size: 1rem; border-radius: 8px;">
@@ -619,7 +621,16 @@
             <span class="ms-2">Loading datatable, please wait...</span>
         </div>
 
-        <div>
+        {{-- <button id="showSalesGraph" class="btn btn-primary mb-3">📈 Show Sales Trend</button> --}}
+
+        <!-- Hidden chart area -->
+        <div id="salesTrendChart" style="width: 100%; height: 500px; display: none;"></div>
+
+        {{-- <div class="col-md-12 mt-3">
+            <div id="channelSalesChart" style="width: 100%; height: 400px; display: none; background: #f8f9fa; border-radius: 10px; padding: 10px;"></div>
+        </div> --}}
+
+        {{-- <div>
             <label>
                 <input type="checkbox" id="showSales" checked> Sales Wise (L30 & L60)
             </label>
@@ -635,9 +646,9 @@
         </div>
 
         <div class="mb-4">
-            {{-- <h5 class="mb-2">Channel-wise L30 Sales</h5> --}}
+            
             <div id="channelSalesChart" style="width: 100%; height: 400px;"></div>
-        </div>
+        </div> --}}
 
 
         <!-- Table Container -->
@@ -650,13 +661,13 @@
                             <th>R&A</th>
                             {{-- <th>Link</th> --}}
                             <th>Sheet Link</th>
-                            <th class="text-center align-middle">
+                            {{-- <th class="text-center align-middle">
                                 <small id="l60SalesCountBadge" class="badge bg-dark text-white mb-1"
                                     style="font-size: 13px;">
                                     ₹ 0
                                 </small><br>
                                 L-60 Sales
-                            </th>
+                            </th> --}}
                             <th class="text-center align-middle">
                                 <small id="l30SalesCountBadge" class="badge bg-dark text-white mb-1"
                                     style="font-size: 13px;">
@@ -671,13 +682,13 @@
                                 </small><br>
                                 Growth
                             </th>
-                            <th class="text-center align-middle">
+                            {{-- <th class="text-center align-middle">
                                 <small id="l60OrdersCountBadge" class="badge bg-dark text-white mb-1"
                                     style="font-size: 13px;">
                                     0
                                 </small><br>
                                 L60 Orders
-                            </th>
+                            </th> --}}
                             <th class="text-center align-middle">
                                 <small id="l30OrdersCountBadge" class="badge bg-dark text-white mb-1"
                                     style="font-size: 13px;">
@@ -888,7 +899,7 @@
                 
                 // const pft = parseNumber(row['Gprofit%']);
                 // totalPft += pft;
-                const cogs = parseNumber(row['G ROI%']);
+                const cogs = parseNumber(row['cogs']);
                 
                 totalCogs += cogs;
                 // const l30Sales = parseNumber(row['L30 Sales']);
@@ -904,8 +915,8 @@
                 totalPft += profitAmount;
                 totalL30Sales += l30Sales;
             });
-            let gProfit = totalL30Sales !== 0 ? (totalPft / totalL30Sales * 100) : null;
-            let gRoi = totalCogs !== 0 ? (totalPft / totalCogs * 100) : null;
+            let gProfit = totalL30Sales !== 0 ? (totalPft / totalL30Sales)* 100 : null;
+            let gRoi = totalCogs !== 0 ? (totalPft / totalCogs)* 100 : null;
             if (gprofitBadge) {
                 gprofitBadge.textContent = gProfit !== null ? gProfit.toFixed(1) + '%' : 'N/A';
             }
@@ -1682,7 +1693,7 @@
                        dataSrc: function (json) {
                             if (!json || !json.data) return [];
 
-                            drawChannelChart(json.data);
+                            // drawChannelChart(json.data);
 
                             json.data.sort((a, b) => {
                                 const aVal = parseFloat(String(a['L30 Sales'] || a['l30_sales'] || 0).replace(/,/g, '')) || 0;
@@ -1712,6 +1723,7 @@
                                 let gprofit = pctFix(pick(item, ['gprofit_percentage', 'PFT_percentage', 'gprofit', 'Gprofit%'], 0));
                                 let groi    = pctFix(pick(item, ['G Roi', 'g_roi_percentage', 'roi'], 0));
                                 let gprofitL60  = pctFix(pick(item, ['Gprofitl60'], 0));
+                                let cogs = pctFix(pick(item, ['cogs'], 0));
 
                                 return {
                                     'Channel': pick(item, ['channel', 'Channel', 'Channel '], ''),  // use per-row channel
@@ -1738,6 +1750,7 @@
                                     'Update': toNum(pick(item, ['update_flag', 'update','Update'], 0), 0),
                                     'Ac Health': pick(item, ['account_health', 'ac_health', 'accounthealth'], ''),
                                     'Channel Percentage': pctFix(pick(item, ['channel_percentage'], 0), 0),
+                                    'cogs': cogs,
                                     
                                 };
                                 
@@ -1802,13 +1815,13 @@
                                             value="${sheetLink}"
                                             data-channel="${channelName}"
                                             placeholder="Enter Link"
-                                            style="min-width: 100px;" />
+                                            style="min-width: 10px;" />
                                         ${sheetLink ? `<a href="${sheetLink}" target="_blank" class="btn btn-sm btn-success">🔗</a>` : ''}
                                     </div>
                                 `;
                             }
                         },      
-                        { data: 'L-60 Sales', render: v => `<span class="metric-value">${toNum(v).toLocaleString('en-US')}</span>` },
+                        // { data: 'L-60 Sales', render: v => `<span class="metric-value">${toNum(v).toLocaleString('en-US')}</span>` },
                         // { data: 'L30 Sales',  render: v => `<span class="metric-value">${toNum(v).toLocaleString('en-US')}</span>` },
                         {
                             data: 'L30 Sales',
@@ -1842,7 +1855,7 @@
                             }
                         },
                         
-                        { data: 'L60 Orders', render: v => `<span class="metric-value">${toNum(v).toLocaleString('en-US')}</span>` },
+                        // { data: 'L60 Orders', render: v => `<span class="metric-value">${toNum(v).toLocaleString('en-US')}</span>` },
                         { data: 'L30 Orders', render: v => `<span class="metric-value">${toNum(v).toLocaleString('en-US')}</span>` },
 
                         // {
@@ -2261,103 +2274,264 @@
         //     chart.draw(dataTable, options);
         // }
 
-        function drawChannelChart(data) {
+        // function drawChannelChart(data) {
             
-            if (!data || data.length === 0) return;
+        //     if (!data || data.length === 0) return;
 
-            google.charts.load('current', { packages: ['corechart'] });
-            google.charts.setOnLoadCallback(function () {
-                renderChart(data);
+        //     google.charts.load('current', { packages: ['corechart'] });
+        //     google.charts.setOnLoadCallback(function () {
+        //         renderChart(data);
 
-                // Re-render chart when checkboxes change
-                document.getElementById("showSales").addEventListener("change", () => renderChart(data));
-                document.getElementById("showOrders").addEventListener("change", () => renderChart(data));
-                document.getElementById("showGProfit").addEventListener("change", () => renderChart(data));
-                document.getElementById("showGRoi").addEventListener("change", () => renderChart(data));
-            });
-        }
+        //         // Re-render chart when checkboxes change
+        //         document.getElementById("showSales").addEventListener("change", () => renderChart(data));
+        //         document.getElementById("showOrders").addEventListener("change", () => renderChart(data));
+        //         document.getElementById("showGProfit").addEventListener("change", () => renderChart(data));
+        //         document.getElementById("showGRoi").addEventListener("change", () => renderChart(data));
+        //     });
+        // }
 
-        function renderChart(data) {
+        // function renderChart(data) {
             
-            let chartData = [['Channel']];
+        //     let chartData = [['Channel']];
 
-            if (document.getElementById("showSales").checked) {
-                chartData[0].push('L30 Sales', { role: 'annotation' }, 'L60 Sales', { role: 'annotation' });
-            }
-            if (document.getElementById("showOrders").checked) {
-                chartData[0].push('L30 Orders', { role: 'annotation' }, 'L60 Orders', { role: 'annotation' });
-            }
-            if (document.getElementById("showGProfit").checked) {
-                chartData[0].push('L30 GProfit', { role: 'annotation' }, 'L60 GProfit', { role: 'annotation' });
-            }
-            if (document.getElementById("showGRoi").checked) {
-                chartData[0].push('L30 GROI', { role: 'annotation' }, 'L60 GROI', { role: 'annotation' });
-            }
+        //     if (document.getElementById("showSales").checked) {
+        //         chartData[0].push('L30 Sales', { role: 'annotation' }, 'L60 Sales', { role: 'annotation' });
+        //     }
+        //     if (document.getElementById("showOrders").checked) {
+        //         chartData[0].push('L30 Orders', { role: 'annotation' }, 'L60 Orders', { role: 'annotation' });
+        //     }
+        //     if (document.getElementById("showGProfit").checked) {
+        //         chartData[0].push('L30 GProfit', { role: 'annotation' }, 'L60 GProfit', { role: 'annotation' });
+        //     }
+        //     if (document.getElementById("showGRoi").checked) {
+        //         chartData[0].push('L30 GROI', { role: 'annotation' }, 'L60 GROI', { role: 'annotation' });
+        //     }
 
-            data.forEach(row => {
+        //     data.forEach(row => {
                 
-                let channel = row['Channel'] || row['Channel '] || '';
+        //         let channel = row['Channel'] || row['Channel '] || '';
 
-                let l30Sales   = parseFloat(row['L30 Sales'] || row['l30_sales'] || 0);
-                let l60Sales   = parseFloat(row['L-60 Sales'] || row['l60_sales'] || 0);
-                let l30Orders  = parseFloat(row['L30 Orders'] || row['l30_orders'] || 0);
-                let l60Orders  = parseFloat(row['L60 Orders'] || row['l60_orders'] || 0);
-                let l30GProfit = parseFloat(row['Gprofit%'] || row['l30_gprofit'] || 0);
-                let l60GProfit = parseFloat(row['gprofitL60'] || row['l60_gprofit'] || 0);
-                let l30Groi    = parseFloat(row['L30 Groi'] || row['G Roi'] || 0);
-                let l60Groi    = parseFloat(row['L60 Groi'] || row['G RoiL60'] || 0);
+        //         let l30Sales   = parseFloat(row['L30 Sales'] || row['l30_sales'] || 0);
+        //         let l60Sales   = parseFloat(row['L-60 Sales'] || row['l60_sales'] || 0);
+        //         let l30Orders  = parseFloat(row['L30 Orders'] || row['l30_orders'] || 0);
+        //         let l60Orders  = parseFloat(row['L60 Orders'] || row['l60_orders'] || 0);
+        //         let l30GProfit = parseFloat(row['Gprofit%'] || row['l30_gprofit'] || 0);
+        //         let l60GProfit = parseFloat(row['gprofitL60'] || row['l60_gprofit'] || 0);
+        //         let l30Groi    = parseFloat(row['L30 Groi'] || row['G Roi'] || 0);
+        //         let l60Groi    = parseFloat(row['L60 Groi'] || row['G RoiL60'] || 0);
 
-                let rowData = [channel];
+        //         let rowData = [channel];
 
-                if (document.getElementById("showSales").checked) {
-                    rowData.push(l30Sales, l30Sales > 0 ? channel : null);
-                    rowData.push(l60Sales, l60Sales > 0 ? channel : null);
-                }
-                if (document.getElementById("showOrders").checked) {
-                    rowData.push(l30Orders, l30Orders > 0 ? channel : null);
-                    rowData.push(l60Orders, l60Orders > 0 ? channel : null);
-                }
-                if (document.getElementById("showGProfit").checked) {
-                    rowData.push(l30GProfit, l30GProfit > 0 ? channel : null);
-                    rowData.push(l60GProfit, l60GProfit > 0 ? channel : null);
-                }
-                if (document.getElementById("showGRoi").checked) {
-                    rowData.push(l30Groi, channel);
-                    rowData.push(l60Groi, channel);
-                }
+        //         if (document.getElementById("showSales").checked) {
+        //             rowData.push(l30Sales, l30Sales > 0 ? channel : null);
+        //             rowData.push(l60Sales, l60Sales > 0 ? channel : null);
+        //         }
+        //         if (document.getElementById("showOrders").checked) {
+        //             rowData.push(l30Orders, l30Orders > 0 ? channel : null);
+        //             rowData.push(l60Orders, l60Orders > 0 ? channel : null);
+        //         }
+        //         if (document.getElementById("showGProfit").checked) {
+        //             rowData.push(l30GProfit, l30GProfit > 0 ? channel : null);
+        //             rowData.push(l60GProfit, l60GProfit > 0 ? channel : null);
+        //         }
+        //         if (document.getElementById("showGRoi").checked) {
+        //             rowData.push(l30Groi, channel);
+        //             rowData.push(l60Groi, channel);
+        //         }
 
-                chartData.push(rowData);
-            });
+        //         chartData.push(rowData);
+        //     });
 
-            let dataTable = google.visualization.arrayToDataTable(chartData);
+        //     let dataTable = google.visualization.arrayToDataTable(chartData);
 
-            let options = {
-                // title: 'Channel-wise L30 vs L60 Sales, Orders & GProfit',
-                curveType: 'function',
-                legend: { position: 'bottom' },
-                hAxis: { textPosition: 'none' },
-                vAxis: { title: 'Value', minValue: 0 },
-                pointSize: 5,
-                annotations: {
-                    alwaysOutside: true,
-                    textStyle: { fontSize: 11, bold: true, color: '#000' }
-                },
-                series: {
-                    0: { color: '#1E88E5', lineWidth: 4 }, // L30 Sales (blue)
-                    1: { color: '#90CAF9', lineWidth: 2 }, // L60 Sales (light blue)
-                    2: { color: '#43A047', lineWidth: 4 }, // L30 Orders (green)
-                    3: { color: '#A5D6A7', lineWidth: 2 }, // L60 Orders (light green)
-                    4: { color: '#F4511E', lineWidth: 4 }, // L30 GProfit (orange)
-                    5: { color: '#FFAB91', lineWidth: 2 },  // L60 GProfit (light orange)
-                    6: { color: '#6A1B9A', lineWidth: 4 }, // L30 GROI (purple)
-                    7: { color: '#CE93D8', lineWidth: 2 }  // L60 GROI (light purple)
-                }
-            };
+        //     let options = {
+        //         // title: 'Channel-wise L30 vs L60 Sales, Orders & GProfit',
+        //         curveType: 'function',
+        //         legend: { position: 'bottom' },
+        //         hAxis: { textPosition: 'none' },
+        //         vAxis: { title: 'Value', minValue: 0 },
+        //         pointSize: 5,
+        //         annotations: {
+        //             alwaysOutside: true,
+        //             textStyle: { fontSize: 11, bold: true, color: '#000' }
+        //         },
+        //         series: {
+        //             0: { color: '#1E88E5', lineWidth: 4 }, // L30 Sales (blue)
+        //             1: { color: '#90CAF9', lineWidth: 2 }, // L60 Sales (light blue)
+        //             2: { color: '#43A047', lineWidth: 4 }, // L30 Orders (green)
+        //             3: { color: '#A5D6A7', lineWidth: 2 }, // L60 Orders (light green)
+        //             4: { color: '#F4511E', lineWidth: 4 }, // L30 GProfit (orange)
+        //             5: { color: '#FFAB91', lineWidth: 2 },  // L60 GProfit (light orange)
+        //             6: { color: '#6A1B9A', lineWidth: 4 }, // L30 GROI (purple)
+        //             7: { color: '#CE93D8', lineWidth: 2 }  // L60 GROI (light purple)
+        //         }
+        //     };
 
-            let chart = new google.visualization.LineChart(document.getElementById('channelSalesChart'));
-            chart.draw(dataTable, options);
+        //     let chart = new google.visualization.LineChart(document.getElementById('channelSalesChart'));
+        //     chart.draw(dataTable, options);
+        // }
+
+
+        // function drawChannelChart() {
+        //     $.getJSON('/get-channel-sales-data', function(data) {
+        //         if (!data || data.length === 0) return;
+
+        //         google.charts.load('current', { packages: ['corechart'] });
+        //         google.charts.setOnLoadCallback(function () {
+        //             let chartData = [
+        //                 ['Channel', 'L30 Sales', { role: 'annotation' }, 'L60 Sales', { role: 'annotation' }]
+        //             ];
+
+        //             data.forEach(row => {
+        //                 let channel = row.channel || '';
+        //                 let l30 = parseFloat(row.l30_sales || 0);
+        //                 let l60 = parseFloat(row.l60_sales || 0);
+
+        //                 let l30Annotation = (l30 > 0) ? channel : null;
+        //                 let l60Annotation = (l60 > 0) ? channel : null;
+
+        //                 chartData.push([channel, l30, l30Annotation, l60, l60Annotation]);
+        //             });
+
+        //             let dataTable = google.visualization.arrayToDataTable(chartData);
+
+        //             let options = {
+        //                 title: 'Channel-wise L30 vs L60 Sales',
+        //                 curveType: 'function',
+        //                 legend: { position: 'bottom' },
+        //                 hAxis: { textPosition: 'none' },
+        //                 vAxis: { title: 'Sales', minValue: 0 },
+        //                 colors: ['#1E88E5', '#90CAF9'],
+        //                 lineWidth: 3,
+        //                 pointSize: 5,
+        //                 annotations: {
+        //                     alwaysOutside: true,
+        //                     textStyle: { fontSize: 11, bold: true, color: '#000' }
+        //                 }
+        //             };
+
+        //             let chart = new google.visualization.LineChart(
+        //                 document.getElementById('channelSalesChart')
+        //             );
+        //             chart.draw(dataTable, options);
+        //         });
+        //     });
+        // }
+
+        // function drawChannelChart() {
+        //     $.getJSON('/get-channel-sales-data', function(data) {
+        //         if (!data || data.length === 0) {
+        //             $('#channelSalesChart').html('<p class="text-center mt-5 text-muted">No sales data available.</p>');
+        //             return;
+        //         }
+
+        //         google.charts.load('current', { packages: ['corechart'] });
+        //         google.charts.setOnLoadCallback(function () {
+        //             const chartData = [['Date', 'L30 Sales', 'L60 Sales']];
+
+        //             data.forEach(row => {
+        //                 chartData.push([
+        //                     row.date,
+        //                     parseFloat(row.l30),
+        //                     parseFloat(row.l60)
+        //                 ]);
+        //             });
+
+        //             const dataTable = google.visualization.arrayToDataTable(chartData);
+
+        //             const options = {
+        //                 title: 'Daily Sales Trend (L30 vs L60)',
+        //                 curveType: 'function',
+        //                 legend: { position: 'bottom' },
+        //                 hAxis: {
+        //                     title: 'Date',
+        //                     slantedText: true,
+        //                     slantedTextAngle: 45
+        //                 },
+        //                 vAxis: {
+        //                     title: 'Sales ($)',
+        //                     minValue: 0
+        //                 },
+        //                 series: {
+        //                     0: { color: '#1E88E5', lineWidth: 3 }, // L30 solid
+        //                     1: { color: '#90CAF9', lineWidth: 2, lineDashStyle: [4, 4] } // L60 dotted
+        //                 },
+        //                 chartArea: { width: '85%', height: '70%' },
+        //                 pointSize: 5
+        //             };
+
+        //             const chart = new google.visualization.LineChart(
+        //                 document.getElementById('channelSalesChart')
+        //             );
+        //             chart.draw(dataTable, options);
+        //         });
+        //     });
+        // }
+
+        function drawSalesTrendChart() {
+            fetch('/sales-trend-data')
+            .then(response => response.json())
+            .then(json => {
+                const data = json.chartData || [];
+                if (!data.length) return alert("No sales data found");
+
+                google.charts.load('current', { packages: ['corechart'] });
+                google.charts.setOnLoadCallback(function () {
+                    const chartData = [['Date', 'L30 Sales', 'L60 Sales']];
+                    data.forEach(row => {
+                        chartData.push([
+                            row.date,
+                            parseFloat(row.l30_sales) || 0,
+                            parseFloat(row.l60_sales) || 0
+                        ]);
+                    });
+
+                    const dataTable = google.visualization.arrayToDataTable(chartData);
+                    const options = {
+                        title: 'Daily Total Sales (L30 vs L60)',
+                        legend: { position: 'bottom' },
+                        curveType: 'function',
+                        hAxis: {
+                            title: 'Date',
+                            textStyle: { fontSize: 10 },
+                            slantedText: true,
+                            slantedTextAngle: 45
+                        },
+                        vAxis: {
+                            title: 'Sales Amount ($)',
+                            minValue: 0
+                        },
+                        series: {
+                            0: { color: '#1E88E5', lineWidth: 3 },           // solid L30
+                            1: { color: '#FF7043', lineDashStyle: [4, 4] }  // dotted L60
+                        },
+                        chartArea: { left: 70, top: 50, width: '85%', height: '65%' },
+                        backgroundColor: 'transparent',
+                    };
+
+                    // show chart only now
+                    const chartDiv = document.getElementById('salesTrendChart');
+                    chartDiv.style.display = 'block';
+
+                    const chart = new google.visualization.LineChart(chartDiv);
+                    chart.draw(dataTable, options);
+
+                    window.addEventListener('resize', () => chart.draw(dataTable, options));
+                });
+            })
+            .catch(err => console.error('Error fetching chart data:', err));
         }
 
+        document.getElementById('showSalesGraph').addEventListener('click', function() {
+            const chartDiv = document.getElementById('salesTrendChart');
+            if (chartDiv.style.display === 'none') {
+                drawSalesTrendChart();
+                this.textContent = " 📈 Hide Daily Sales Graph";
+            } else {
+                chartDiv.style.display = 'none';
+                this.textContent = "📈 Show Daily Sales Graph";
+            }
+        });
 
 
         function updatePlayButtonColor() {
@@ -2979,4 +3153,5 @@
             }
         });
     </script>
+
 @endsection

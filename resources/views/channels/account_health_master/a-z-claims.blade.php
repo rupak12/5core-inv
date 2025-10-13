@@ -33,6 +33,16 @@
             position: relative;
         }
 
+        .custom-select-wrapper.disabled {
+            cursor: not-allowed;
+        }
+
+        .custom-select-wrapper.disabled .custom-select-display {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+
         .custom-select-display {
             background-color: #fff;
             border: 1px solid #ced4da;
@@ -90,7 +100,7 @@
         <div class="col-12">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <div class="d-flex flex-wrap justify-content-end align-items-center mb-4 gap-1">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-1">
                         <div class="d-flex align-items-center gap-2">
                             <select id="channelFilter" class="form-select form-control-lg me-2"
                                 style="width: 200px; min-width: 160px;">
@@ -99,12 +109,19 @@
                                     <option value="{{ $channel->channel }}">{{ $channel->channel }}</option>
                                 @endforeach
                             </select>
+                        </div>
+                        <!-- <div class="d-flex align-items-center gap-2">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="toggleAction" checked>
+                                <label class="form-check-label" for="toggleAction">Show Actions</label>
+                            </div>
                             <button type="button" class="btn btn-success d-flex align-items-center d-none" data-bs-toggle="modal"
                                 data-bs-target="#accountHealthModal">
                                 <i class="fas fa-plus-circle me-1"></i> Add Report
                             </button>
-                        </div>
+                        </div> -->
                     </div>
+
                     <div id="odr-rate"></div>
                 </div>
             </div>
@@ -116,15 +133,16 @@
         <div class="modal-dialog modal-lg modal-dialog-centered shadow-none" role="document">
             <div class="modal-content border border-primary rounded-2">
                 <div class="modal-header bg-white border-bottom rounded-top-2">
-                    <h5 class="modal-title fw-semibold text-primary">
+                    <h5 class="modal-title fw-semibold text-primary" id="modal-title">
                         <i class="fas fa-heartbeat me-2"></i> ODR Rate Report
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
                 <div class="modal-body bg-light">
-                    <form method="POST" action="{{ route('odr.rate.save') }}">
+                    <form id="edit-form">
                         @csrf
+                        <input type="hidden" name="id" id="edit_id">
                         <div class="row g-4">
 
                             {{-- Marketplace Channel --}}
@@ -144,7 +162,7 @@
                                             </div>
                                         @endforeach
                                     </div>
-                                    <input type="hidden" name="channel_id" required>
+                                    <input type="hidden" name="channel_id" id="channel_id_hidden" required>
                                 </div>
                                 @error('channel')
                                     <div class="text-danger mt-1 small">{{ $message }}</div>
@@ -154,20 +172,39 @@
                             {{-- Report Date --}}
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Report Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" name="report_date" value="{{ date('Y-m-d') }}"
+                                <input type="date" class="form-control" name="report_date" id="report_date_input" value="{{ date('Y-m-d') }}"
                                     required>
                             </div>
 
                             {{-- Account Health Links --}}
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Account Health Links</label>
-                                <input type="text" class="form-control" name="account_health_links"
+                                <input type="text" class="form-control" name="account_health_links" id="account_health_links_input"
                                     placeholder="Enter Account Health link">
                             </div>
                         </div>
 
+                        <div class="row g-4 mt-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">What</label>
+                                <textarea class="form-control" name="what" id="what_input" rows="2"></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Why</label>
+                                <textarea class="form-control" name="why" id="why_input" rows="2"></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Action</label>
+                                <input type="text" class="form-control" name="action" id="action_input">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">C+ Action</label>
+                                <input type="text" class="form-control" name="c_action" id="c_action_input">
+                            </div>
+                        </div>
+
                         <div class="mt-4 d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary px-4">
+                            <button type="submit" class="btn btn-primary px-4" id="submit-btn">
                                 <i class="fas fa-save me-1"></i> Save Report
                             </button>
                         </div>
@@ -182,150 +219,165 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
-            const table = new Tabulator("#odr-rate", {
-                ajaxURL: "/fetchAtoZClaimsRates",
-                ajaxConfig: "GET",
-                layout: "fitDataFill",
-                pagination: true,
-                paginationSize: 50,
-                paginationMode: "local",
-                movableColumns: false,
-                resizableColumns: true,
-                height: "550px",
-                columns: [{
-                        title: "Channels",
-                        field: "channel",
-                        headerSort: true,
-                        formatter: function(cell) {
-                            const value = cell.getValue();
-                            if (!value) return "";
-                            let color = "#f5f5f5";
-                            return `<span style="display:inline-flex;align-items:center;gap:7px;">
-                        
-                        <span style="background:${color};color:#000;font-weight:600;padding:4px 14px;border-radius:12px;font-size:1em;letter-spacing:0.01em;">
-                            ${value}
-                        </span>
-                        </span>`;
-                        }
-                    },
-                    {
-                        title: `Account Health <i class="fas fa-link"></i>`,
-                        field: "account_health_links",
-                        editor: "input",
-                        formatter: function(cell) {
-                            const value = cell.getValue();
+            let tableData = []; // To store the claims data
+            let table; // To reference the table
+            const editModal = new bootstrap.Modal(document.getElementById('accountHealthModal'));
+            let isEditMode = false; // Flag to track if in edit mode
 
-                            if (value && value.trim() !== "") {
-                                return `
-                                    <a href="${value}" target="_blank" title="Open Account Health Link"
-                                    style="display:inline-flex;align-items:center;gap:8px;padding:7px 18px;background:linear-gradient(90deg,#2563eb 60%,#2563eb 100%);color:#fff;border-radius:20px;text-decoration:none;font-weight:600;box-shadow:0 2px 8px rgba(37,99,235,0.13);transition:background 0.18s;outline:none;border:none;height:40px;width:90px;">
-                                        <span style="font-size:1em;">View</span>
-                                        <i class="fas fa-arrow-up-right-from-square" style="color:#fff;font-size:1em;"></i>
-                                    </a>
-                                `;
-                            }
+            // Fetch data manually to handle both table and eBay VTR
+            fetch("/fetchAtoZClaimsRates", {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                tableData = data.atoz_claims;
 
-                            return ""; // no button if link is empty
-                        },
-                        hozAlign: "center"
-                    },
-                    {
-                        title: "Allowed",
-                        field: "allowed",
-                        editor: "input",
-                        formatter: function (cell) {
-                            const data = cell.getData();
-                            let allowed = parseFloat(data.allowed);
-                            let actual = parseFloat(data.actual);
-
-                            // Handle NaN values
-                            allowed = isNaN(allowed) ? 0 : allowed;
-                            actual = isNaN(actual) ? 0 : actual;
-
-                            let color = "transparent"; // default bg
-                            if (actual < (allowed - 100) / 2) {
-                                color = "#28a745"; // light green
-                            } else if (actual > allowed) {
-                                color = "#ffc107"; // light yellow
-                            } else {
-                                color = "#dc3545"; // light red
-                            }
-
-                            const percentText = allowed + "%";
-
-                            return `<div class="text-center" style="background-color:${color}; color:#ffffff; padding:4px; border-radius:4px;">
-                                        <span>${percentText}</span>
-                                    </div>`;
-                        },
-                        cellEdited: function(cell) {
-                            cell.getRow().update({}); // re-trigger formatter
-                        },
-                        hozAlign: "center"
-                    },
-                    {
-                        title: "Current",
-                        field: "current",
-                        editor: "input",
-                        hozAlign: "center"
-                    },
-                    {
-                        title: "Date",
-                        field: "report_date",
-                        hozAlign: "center"
-                    },
-                    {
-                        title: "Previous",
-                        field: "prev_1",
-                        hozAlign: "center"
-                    },
-                    {
-                        title: "Date",
-                        field: "prev_1_date",
-                        hozAlign: "center"
-                    },
-                    {
-                        title: "Previous",
-                        field: "prev_2",
-                        hozAlign: "center"
-                    },
-                    {
-                        title: "Date",
-                        field: "prev_2_date",
-                        hozAlign: "center"
-                    },
-                    {
-                        title: "What",
-                        field: "what",
-                        editor: "input",
-                        hozAlign: "center"
-                    },
-                    {
-                        title: "Why",
-                        field: "why",
-                        editor: "input",
-                        hozAlign: "center"
-                    },
-                    {
-                        title: "Action",
-                        field: "action",
-                        editor: "input",
-                        hozAlign: "center"
-                    },
-                    {
-                        title: "C+ Action",
-                        field: "c_action",
-                        editor: "input",
-                        hozAlign: "center"
-                    },
-                    {
-                        title: "Report Date",
-                        field: "report_date",
+                // Update eBay row with VTR data
+                if (data.ebay_vtr && data.ebay_vtr.success) {
+                    const ebayRow = tableData.find(row => row.channel === 'eBay');
+                    if (ebayRow) {
+                        ebayRow.allowed = data.ebay_vtr.thresholdLower;
+                        ebayRow.current = data.ebay_vtr.vtr;
                     }
-                ],
+                }
+
+                initializeTable(tableData);
+            })
+            .catch(error => {
+                console.error("Error fetching data:", error);
             });
 
-            table.on("cellEdited", function(cell) {
-                let rowData = cell.getData();
+            function initializeTable(data) {
+                table = new Tabulator("#odr-rate", {
+                    data: data, // Use the fetched data
+                    layout: "fitDataFill",
+                    pagination: true,
+                    paginationSize: 50,
+                    paginationMode: "local",
+                    movableColumns: false,
+                    resizableColumns: true,
+                    height: "550px",
+                    columns: [{
+                            title: "Channels",
+                            field: "channel",
+                            headerSort: true,
+                            formatter: function(cell) {
+                                const value = cell.getValue();
+                                if (!value) return "";
+                                let color = "#f5f5f5";
+                                return `<span style="display:inline-flex;align-items:center;gap:7px;">
+                    
+                            <span style="background:${color};color:#000;font-weight:600;padding:4px 14px;border-radius:12px;font-size:1em;letter-spacing:0.01em;">
+                                ${value}
+                            </span>
+                            </span>`;
+                            }
+                        },
+                        {
+                            title: "Allowed",
+                            field: "allowed",
+                            formatter: function(cell) {
+                                const value = cell.getValue();
+                                let percent = parseFloat(value);
+                                if (isNaN(percent)) return '';
+                                return `<div class="text-center" style="background-color:transparent; padding:4px; border-radius:4px;">
+                                    <span>${percent}%</span>
+                                </div>`;
+                            },
+                            hozAlign: "center"
+                        },
+                        {
+                            title: "Current",
+                            field: "current",
+                            formatter: function(cell) {
+                                const value = cell.getValue();
+                                let percent = parseFloat(value);
+                                if (isNaN(percent)) return '';
+                                let color = "transparent";
+                                if (percent <= 95) {
+                                    color = "#dc3545"; // red
+                                } else if (percent >= 96 && percent <= 97) {
+                                    color = "#ffc107"; // orange
+                                } else if (percent >= 98) {
+                                    color = "#28a745"; // green
+                                }
+                                return `<div class="text-center" style="background-color:${color}; color:#ffffff; padding:4px; border-radius:4px;">
+                                    <span>${percent}%</span>
+                                </div>`;
+                            },
+                            hozAlign: "center"
+                        },
+                        {
+                            title: "Action",
+                            field: "action",
+                            editor: false,
+                            formatter: function(cell){
+                                const data = cell.getRow().getData();
+                                if (data.channel === 'eBay') {
+                                    return `<span style="cursor: pointer; color: #0d6efd; text-decoration: underline;" title="Open eBay Dashboard">
+                                        View Dashboard
+                                    </span>`;
+                                }
+                                const value = cell.getValue() || '';
+                                return `-`;
+                            },
+                            hozAlign: "center",
+                            cellClick: function(e, cell){
+                                const rowData = cell.getRow().getData();
+                                if (rowData.channel === 'eBay') {
+                                    window.open('https://sellerstandards.ebay.com/dashboard?region=US', '_blank');
+                                    return;
+                                }
+                                openEditModal(cell.getRow());
+                            }
+                        },
+                    ],
+                });
+
+                // Action column toggle
+                const toggleAction = document.getElementById('toggleAction');
+                const actionColumn = table.getColumn('action');
+                toggleAction.addEventListener('change', function() {
+                    if (this.checked) {
+                        actionColumn.show();
+                    } else {
+                        actionColumn.hide();
+                    }
+                    table.redraw(true); // Redraw to adjust column widths
+                });
+
+                // Channel filter functionality
+                const channelFilter = document.getElementById("channelFilter");
+                channelFilter.addEventListener("change", function () {
+                    const selectedChannel = this.value;
+                    if (selectedChannel) {
+                        table.setFilter("channel", "=", selectedChannel);
+                    } else {
+                        table.clearFilter();
+                    }
+                });
+            }
+
+            // Modal form submit handler
+            const form = document.getElementById('edit-form');
+            form.addEventListener('submit', function(e){
+                e.preventDefault();
+                const formData = new FormData(form);
+                const updateData = {
+                    id: formData.get('id'),
+                    channel_id: formData.get('channel_id'),
+                    report_date: formData.get('report_date'),
+                    account_health_links: formData.get('account_health_links'),
+                    what: formData.get('what'),
+                    why: formData.get('why'),
+                    action: formData.get('action'),
+                    c_action: formData.get('c_action'),
+                };
 
                 fetch("/AtoZClaims-rate/update", {
                         method: "POST",
@@ -333,30 +385,64 @@
                             "Content-Type": "application/json",
                             "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content")
                         },
-                        body: JSON.stringify(rowData)
+                        body: JSON.stringify(updateData)
                     })
                     .then(res => res.json())
                     .then(response => {
                         console.log("Updated:", response);
+                        // Update table row
+                        const rowId = updateData.id;
+                        table.updateData([updateData]); // Update the row in table
+                        editModal.hide();
                     })
                     .catch(error => console.error("Update failed:", error));
             });
-            channelSelect();
-        });
 
-        // Channel filter functionality
-        document.addEventListener("DOMContentLoaded", function () {
-        const channelFilter = document.getElementById("channelFilter");
-        const table = Tabulator.findTable("#odr-rate")[0];
+            function openEditModal(row){
+                const data = row.getData();
+                isEditMode = true;
 
-            channelFilter.addEventListener("change", function () {
-                const selectedChannel = this.value;
-                if (selectedChannel) {
-                table.setFilter("channel", "=", selectedChannel);
-                } else {
-                table.clearFilter();
-                }
+                // Set title
+                document.getElementById('modal-title').innerHTML = `<i class="fas fa-edit me-2"></i> Edit Report Details for ${data.channel}`;
+
+                // Set channel - pre-select and disable
+                const wrapper = document.querySelector(".custom-select-wrapper");
+                const display = wrapper.querySelector(".custom-select-display");
+                display.textContent = data.channel;
+                document.getElementById('channel_id_hidden').value = data.channel_id || ''; // Assuming channel_id is in data
+                wrapper.classList.add('disabled');
+                const optionsContainer = wrapper.querySelector(".custom-select-options");
+                optionsContainer.style.display = 'none'; // Ensure options are closed
+
+                // Set other fields
+                document.getElementById('report_date_input').value = data.report_date || '';
+                document.getElementById('account_health_links_input').value = data.account_health_links || '';
+                document.getElementById('what_input').value = data.what || '';
+                document.getElementById('why_input').value = data.why || '';
+                document.getElementById('action_input').value = data.action || '';
+                document.getElementById('c_action_input').value = data.c_action || '';
+
+                // Set hidden id
+                document.getElementById('edit_id').value = data.id || '';
+
+                // Set button text
+                document.getElementById('submit-btn').innerHTML = '<i class="fas fa-save me-1"></i> Update Report';
+
+                editModal.show();
+            }
+
+            // Reset modal on hide
+            editModal._element.addEventListener('hidden.bs.modal', function () {
+                const wrapper = document.querySelector(".custom-select-wrapper");
+                wrapper.classList.remove('disabled');
+                const display = wrapper.querySelector(".custom-select-display");
+                display.textContent = 'Choose a channel...';
+                document.getElementById('channel_id_hidden').value = '';
+                isEditMode = false;
+                // Reset other fields if needed
             });
+
+            channelSelect();
         });
 
         function channelSelect() {
@@ -368,7 +454,10 @@
             const options = wrapper.querySelectorAll(".custom-select-option");
 
             display.addEventListener("click", (e) => {
-                e.stopPropagation(); // 👈 add this line
+                if (wrapper.classList.contains('disabled')) {
+                    return; // Prevent opening if disabled
+                }
+                e.stopPropagation();
                 const isOpen = optionsContainer.style.display === "block";
                 optionsContainer.style.display = isOpen ? "none" : "block";
                 searchInput.value = "";
@@ -379,10 +468,10 @@
             options.forEach(option => {
                 option.addEventListener("click", (e) => {
                     e.stopPropagation();
-                    const value = option.dataset.value;         // ID
-                    const label = option.textContent.trim();    // Channel Name
-                    display.textContent = label;                // Show name in UI
-                    hiddenInput.value = value;                  // Submit ID to backend
+                    const value = option.dataset.value;         
+                    const label = option.textContent.trim();    
+                    display.textContent = label;                
+                    hiddenInput.value = value;                 
                     optionsContainer.style.display = "none";
                 });
 
@@ -408,4 +497,4 @@
         }
 
     </script>
-
+@endsection

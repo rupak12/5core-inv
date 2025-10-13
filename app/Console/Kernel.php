@@ -7,6 +7,7 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use App\Console\Commands\FetchReverbData;
 use App\Console\Commands\FetchMacyProducts;
 use App\Console\Commands\FetchWayfairData;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class Kernel extends ConsoleKernel
@@ -31,6 +32,11 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\EbayOverUtilzBidsAutoUpdate::class,
         \App\Console\Commands\EbayPinkDilKwBidsAutoUpdate::class,
         \App\Console\Commands\EbayPriceLessBidsAutoUpdate::class,
+        \App\Console\Commands\AutoUpdateAmazonFbaOverKwBids::class,
+        \App\Console\Commands\AutoUpdateAmazonFbaUnderKwBids::class,
+        \App\Console\Commands\AutoUpdateAmazonFbaOverPtBids::class,
+        \App\Console\Commands\AutoUpdateAmazonFbaUnderPtBids::class,
+
     ];
 
     /**
@@ -126,7 +132,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('app:ebay2-campaign-reports')
             ->dailyAt('01:15')
             ->timezone('America/Los_Angeles');
-        // Amazon and Ebay bids update commands
+        // Amazon over utilized bids update commands
         $schedule->command('amazon:auto-update-over-kw-bids')
             ->dailyAt('12:00')
             ->timezone('Asia/Kolkata');
@@ -136,18 +142,17 @@ class Kernel extends ConsoleKernel
         $schedule->command('amazon:auto-update-over-hl-bids')
             ->dailyAt('12:00')
             ->timezone('Asia/Kolkata');
+        // amazon acos bgt update commands
         $schedule->command('amazon:auto-update-amz-bgt-kw')
-            ->days([1, 4]) // 1 = Monday, 4 = Thursday
-            ->at('12:00')
-            ->timezone('Asia/Kolkata');
+            ->dailyAt('12:00')
+            ->timezone('Asia/Kolkata'); 
         $schedule->command('amazon:auto-update-amz-bgt-pt')
-            ->days([1, 4])
-            ->at('12:00')
-            ->timezone('Asia/Kolkata');
+            ->dailyAt('12:00')
+            ->timezone('Asia/Kolkata'); 
         $schedule->command('amazon:auto-update-amz-bgt-hl')
-            ->days([1, 4])
-            ->at('12:00')
-            ->timezone('Asia/Kolkata');
+            ->dailyAt('12:00')
+            ->timezone('Asia/Kolkata'); 
+        // Pink Dil ads update command
         $schedule->command('amazon:auto-update-pink-dil-kw-ads')
             ->dailyAt('12:00')
             ->timezone('Asia/Kolkata');
@@ -157,6 +162,22 @@ class Kernel extends ConsoleKernel
         $schedule->command('amazon:auto-update-pink-dil-hl-ads')
             ->dailyAt('12:00')
             ->timezone('Asia/Kolkata');
+        // FBA bids update command
+
+        $schedule->command('amazon-fba:auto-update-over-kw-bids')
+            ->dailyAt('12:00')
+            ->timezone('Asia/Kolkata');
+        $schedule->command('amazon-fba:auto-update-under-kw-bids')
+            ->dailyAt('12:00')
+            ->timezone('Asia/Kolkata');
+        $schedule->command('amazon-fba:auto-update-over-pt-bids')
+            ->dailyAt('12:00')
+            ->timezone('Asia/Kolkata');
+        $schedule->command('amazon-fba:auto-update-under-pt-bids')
+            ->dailyAt('12:00')
+            ->timezone('Asia/Kolkata');
+
+        // Ebay bids update command
         $schedule->command('ebay:auto-update-over-bids')
             ->dailyAt('12:00')
             ->timezone('Asia/Kolkata');
@@ -172,6 +193,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('sync:walmart-metrics-data')->everyMinute();
         $schedule->command('sync:tiktok-sheet-data')->everyMinute();
         $schedule->command('app:aliexpress-sheet-sync')->everyMinute();
+        $schedule->command('app:fetch-ebay-table-data')->dailyAt('00:00');
           $schedule->call(function () {
             DB::connection('apicentral')
                 ->table('google_ads_campaigns')
@@ -192,3 +214,4 @@ class Kernel extends ConsoleKernel
         require base_path('routes/console.php');
     }
 }
+ 

@@ -142,7 +142,9 @@ class WarehouseController extends Controller
     public function openBoxGodown(Request $request)
     {
         $warehouseId = 2;
-        $data = Inventory::with('warehouse')->where('warehouse_id', $warehouseId)->get();
+        $openboxData = Inventory::with('warehouse')->where('warehouse_id', $warehouseId)->get();
+        $incomingData = IncomingData::with('warehouse')->where('warehouse_id', $warehouseId)->get();
+        $data = $openboxData->merge($incomingData)->values();
 
         if ($request->ajax()) {
             return response()->json(['data' => $data]);
@@ -178,7 +180,9 @@ class WarehouseController extends Controller
     public function trashGodown(Request $request)
     {
         $warehouseId = 5;
-        $data = Inventory::with('warehouse')->where('warehouse_id', $warehouseId)->get();
+        $trashData = Inventory::with('warehouse')->where('warehouse_id', $warehouseId)->get();
+        $incomingData = IncomingData::with('warehouse')->where('warehouse_id', $warehouseId)->get();
+        $data = $trashData->merge($incomingData)->values();
 
         if ($request->ajax()) {
             return response()->json(['data' => $data]);

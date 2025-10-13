@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('fba_inventory', function (Blueprint $table) {
-            //
+        Schema::table('fba_fees', function (Blueprint $table) {
+            $table->dropUnique(['seller_sku', 'report_generated_at']);
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('fba_inventory', function (Blueprint $table) {
-            //
+        Schema::table('fba_fees', function (Blueprint $table) {
+            $table->unique(['seller_sku', 'report_generated_at']);
         });
     }
 };

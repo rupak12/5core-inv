@@ -218,7 +218,7 @@
                         <!-- Search and Controls Row -->
                         <div class="row g-3 mb-3">
                             <!-- Inventory Filters -->
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="d-flex gap-2">
                                     <select id="inv-filter" class="form-select form-select-md">
                                         <option value="">Select INV</option>
@@ -242,13 +242,22 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-6 d-flex justify-content-end gap-2">
+                            <div class="col-md-8 d-flex justify-content-end gap-2">
+                                <a href="javascript:void(0)" id="export-btn" class="btn btn-sm btn-success d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-file-export me-1"></i> Export Excel/CSV
+                                </a>
+                                {{-- <button class="btn btn-info btn-md d-flex align-items-center"> --}}
+                                    <span>Total Spend: <span id="total-spend" class="fw-bold ms-1 fs-4">0</span></span>
+                                {{-- </button> --}}
+                                {{-- <button class="btn btn-info btn-md d-flex align-items-center"> --}}
+                                    <span>Total Sales: <span id="total-sales" class="fw-bold ms-1 fs-4">0</span></span>
+                                {{-- </button> --}}
                                 <button class="btn btn-success btn-md d-flex align-items-center">
-                                    <span>Total Campaigns: <span id="total-campaigns" class="fw-bold ms-1 fs-5">0</span></span>
+                                    <span>Total Campaigns: <span id="total-campaigns" class="fw-bold ms-1 fs-4">0</span></span>
                                 </button>
                                 <button class="btn btn-primary btn-md d-flex align-items-center">
                                     <i class="fa fa-percent me-1"></i>
-                                    <span>Of Total: <span id="percentage-campaigns" class="fw-bold ms-1 fs-5">0%</span></span>
+                                    <span>Of Total: <span id="percentage-campaigns" class="fw-bold ms-1 fs-4">0%</span></span>
                                 </button>
                             </div>
                         </div>
@@ -283,11 +292,12 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Moment.js (daterangepicker dependency) -->
     <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-
     <!-- Daterangepicker -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
 
@@ -1117,8 +1127,13 @@
                 function combinedFilter(data) {
 
                     let searchVal = $("#global-search").val()?.toLowerCase() || "";
-                    if (searchVal && !(data.sku?.toLowerCase().includes(searchVal))) {
-                        return false;
+
+                    if (searchVal) {
+                        let fieldsToSearch = ["sku", "campaignName", "campaignStatus"];
+                        let match = fieldsToSearch.some(field => {
+                            return data[field]?.toString().toLowerCase().includes(searchVal);
+                        });
+                        if (!match) return false;
                     }
 
                     let statusVal = $("#status-filter").val();
@@ -1128,7 +1143,7 @@
 
                     let invFilterVal = $("#inv-filter").val();
                     if (!invFilterVal) {
-                        if (parseFloat(data.INV) != 0) return false;
+                        // if (parseFloat(data.INV) != 0) return false;
                     } else if (invFilterVal === "INV_0") {
                         if (parseFloat(data.INV) !== 0) return false;
                     } else if (invFilterVal === "OTHERS") {
@@ -1193,9 +1208,17 @@
 
                     let percentage = total > 0 ? ((filtered / total) * 100).toFixed(0) : 0;
 
+                    let totalSales = filteredRows.reduce((sum, row) => sum + (parseFloat(row.ad_sales_l30) || 0), 0);
+                    let totalSpend = filteredRows.reduce((sum, row) => sum + (parseFloat(row.spend_l30) || 0), 0);
+                    // let totalOrders = filteredRows.reduce((sum, row) => sum + (parseFloat(row.ad_sold_l30) || 0), 0);
+
+                    const totalSalesEl = document.getElementById("total-sales");
+                    const totalSpendEl = document.getElementById("total-spend");
                     const totalEl = document.getElementById("total-campaigns");
                     const percentageEl = document.getElementById("percentage-campaigns");
 
+                    if (totalSalesEl) totalSalesEl.innerText = totalSales.toFixed(0);
+                    if (totalSpendEl) totalSpendEl.innerText = totalSpend.toFixed(0);
                     if (totalEl) totalEl.innerText = filtered;
                     if (percentageEl) percentageEl.innerText = percentage + "%";
                 }
@@ -1318,6 +1341,22 @@
                 }
             });
 
+            document.getElementById("export-btn").addEventListener("click", function () {
+                let allData = table.getData("active"); 
+
+                if (allData.length === 0) {
+                    alert("No data available to export!");
+                    return;
+                }
+
+                let exportData = allData.map(row => ({ ...row }));
+
+                let ws = XLSX.utils.json_to_sheet(exportData);
+                let wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Campaigns");
+
+                XLSX.writeFile(wb, "amazon_pt_ads_report.xlsx");
+            });
 
             document.body.style.zoom = "78%";
         });
