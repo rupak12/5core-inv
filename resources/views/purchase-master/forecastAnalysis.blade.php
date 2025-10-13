@@ -151,7 +151,7 @@
         <div class="modal-dialog modal-xl">
             <div class="modal-content border-0 shadow-sm">
                 <div class="modal-header bg-info text-white d-flex justify-content-between align-items-center">
-                    <h5 class="modal-title mb-0 fw-semibold">MONTH VIEW</h5>
+                    <h5 class="modal-title mb-0">MONTH VIEW <span id="month-view-sku" class="ms-1"></span></h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
@@ -421,6 +421,7 @@
                     cellClick: function(e, cell) {
                         if (e.target.closest(".open-month-modal")) {
                             const row = cell.getRow().getData();
+                            const sku = row["SKU"] || '';
                             const monthData = {
                                 "JAN": row["jan"],
                                 "FEB": row["feb"],
@@ -435,7 +436,7 @@
                                 "NOV": row["Nov"],
                                 "DEC": row["Dec"]
                             };
-                            openMonthModal(monthData);
+                            openMonthModal(monthData, sku);
                         }
                     }
                 },
@@ -884,7 +885,7 @@
         }
 
         //modals
-        function openMonthModal(monthData) {
+        function openMonthModal(monthData, sku) {
             const wrapper = document.getElementById("monthCardWrapper");
             if (!wrapper) return;
 
@@ -914,6 +915,8 @@
                 card.appendChild(count);
                 wrapper.appendChild(card);
             });
+
+            document.getElementById("month-view-sku").innerText = `( ${sku} )`;
 
             const modal = new bootstrap.Modal(document.getElementById("monthModal"));
             modal.show();
