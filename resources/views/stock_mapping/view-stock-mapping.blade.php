@@ -1373,8 +1373,7 @@
                 <div class="modal-header bg-gradient">
                     <h5 class="modal-title d-flex align-items-center text-dark">
                         <i class="bi bi-bar-chart-line-fill me-2"></i>
-                        Stock Mapping Analysis
-                        <span id="stockSkuLabel" class="badge  text-danger ms-2 animate__animated animate__fadeIn fw-bold fs-3"></span>
+                        Stock Mapping Analysis for SKU:<span id="stockSkuLabel" class="badge  text-danger m-0 animate__animated animate__fadeIn fw-bold fs-3"></span>
                     </h5>
                     <div class="modal-actions">                    
                         <button type="button" class="btn-close" data-bs-dismiss="modal"
@@ -1969,7 +1968,7 @@ function moveImagePreview(e) {
     $(document).on('click', '.showStockModal', function () {
     const sku = $(this).data('sku');
     const item = $(this).data('item');
-
+        $('#stockSkuLabel').text("("+sku+")");
     // Render modal content
   $('#stockContent').html(buildStockTable(item));
 
@@ -2038,7 +2037,7 @@ function buildStockTable(data) {
         html += `<tr>
             <td>
                 <img src="https://inventory.5coremanagement.com/uploads/shopify.png" alt="Shopify" class="channel-logo mb-1" style="width:30px; height:30px; object-fit:contain;">
-                <p class="d-inline-block">Shopify</p>
+                <p class="d-inline-block"> Shopify</p>
             </td>
             <td style="${(data.INV_amazon !== data.INV_shopify) ? 'color:red;' : ''}">${data.INV_shopify}</td>
         </tr>`;
