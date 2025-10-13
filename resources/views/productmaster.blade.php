@@ -1849,7 +1849,7 @@
                             if (searchTerm) {
                                 filteredData = filteredData.filter(item => {
                                     const value = String(item[selectedField] ?? '').toLowerCase();
-                                    return value.includes(searchTerm);
+                                    return value === searchTerm;
                                 });
                             }
 
