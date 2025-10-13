@@ -51,7 +51,7 @@ class EbayApiService
             ->post('https://api.ebay.com/identity/v1/oauth2/token', [
                 'grant_type'    => 'refresh_token',
                 'refresh_token' => $refreshToken,
-                'scope'         => 'https://api.ebay.com/oauth/api_scope'.'https://api.ebay.com/oauth/api_scope/sell.inventory',
+                'scope'         => 'https://api.ebay.com/oauth/api_scope/sell.analytics.readonly https://api.ebay.com/oauth/api_scope/sell.inventory',
             ]);
 
         if ($response->failed()) {
