@@ -72,26 +72,6 @@ class ForecastAnalysisController extends Controller
         $movementMap = DB::table('movement_analysis')->get()->keyBy(fn($item) => $normalizeSku($item->sku));
         $readyToShipMap = DB::table('ready_to_ship')->get()->keyBy(fn($item) => $normalizeSku($item->sku));
 
-        $shopifyMonthlyData = DB::connection('apicentral')
-                ->table('shopify_order_items')
-                ->selectRaw('
-                    UPPER(TRIM(sku)) as sku,
-                    DATE_FORMAT(order_date, "%b") as month,
-                    SUM(quantity) as total_qty
-                ')
-                ->groupByRaw('UPPER(TRIM(sku)), DATE_FORMAT(order_date, "%b")')
-                ->get()
-                ->groupBy('sku')
-                ->map(function ($rows) {
-                    $monthMap = [];
-                    foreach ($rows as $row) {
-                        $monthName = ucfirst(strtolower($row->month)); 
-                        $monthMap[$monthName] = (int)$row->total_qty;
-                    }
-                    return $monthMap;
-                });
-
-
         $processedData = [];
 
         foreach ($productListData as $prodData) {
@@ -148,15 +128,16 @@ class ForecastAnalysisController extends Controller
                 $item->readyToShipQty = $readyToShipMap->get($sheetSku)->qty ?? 0;
             }
 
-            if (isset($shopifyMonthlyData[$sheetSku])) {
-                $shopifyMonths = $shopifyMonthlyData[$sheetSku];
+            if ($movementMap->has($sheetSku)) {
+                $months = json_decode($movementMap->get($sheetSku)->months ?? '{}', true);
+                $months = is_array($months) ? $months : [];
 
-                $monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                $monthNames = ['Dec', 'jan', 'feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'];
                 $totalMonthCount = 0;
                 $totalSum = 0;
 
                 foreach ($monthNames as $month) {
-                    $value = isset($shopifyMonths[$month]) ? (int)$shopifyMonths[$month] : 0;
+                    $value = isset($months[$month]) && is_numeric($months[$month]) ? (int)$months[$month] : 0;
                     $item->{$month} = $value;
                     if ($value !== 0) $totalMonthCount++;
                     $totalSum += $value;
@@ -165,7 +146,6 @@ class ForecastAnalysisController extends Controller
                 $item->{'Total'} = ($item->L30 ?? 0) + $totalSum;
                 $item->{'Total month'} = $totalMonthCount + ((isset($item->L30) && $item->L30 != 0) ? 1 : 0);
             }
-
 
             $processedData[] = $item;
         }
