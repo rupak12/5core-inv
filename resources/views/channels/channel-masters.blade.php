@@ -2055,7 +2055,7 @@
                     const chartDataFromAPI = json.chartData || [];
                     if (!chartDataFromAPI.length) return alert("No sales data found");
 
-                    // ✅ Prepare chart data for Google Charts
+                    // Prepare chart data for Google Charts
                     const chartArray = [['Date', 'L30 Sales', 'L60 Sales', 'GProfit (%)']];
                     chartDataFromAPI.forEach(row => {
                         chartArray.push([
@@ -2070,12 +2070,55 @@
                     google.charts.setOnLoadCallback(() => {
                         const data = google.visualization.arrayToDataTable(chartArray);
 
+                        // const options = {
+                        //     title: 'Daily Sales Trend (L30 vs L60 vs GProfit %)',
+                        //     legend: { position: 'bottom', textStyle: { fontSize: 12 } },
+                        //     curveType: 'function',
+                        //     focusTarget: 'datum', // Show tooltip for single point/line only
+                        //     tooltip: { trigger: 'focus' }, //Trigger only on hover over that point
+                        //     hAxis: {
+                        //         title: 'Date',
+                        //         textStyle: { fontSize: 10 },
+                        //         slantedText: true,
+                        //         slantedTextAngle: 45
+                        //     },
+                        //     vAxes: {
+                        //         0: { title: 'Sales ($)', textStyle: { color: '#1E88E5' } },
+                        //         1: { title: 'GProfit (%)', textStyle: { color: '#43A047' } }
+                        //     },
+                        //     series: {
+                        //         0: {
+                        //             targetAxisIndex: 0,
+                        //             color: '#1E88E5',
+                        //             lineWidth: 3,
+                        //             pointSize: 8,
+                        //             pointShape: 'circle'
+                        //         },
+                        //         1: {
+                        //             targetAxisIndex: 0,
+                        //             color: '#FF7043',
+                        //             lineWidth: 3,
+                        //             pointSize: 8,
+                        //             pointShape: 'triangle',
+                        //             lineDashStyle: [4, 4]
+                        //         },
+                        //         2: {
+                        //             targetAxisIndex: 1,
+                        //             color: '#43A047',
+                        //             lineWidth: 3,
+                        //             pointSize: 9,
+                        //             pointShape: 'square'
+                        //         }
+                        //     },
+                        //     chartArea: { left: 70, top: 50, width: '85%', height: '65%' },
+                        //     backgroundColor: 'transparent'
+                        // };
+
                         const options = {
                             title: '📈 Daily Sales Trend (L30 vs L60 vs GProfit %)',
                             legend: { position: 'bottom', textStyle: { fontSize: 12 } },
-                            curveType: 'function',
-                            focusTarget: 'datum', // 👈 Show tooltip for single point/line only
-                            tooltip: { trigger: 'focus' }, // 👈 Trigger only on hover over that point
+                            focusTarget: 'datum',
+                            tooltip: { trigger: 'focus' },
                             hAxis: {
                                 title: 'Date',
                                 textStyle: { fontSize: 10 },
@@ -2087,32 +2130,14 @@
                                 1: { title: 'GProfit (%)', textStyle: { color: '#43A047' } }
                             },
                             series: {
-                                0: {
-                                    targetAxisIndex: 0,
-                                    color: '#1E88E5',
-                                    lineWidth: 3,
-                                    pointSize: 8,
-                                    pointShape: 'circle'
-                                },
-                                1: {
-                                    targetAxisIndex: 0,
-                                    color: '#FF7043',
-                                    lineWidth: 3,
-                                    pointSize: 8,
-                                    pointShape: 'triangle',
-                                    lineDashStyle: [4, 4]
-                                },
-                                2: {
-                                    targetAxisIndex: 1,
-                                    color: '#43A047',
-                                    lineWidth: 3,
-                                    pointSize: 9,
-                                    pointShape: 'square'
-                                }
+                                0: { targetAxisIndex: 0, color: '#1E88E5', lineWidth: 3, pointSize: 8, pointShape: 'circle' },
+                                1: { targetAxisIndex: 0, color: '#FF7043', lineWidth: 3, pointSize: 8, pointShape: 'triangle', lineDashStyle: [4, 4] },
+                                2: { targetAxisIndex: 1, color: '#43A047', lineWidth: 3, pointSize: 9, pointShape: 'square' }
                             },
                             chartArea: { left: 70, top: 50, width: '85%', height: '65%' },
                             backgroundColor: 'transparent'
                         };
+
 
                         const chartDiv = document.getElementById('salesTrendChart');
                         chartDiv.style.display = 'block';
