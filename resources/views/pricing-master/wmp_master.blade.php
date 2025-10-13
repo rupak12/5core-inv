@@ -1,4 +1,4 @@
-@extends('layouts.vertical', ['title' => 'Inventory by Sales Value'])
+@extends('layouts.vertical', ['title' => 'WMP Master'])
 
 @section('css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -480,8 +480,8 @@
 
 @section('content')
     @include('layouts.shared.page-title', [
-        'page_title' => 'Inventory by Sales Value',
-        'sub_title' => 'Inventory by Sales Value',
+        'page_title' => 'WMP Master',
+        'sub_title' => 'WMP Master',
     ])
 
     <!-- Image Preview -->
@@ -1284,46 +1284,7 @@ const table = new Tabulator("#forecast-table", {
                 return `<span style="color: ${textColor}">${value.toFixed(2)}</span>`;
             }
         },
-        {
-            title: "Inv Value<br><span id='invValueHeader' style='font-size:12px; color:#000; background:#fff; padding:1px 4px; border-radius:3px;'></span>",
-            field: "inv_value",
-            hozAlign: "center",
-            headerSort: true,
-            formatter: function(cell) {
-                const value = parseFloat(cell.getValue()) || 0;
-                return `<span class="text-success">$${Math.round(value)}</span>`;
-            },
-            sorter: function(a, b, aRow, bRow) {
-                const valA = parseFloat(a) || 0;
-                const valB = parseFloat(b) || 0;
-                if (valA === valB) {
-                    const skuA = aRow.getData().SKU || "";
-                    const skuB = bRow.getData().SKU || "";
-                    return skuA.localeCompare(skuB);
-                }
-                return valA - valB;
-            }
-        },
-        {
-            title: "COGS<br><span id='cogsHeader' style='font-size:12px; color:#000; background:#fff; padding:1px 4px; border-radius:3px;'></span>",
-            field: "COGS",
-            hozAlign: "center",
-            headerSort: true,
-            formatter: function(cell) {
-                const value = parseFloat(cell.getValue()) || 0;
-                return `<span class="text-success">$${Math.round(value)}</span>`;
-            },
-            sorter: function(a, b, aRow, bRow) {
-                const valA = parseFloat(a) || 0;
-                const valB = parseFloat(b) || 0;
-                if (valA === valB) {
-                    const skuA = aRow.getData().SKU || "";
-                    const skuB = bRow.getData().SKU || "";
-                    return skuA.localeCompare(skuB);
-                }
-                return valA - valB;
-            }
-        },
+      
         {
             title: "Total Views",
             field: "total_views",
@@ -1692,6 +1653,46 @@ const table = new Tabulator("#forecast-table", {
         //         precision: 2
         //     }
         // },
+          {
+            title: "Inv Value<br><span id='invValueHeader' style='font-size:12px; color:#000; background:#fff; padding:1px 4px; border-radius:3px;'></span>",
+            field: "inv_value",
+            hozAlign: "center",
+            headerSort: true,
+            formatter: function(cell) {
+                const value = parseFloat(cell.getValue()) || 0;
+                return `<span class="text-success">$${Math.round(value)}</span>`;
+            },
+            sorter: function(a, b, aRow, bRow) {
+                const valA = parseFloat(a) || 0;
+                const valB = parseFloat(b) || 0;
+                if (valA === valB) {
+                    const skuA = aRow.getData().SKU || "";
+                    const skuB = bRow.getData().SKU || "";
+                    return skuA.localeCompare(skuB);
+                }
+                return valA - valB;
+            }
+        },
+        {
+            title: "COGS<br><span id='cogsHeader' style='font-size:12px; color:#000; background:#fff; padding:1px 4px; border-radius:3px;'></span>",
+            field: "COGS",
+            hozAlign: "center",
+            headerSort: true,
+            formatter: function(cell) {
+                const value = parseFloat(cell.getValue()) || 0;
+                return `<span class="text-success">$${Math.round(value)}</span>`;
+            },
+            sorter: function(a, b, aRow, bRow) {
+                const valA = parseFloat(a) || 0;
+                const valB = parseFloat(b) || 0;
+                if (valA === valB) {
+                    const skuA = aRow.getData().SKU || "";
+                    const skuB = bRow.getData().SKU || "";
+                    return skuA.localeCompare(skuB);
+                }
+                return valA - valB;
+            }
+        },
     ],
 
     ajaxResponse: function(url, params, response) {
