@@ -205,6 +205,10 @@
                             <a href="{{ url('calculate-cvr-masters') }}">CVR Masters</a>
                         </li>
 
+                         <li>
+                            <a href="{{ url('calculate-wmp-masters') }}">WMP Masters</a>
+                        </li>
+
                         <li>
                             <a href="{{ url('inventory-by-sales-value') }}">Inv by Sales Value </a>
                         </li>
