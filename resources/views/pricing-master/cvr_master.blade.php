@@ -1205,6 +1205,9 @@
             initialSort: [{
                 column: "avgCvr",
                 dir: "asc"
+            }, {
+                column: "Dil%",
+                dir: "asc"
             }],
             pagination: true,
             paginationSize: 50,
