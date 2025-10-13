@@ -1731,120 +1731,122 @@
                     }
                 },
             ],
-            ajaxResponse: function(url, params, response) {
-                groupedSkuData = {};
-                // response.data = response.data.filter(item => parseFloat(item.INV) > 0); // Filter out INV=0 for all rows
-                response.data = response.data.map((item, index) => {
-                    const sku = item.SKU || "";
-                    const isParent = item.is_parent || sku.toUpperCase().includes("PARENT");
-                    return {
-                        ...item,
-                        calculatedRoi: calculateROI(item),
-                        calculatedProfit: calculateAvgProfit(item),
-                        sl_no: index + 1,
-                        is_parent: isParent ? 1 : 0,
-                        isParent: isParent,
-                        raw_data: item || {}
-                    };
-                });
-                let grouped = {};
-                response.data.forEach(item => {
-                    const parentKey = item.Parent || "";
-                    if (!grouped[parentKey]) grouped[parentKey] = [];
-                    grouped[parentKey].push(item);
-                    if (!groupedSkuData[parentKey]) {
-                        groupedSkuData[parentKey] = [];
-                    }
-                    groupedSkuData[parentKey].push(item);
-                });
-                Object.keys(grouped).forEach(parentKey => {
-                    const rows = grouped[parentKey];
-                    const children = rows.filter(item => !item.is_parent);
-                    const parent = rows.find(item => item.is_parent);
-                    if (!parent || children.length === 0) return;
-                    const additiveFields = ['INV', 'total_views', 'total_req_view', 'inv_value', 'COGS'];
-                    additiveFields.forEach(field => {
-                        parent[field] = children.reduce((sum, c) => sum + (parseFloat(c[field]) || 0), 0).toFixed(2);
-                    });
-                    const rateFields = ['Dil%', 'avgCvr', 'MSRP', 'MAP', 'LP', 'SHIP', 'temu_ship', 'avgPftPercent'];
-                    rateFields.forEach(field => {
-                        const values = children.map(c => parseFloat(c[field]) || 0);
-                         const valid = values.filter(v => !isNaN(v) && v !== 0); // Exclude 0 to avoid skew
-                        parent[field] = valid.length > 0 ? (valid.reduce((sum, v) => sum + v, 0) / valid.length).toFixed(2) :
-                            (values.length > 0 ? (values.reduce((sum, v) => sum + v, 0) / values.length).toFixed(2) : 0);
-                    });
-                    const mps = ['amz', 'ebay', 'macy', 'reverb', 'doba', 'temu', 'ebay3', 'ebay2', 'walmart', 'shein', 'shopifyb2c', 'aliexpress', 'tiktok', 'bestbuy' ,'tiendamia'];
-                    mps.forEach(mp => {
-                        const l30Field = (mp === 'shopifyb2c' ? 'shopifyb2c_l30' : `${mp}_l30`);
-                        const priceField = (mp === 'shopifyb2c' ? 'shopifyb2c_price' : `${mp}_price`);
-                        parent[l30Field] = children.reduce((sum, c) => sum + (parseFloat(c[l30Field]) || 0), 0);
-                        let totalWeighted = 0;
-                        let totalWeight = 0;
-                        children.forEach(c => {
-                            const price = parseFloat(c[priceField]) || 0;
-                            const weight = parseFloat(c[l30Field]) || 0;
-                            totalWeighted += price * weight;
-                            totalWeight += weight;
-                        });
-                        parent[priceField] = totalWeight > 0 ? (totalWeighted / totalWeight).toFixed(2) :
-                            (children.reduce((sum, c) => sum + (parseFloat(c[priceField]) || 0), 0) / children.length).toFixed(2);
-                    });
-                    const inv = parseFloat(parent.INV) || 0;
-                    const shopifyPrice = parseFloat(parent.shopifyb2c_price) || 0;
-                    parent.inv_value = (inv * shopifyPrice).toFixed(2);
-                    const lp = parseFloat(parent.LP) || 0;
-                    parent.COGS = (lp * inv).toFixed(2);
-                    const marketplaces = [
-                        { price: parent.amz_price, l30: parent.amz_l30, factor: 0.70 },
-                        { price: parent.ebay_price, l30: parent.ebay_l30, factor: 0.72 },
-                        { price: parent.shopifyb2c_price, l30: parent.shopifyb2c_l30, factor: 0.75 },
-                        { price: parent.macy_price, l30: parent.macy_l30, factor: 0.76 },
-                        { price: parent.reverb_price, l30: parent.reverb_l30, factor: 0.84 },
-                        { price: parent.doba_price, l30: parent.doba_l30, factor: 0.95 },
-                        { price: parent.temu_price, l30: parent.temu_l30, factor: 0.87, ship: parent.temu_ship },
-                        { price: parent.ebay3_price, l30: parent.ebay3_l30, factor: 0.71 },
-                        { price: parent.ebay2_price, l30: parent.ebay2_l30, factor: 0.80 },
-                        { price: parent.walmart_price, l30: parent.walmart_l30, factor: 0.80 },
-                        { price: parent.shein_price, l30: parent.shein_l30, factor: 0.89 },
-                        { price: parent.aliexpress_price, l30: parent.aliexpress_l30, factor: 0.89 },
-                        { price: parent.tiktok_price, l30: parent.tiktok_l30, factor: 0.64 },
-                        { price: parent.bestbuy_price, l30: parent.bestbuy_l30, factor: 0.80 },
-                        { price: parent.tiendamia_price, l30: parent.tiendamia_price, factor: 0.83 },
-                        { price: parent.aliexpress_price, l30: parent.aliexpress_price, factor: 0.89 }
-                    ];
-                    let totalProfit = 0;
-                    let totalRevenue = 0;
-                    marketplaces.forEach(mp => {
-                        const price = parseFloat(mp.price) || 0;
-                        const l30 = parseFloat(mp.l30) || 0;
-                        const ship = parseFloat(mp.ship || parent.SHIP) || 0;
-                        const profit = ((price * mp.factor) - lp - ship) * l30;
-                        totalProfit += profit;
-                        totalRevenue += price * l30;
-                    });
-                    parent.avgPftPercent = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(2) : 0;
-                    if (!parent.shopifyb2c_image && children[0]) {
-                        parent.shopifyb2c_image = children[0].shopifyb2c_image;
-                    }
-                    parent.ovl30 = parent.shopifyb2c_l30;
-                });
-                let finalData = [];
-                Object.values(grouped).forEach(rows => {
-                    const parent = rows.find(item => item.is_parent);
-                    const children = rows.filter(item => !item.is_parent).sort((a, b) => (a.SKU || "").localeCompare(b.SKU || ""));
-                    if (parent) {
-                        parent._children = children;
-                        finalData.push(parent);
-                    } else {
-                        finalData = finalData.concat(children);
-                    }
-                });
-                setTimeout(() => {
-                    setCombinedFilters();
-                }, 0);
-                return finalData;
-            },
+           ajaxResponse: function(url, params, response) {
+        groupedSkuData = {};
+        // response.data = response.data.filter(item => parseFloat(item.INV) > 0); // Filter out INV=0 for all rows
+        response.data = response.data.map((item, index) => {
+            const sku = item.SKU || "";
+            const isParent = item.is_parent || sku.toUpperCase().includes("PARENT");
+            return {
+                ...item,
+                calculatedRoi: calculateROI(item),
+                calculatedProfit: calculateAvgProfit(item),
+                sl_no: index + 1,
+                is_parent: isParent ? 1 : 0,
+                isParent: isParent,
+                raw_data: item || {}
+            };
         });
+        let grouped = {};
+        response.data.forEach(item => {
+            const parentKey = item.Parent || "";
+            if (!grouped[parentKey]) grouped[parentKey] = [];
+            grouped[parentKey].push(item);
+            if (!groupedSkuData[parentKey]) {
+                groupedSkuData[parentKey] = [];
+            }
+            groupedSkuData[parentKey].push(item);
+        });
+        Object.keys(grouped).forEach(parentKey => {
+            const rows = grouped[parentKey];
+            const children = rows.filter(item => !item.is_parent);
+            const parent = rows.find(item => item.is_parent);
+            if (!parent || children.length === 0) return;
+            const additiveFields = ['INV', 'total_views', 'total_req_view', 'inv_value', 'COGS'];
+            additiveFields.forEach(field => {
+                parent[field] = children.reduce((sum, c) => sum + (parseFloat(c[field]) || 0), 0).toFixed(2);
+            });
+            const rateFields = ['Dil%', 'avgCvr', 'MSRP', 'MAP', 'LP', 'SHIP', 'temu_ship', 'avgPftPercent'];
+            rateFields.forEach(field => {
+                const values = children.map(c => parseFloat(c[field]) || 0);
+                 const valid = values.filter(v => !isNaN(v) && v !== 0); // Exclude 0 to avoid skew
+                parent[field] = valid.length > 0 ? (valid.reduce((sum, v) => sum + v, 0) / valid.length).toFixed(2) :
+                    (values.length > 0 ? (values.reduce((sum, v) => sum + v, 0) / values.length).toFixed(2) : 0);
+            });
+            const mps = ['amz', 'ebay', 'macy', 'reverb', 'doba', 'temu', 'ebay3', 'ebay2', 'walmart', 'shein', 'shopifyb2c', 'aliexpress', 'tiktok', 'bestbuy' ,'tiendamia'];
+            mps.forEach(mp => {
+                const l30Field = (mp === 'shopifyb2c' ? 'shopifyb2c_l30' : `${mp}_l30`);
+                const priceField = (mp === 'shopifyb2c' ? 'shopifyb2c_price' : `${mp}_price`);
+                parent[l30Field] = children.reduce((sum, c) => sum + (parseFloat(c[l30Field]) || 0), 0);
+                let totalWeighted = 0;
+                let totalWeight = 0;
+                children.forEach(c => {
+                    const price = parseFloat(c[priceField]) || 0;
+                    const weight = parseFloat(c[l30Field]) || 0;
+                    totalWeighted += price * weight;
+                    totalWeight += weight;
+                });
+                parent[priceField] = totalWeight > 0 ? (totalWeighted / totalWeight).toFixed(2) :
+                    (children.reduce((sum, c) => sum + (parseFloat(c[priceField]) || 0), 0) / children.length).toFixed(2);
+            });
+            const inv = parseFloat(parent.INV) || 0;
+            const shopifyPrice = parseFloat(parent.shopifyb2c_price) || 0;
+            parent.inv_value = (inv * shopifyPrice).toFixed(2);
+            const lp = parseFloat(parent.LP) || 0;
+            parent.COGS = (lp * inv).toFixed(2);
+            const marketplaces = [
+                { price: parent.amz_price, l30: parent.amz_l30, factor: 0.70 },
+                { price: parent.ebay_price, l30: parent.ebay_l30, factor: 0.72 },
+                { price: parent.shopifyb2c_price, l30: parent.shopifyb2c_l30, factor: 0.75 },
+                { price: parent.macy_price, l30: parent.macy_l30, factor: 0.76 },
+                { price: parent.reverb_price, l30: parent.reverb_l30, factor: 0.84 },
+                { price: parent.doba_price, l30: parent.doba_l30, factor: 0.95 },
+                { price: parent.temu_price, l30: parent.temu_l30, factor: 0.87, ship: parent.temu_ship },
+                { price: parent.ebay3_price, l30: parent.ebay3_l30, factor: 0.71 },
+                { price: parent.ebay2_price, l30: parent.ebay2_l30, factor: 0.80 },
+                { price: parent.walmart_price, l30: parent.walmart_l30, factor: 0.80 },
+                { price: parent.shein_price, l30: parent.shein_l30, factor: 0.89 },
+                { price: parent.aliexpress_price, l30: parent.aliexpress_l30, factor: 0.89 },
+                { price: parent.tiktok_price, l30: parent.tiktok_l30, factor: 0.64 },
+                { price: parent.bestbuy_price, l30: parent.bestbuy_l30, factor: 0.80 },
+                { price: parent.tiendamia_price, l30: parent.tiendamia_price, factor: 0.83 },
+                { price: parent.aliexpress_price, l30: parent.aliexpress_price, factor: 0.89 }
+            ];
+            let totalProfit = 0;
+            let totalRevenue = 0;
+            marketplaces.forEach(mp => {
+                const price = parseFloat(mp.price) || 0;
+                const l30 = parseFloat(mp.l30) || 0;
+                const ship = parseFloat(mp.ship || parent.SHIP) || 0;
+                const profit = ((price * mp.factor) - lp - ship) * l30;
+                totalProfit += profit;
+                totalRevenue += price * l30;
+            });
+            parent.avgPftPercent = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(2) : 0;
+            if (!parent.shopifyb2c_image && children[0]) {
+                parent.shopifyb2c_image = children[0].shopifyb2c_image;
+            }
+            parent.ovl30 = parent.shopifyb2c_l30;
+        });
+        let finalData = [];
+        Object.values(grouped).forEach(rows => {
+            const parent = rows.find(item => item.is_parent);
+            const children = rows.filter(item => !item.is_parent).sort((a, b) => (a.SKU || "").localeCompare(b.SKU || ""));
+            if (parent) {
+                parent._children = children;
+                finalData.push(parent);
+            } else {
+                finalData = finalData.concat(children);
+            }
+        });
+        setTimeout(() => {
+            setCombinedFilters();
+        }, 0);
+        return finalData;
+    },
+        });
+
+        setCombinedFilters();
 
         // On Top Start 
         table.on("dataProcessed", function(){
@@ -1922,13 +1924,70 @@
 
     
 
+        let groupedSkuData = {};
         let currentParentFilter = null;
+        let currentViewFilter = 'parent'; // Default to parent as per radio checked
+        let currentDilFilter = 'clear';
+        let currentCvrFilter = 'clear';
+        let currentMarginFilter = 'clear';
+        let currentInvFilter = 'all'; // Default all, but combined enforces >0
 
         function setCombinedFilters() {
-            table.setFilter(function(row) {
-                return true; // Show all rows by default
-            });
+            table.setFilter(combinedFilterFunction);
+        
         }
+
+        function combinedFilterFunction(data) {
+    const inv = parseFloat(data.INV) || 0;
+    const dil = parseFloat(data['Dil%']) || 0;
+    const cvr = parseFloat(data.avgCvr) || 0;
+    const margin = parseFloat(data.avgPftPercent) || 0;
+    const sku = (data.SKU || "").toUpperCase();
+    const isParent = sku.includes("PARENT");
+
+    // Always hide rows with Dil% > 50
+    if (dil > 50) return false;
+
+    // Inv filter (override default >0 if selected)
+    if (currentInvFilter === 'zero' && inv !== 0) return false;
+    if (currentInvFilter === 'other' && inv <= 0) return false;
+    // If 'all', enforce >0 as default
+    if (currentInvFilter === 'all' && inv <= 0) return false;
+
+    // Dil filter
+    if (currentDilFilter !== 'clear' && currentDilFilter !== 'all') {
+        if (inv <= 0 || isParent) return false; // Apply only to non-parent with inv>0
+        if (currentDilFilter === 'verylow' && dil > 10) return false;
+        if (currentDilFilter === 'low' && (dil < 11 || dil > 15)) return false;
+        if (currentDilFilter === 'medium' && (dil < 16 || dil > 20)) return false;
+        if (currentDilFilter === 'high' && (dil < 21 || dil > 40)) return false;
+        if (currentDilFilter === 'veryhigh' && dil <= 40) return false;
+    }
+
+    // Cvr filter
+    if (currentCvrFilter !== 'clear' && currentCvrFilter !== 'all') {
+        if (inv <= 0 || isParent) return false;
+        if (currentCvrFilter === 'high' && cvr <= 5) return false;
+        if (currentCvrFilter === 'medium' && (cvr < 3 || cvr > 5)) return false;
+        if (currentCvrFilter === 'low' && cvr >= 3) return false;
+    }
+
+    // Margin filter
+    if (currentMarginFilter !== 'clear') {
+        if (currentMarginFilter === 'high') {
+            if (margin <= 20 || inv <= 0 || isParent) return false;
+        }
+    }
+
+    // View filter: parent, sku, or both
+    if (currentViewFilter === 'parent' && !isParent) return false;
+    if (currentViewFilter === 'sku' && isParent) return false;
+
+    // If a specific parent is selected (from renderGroup), filter by Parent key
+    if (currentParentFilter && data.Parent !== currentParentFilter) return false;
+
+    return true;
+}
 
         // Function to add trend indicators
         function addTrendIndicators(row) {
@@ -2668,14 +2727,11 @@
             let isPlaying = false;
 
             function renderGroup(parentKey) {
-                if (!groupedSkuData[parentKey]) return;
+            if (!groupedSkuData[parentKey]) return;
 
-                currentParentFilter = parentKey;
-                setCombinedFilters();
-
-                // Filter table by Parent
-                table.setFilter("Parent", "=", parentKey);
-                console.log("Showing group:", parentKey);
+            // Update current filter
+            currentParentFilter = parentKey;
+            setCombinedFilters();
             }
 
             // ▶️ Play (activate filter mode, start at first group)
