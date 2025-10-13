@@ -339,13 +339,34 @@
                 <div class="card-body">
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <div class="dataTables_length">
-                                <div class="selection-controls"
+                            <div class="d-flex align-items-center gap-3">
+                                <!-- Keep selection-controls unchanged -->
+                                <div class="selection-controls" 
                                     style="position: relative; opacity: 1; display: inline-flex; margin-right: 15px;">
                                     <span class="select-toggle-text">Multi Add</span>
                                     <button type="button" class="select-toggle-btn" id="toggleSelection">
                                         <i class="fas fa-plus"></i>
                                     </button>
+                                </div>
+                                <!-- Compact field selector -->
+                                <div class="field-selector-wrapper" style="width: 200px;">
+                                    <select class="form-select form-select-md" style="border-radius: 6px; border: 1px solid #92c1ff; font-size: 13px;">
+                                        <option value="">Filter By...</option>
+                                        <option value="lp">LP</option>
+                                        <option value="cp">CP</option>
+                                        <option value="frght">FRGHT</option>
+                                        <option value="ship">SHIP</option>
+                                        <option value="temu_ship">TEMU SHIP</option>
+                                        <option value="ebay2_ship">EBAY2 SHIP</option>
+                                        <option value="initial_quantity">INITIAL QTY</option>
+                                        <option value="label_qty">Label QTY</option>
+                                        <option value="wt_act">WT ACT</option>
+                                        <option value="wt_decl">WT DECL</option>
+                                        <option value="l">L</option>
+                                        <option value="w">W</option>
+                                        <option value="h">H</option>
+                                        <option value="status">Status</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -1790,6 +1811,7 @@
                 // Rest of initialization...
                 loadData();
                 setupSearch();
+                setupSelectFilter();
                 setupHeaderColumnSearch();
                 setupExcelExport();
                 setupAddProductModal();
@@ -1798,7 +1820,45 @@
                 setupBatchProcessing();
             }
 
-        
+            function setupSelectFilter(){
+                const fieldSelect = document.querySelector('.field-selector-wrapper select');
+                let fieldInput = null; 
+                let selectedField = "";
+
+                fieldSelect.addEventListener('change', function () {
+                    selectedField = this.value.trim();
+
+                    if (fieldInput) fieldInput.remove();
+
+                    if (selectedField) {
+                        fieldInput = document.createElement('input');
+                        fieldInput.type = 'text';
+                        fieldInput.placeholder = `Search ${selectedField.toUpperCase()}...`;
+                        fieldInput.classList.add('form-control', 'mt-2');
+                        fieldInput.style.fontSize = '13px';
+                        fieldInput.style.border = '1px solid #92c1ff';
+                        fieldInput.style.borderRadius = '6px';
+
+                        fieldSelect.parentElement.appendChild(fieldInput);
+
+                        fieldInput.addEventListener('input', debounce(function () {
+                            const searchTerm = fieldInput.value.toLowerCase().trim();
+
+                            let filteredData = [...tableData];
+
+                            if (searchTerm) {
+                                filteredData = filteredData.filter(item => {
+                                    const value = String(item[selectedField] ?? '').toLowerCase();
+                                    return value.includes(searchTerm);
+                                });
+                            }
+
+                            renderTable(filteredData);
+                        }, 300));
+                    }
+                });
+            }
+            
             function setupSearch() {
                 const searchInput = document.getElementById('customSearch');
                 
@@ -1812,7 +1872,6 @@
                 if (searchInput) {
                     searchInput.addEventListener('input', debounce(function () {
                         const searchTerm = searchInput.value.toLowerCase().trim();
-                        console.log('Global Search Term:', searchTerm);
 
                         let filteredData = [...tableData];
                         if (searchTerm) {
@@ -1832,7 +1891,6 @@
                     
                     skuSearchInput.addEventListener('input', debounce(function () {
                         const skuValue = skuSearchInput.value.toLowerCase().trim();
-                        console.log('SKU Search Term:', skuValue);
 
                         let filteredData = [...tableData];
                         if (skuValue) {
@@ -1849,7 +1907,6 @@
                 if (parentSearchInput) {
                     parentSearchInput.addEventListener('input', debounce(function () {
                         const parentValue = parentSearchInput.value.toLowerCase().trim();
-                        console.log('Parent Search Term:', parentValue);
 
                         let filteredData = [...tableData];
                         if (parentValue) {
