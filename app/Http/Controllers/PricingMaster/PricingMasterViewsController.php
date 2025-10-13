@@ -638,20 +638,12 @@ class PricingMasterViewsController extends Controller
                 'shopifyb2c_seller_link' => isset($shopifyb2cListingData[$sku]) ? ($shopifyb2cListingData[$sku]->value['seller_link'] ?? null) : null,
                 // Shein
                 'shein_price' => $shein ? ($shein->price ?? 0) : 0,
-<<<<<<< Updated upstream
                 'shein_l30'   => $shein ? ($shein->shopify_sheinl30 ?? $shein->l30 ?? 0) : 0,
                 'shein_l60'   => $shein ? ($shein->shopify_sheinl60 ?? $shein->l60 ?? 0) : 0,
                 'shein_dil'   => $shein ? ($shein->dil ?? 0) : 0,
                 'shein_views_clicks' => $shein ? ($shein->views_clicks ?? 0) : 0,
                 'shein_pft'   => $shein && ($shein->price ?? 0) > 0 ? (($shein->price * 0.89 - $lp - $ship) / $shein->price) : 0,
                 'shein_roi'   => $shein && $lp > 0 && ($shein->price ?? 0) > 0 ? (($shein->price * 0.89 - $lp - $ship) / $lp) : 0,
-=======
-                'shein_l30' => $shein ? ($shein->shopify_sheinl30 ?? $shein->l30 ?? 0) : 0,
-                'shein_l60' => $shein ? ($shein->shopify_sheinl60 ?? $shein->l60 ?? 0) : 0,
-                'shein_dil' => $shein ? ($shein->dil ?? 0) : 0,
-                'shein_pft' => $shein && ($shein->price ?? 0) > 0 ? (($shein->price * 0.89 - $lp - $ship) / $shein->price) : 0,
-                'shein_roi' => $shein && $lp > 0 && ($shein->price ?? 0) > 0 ? (($shein->price * 0.89 - $lp - $ship) / $lp) : 0,
->>>>>>> Stashed changes
                 'shein_req_view' => $shein && $shein->views && $shein->l30 ? (($inv / 90) * 30) / (($shein->l30 / $shein->views)) : 0,
                 'shein_buyer_link' => isset($sheinListingData[$sku]) ? ($sheinListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'shein_seller_link' => isset($sheinListingData[$sku]) ? ($sheinListingData[$sku]->value['seller_link'] ?? null) : null,
