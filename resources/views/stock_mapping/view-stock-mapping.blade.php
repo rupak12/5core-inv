@@ -1374,6 +1374,7 @@
                     <h5 class="modal-title d-flex align-items-center text-dark">
                         <i class="bi bi-bar-chart-line-fill me-2"></i>
                         Stock Mapping Analysis for SKU:<span id="stockSkuLabel" class="badge  text-danger m-0 animate__animated animate__fadeIn fw-bold fs-3"></span>
+                        <label><input type="checkbox" id="mismatchToggle"> Show only mismatched stock</label>
                     </h5>
                     <div class="modal-actions">                    
                         <button type="button" class="btn-close" data-bs-dismiss="modal"
@@ -1383,7 +1384,7 @@
                 <div class="modal-body p-0">
                     <div class="row g-0">
                         <div class="col-12">                           
-                            <div id="stockContent" class="p-3" style="color: #000000; width:100%; max-height: 70vh; overflow-y: auto;"></div>
+                            <div id="stockContent" class="p-3" style="color: #000000; width:100%; max-height: 70vh; overflow-y: auto;"></div>                            
                         </div>
                     </div>
                 </div>
@@ -1963,11 +1964,12 @@ function moveImagePreview(e) {
     preview.style.left = x + 'px';
     preview.style.top = y + 'px';
 }
-
+    let row='';
 
     $(document).on('click', '.showStockModal', function () {
     const sku = $(this).data('sku');
     const item = $(this).data('item');
+    row =item;
         $('#stockSkuLabel').text("("+sku+")");
     // Render modal content
   $('#stockContent').html(buildStockTable(item));
@@ -2020,7 +2022,7 @@ function moveImagePreview(e) {
     modal.show();
 });
 
-function buildStockTable(data) {
+function buildStockTable(data, filterMismatchOnly = false) {
     let html = `
         <div class="table-responsive">
             <div class="table-responsive" style="max-height: 600px; overflow-y: auto; position: relative;">
@@ -2033,25 +2035,18 @@ function buildStockTable(data) {
                     </thead>
                     <tbody>`;
 
-    if (data.INV_shopify === 'Not Listed') {
+    // Always show Shopify
+    if(filterMismatchOnly==true)
+    {
         html += `<tr>
-            <td>
-                <img src="https://inventory.5coremanagement.com/uploads/shopify.png" alt="Shopify" class="channel-logo mb-1" style="width:30px; height:30px; object-fit:contain;">
-                <p class="d-inline-block"> Shopify</p>
-            </td>
-            <td style="${(data.INV_amazon !== data.INV_shopify) ? 'color:red;' : ''}">${data.INV_shopify}</td>
-        </tr>`;
+        <td>
+            <img src="https://inventory.5coremanagement.com/uploads/shopify.png" alt="Shopify" class="channel-logo mb-1" style="width:30px; height:30px; object-fit:contain;">
+            <p class="d-inline-block">Shopify</p>
+        </td>
+        <td>${data.INV_shopify}</td>
+    </tr>`;
     }
-
-    // if (data.INV_amazon === 'Not Listed') {
-    //     html += `<tr>
-    //         <td>
-    //             <img src="https://inventory.5coremanagement.com/uploads/amazon.png" alt="Amazon" class="channel-logo mb-1" style="width:30px; height:30px; object-fit:contain;">
-    //             <p class="d-inline-block">Amazon</p>
-    //         </td>
-    //         <td style="${(data.INV_amazon !== data.INV_shopify) ? 'color:red;' : ''}">${data.INV_amazon}</td>
-    //     </tr>`;
-    // }
+    
 
     const channels = [
         { key: 'INV_amazon', name: 'Amazon', img: 'amazon.png' },
@@ -2067,20 +2062,36 @@ function buildStockTable(data) {
     ];
 
     channels.forEach(channel => {
-        if (data[channel.key] === 'Not Listed') {
-            html += `<tr>
-                <td>
-                    <img src="https://inventory.5coremanagement.com/uploads/${channel.img}" alt="${channel.name}" class="channel-logo mb-1" style="width:50px; height:50px; object-fit:contain;">
-                    <p class="d-inline-block">${channel.name}</p>
-                </td>
-                <td style="${(data[channel.key] === 'Not Listed' || data.INV_shopify !== data[channel.key]) ? 'color:red;' : ''}">${data[channel.key]}</td>
-            </tr>`;
-        }
+        const value = data[channel.key];
+        const isMismatch = value !== data.INV_shopify;
+        const isNotListed = value === 'Not Listed';
+
+        // Default mode: show only Not Listed
+        if (!filterMismatchOnly && !isNotListed) return;
+
+        // Filtered mode: show only mismatches, but exclude Not Listed
+        if (filterMismatchOnly && (!isMismatch || isNotListed)) return;
+
+        html += `<tr>
+            <td>
+                <img src="https://inventory.5coremanagement.com/uploads/${channel.img}" alt="${channel.name}" class="channel-logo mb-1" style="width:50px; height:50px; object-fit:contain;">
+                <p class="d-inline-block">${channel.name}</p>
+            </td>
+            <td style="${isMismatch ? 'color:red;' : ''}">${value}</td>
+        </tr>`;
     });
 
     html += `</tbody></table></div></div>`;
     return html;
 }
+
+document.getElementById('mismatchToggle').addEventListener('change', function () {
+    const filterMismatchOnly = this.checked;
+    const tableHtml = buildStockTable(row, filterMismatchOnly);
+    document.getElementById('stockContent').innerHTML="";
+    document.getElementById('stockContent').innerHTML = tableHtml;
+});
+
 
 
 $(document).on('click', '#updatenotrequired', function (e) {

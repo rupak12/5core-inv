@@ -161,20 +161,12 @@ use App\Http\Controllers\AdvertisementMaster\MetaParent\ProductWiseMetaParentCon
 use App\Http\Controllers\ArrivedContainerController;
 use App\Http\Controllers\Campaigns\AmazonAdRunningController;
 use App\Http\Controllers\Campaigns\AmazonCampaignReportsController;
-use App\Http\Controllers\Campaigns\AmazonFbaAcosController;
-use App\Http\Controllers\Campaigns\AmazonFbaAdsController;
-use App\Http\Controllers\Campaigns\AmazonMissingAdsController;
 use App\Http\Controllers\Campaigns\AmazonPinkDilAdController;
 use App\Http\Controllers\Campaigns\AmazonSbBudgetController;
 use App\Http\Controllers\Campaigns\AmazonSpBudgetController;
 use App\Http\Controllers\Campaigns\AmzCorrectlyUtilizedController;
 use App\Http\Controllers\Campaigns\AmzUnderUtilizedBgtController;
 use App\Http\Controllers\Campaigns\CampaignImportController;
-use App\Http\Controllers\Campaigns\Ebay3AcosController;
-use App\Http\Controllers\Campaigns\Ebay3KeywordAdsController;
-use App\Http\Controllers\Campaigns\Ebay3PinkDilAdController;
-use App\Http\Controllers\Campaigns\Ebay3PmtAdsController;
-use App\Http\Controllers\Campaigns\Ebay3UtilizedAdsController;
 use App\Http\Controllers\Campaigns\EbayKwAdsController;
 use App\Http\Controllers\Campaigns\EbayOverUtilizedBgtController;
 use App\Http\Controllers\Campaigns\EbayPinkDilAdController;
@@ -296,10 +288,6 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
     Route::post('/update-executive', [ChannelMasterController::class, 'updateExecutive']);
     Route::post('/update-checkbox', [ChannelMasterController::class, 'sendToGoogleSheet']);
     Route::get('/channels-master-data', [ChannelMasterController::class, 'getViewChannelData']);
-    // Route::get('/get-channel-sales-data', [ChannelMasterController::class, 'getChannelSalesData']);
-    Route::get('/sales-trend-data', [ChannelMasterController::class, 'getSalesTrendData']);
-
-
 
     //Zero Visibility Master
     Route::get('/zero-visibility-master', [ZeroVisibilityMasterController::class, 'index'])->name('zero.visibility');
@@ -1035,15 +1023,10 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
     Route::get('/inventory-stages/data', [ForecastAnalysisController::class, 'invetoryStagesData']);
 
     //MFRG In Progress
-    Route::controller(MFRGInProgressController::class)->group(function () {
-        Route::get('/mfrg-in-progress', 'index')->name('mfrg.in.progress');
-        Route::post('/mfrg-progresses/inline-update-by-sku', 'inlineUpdateBySku');
-        Route::get('/convert-currency', 'convert');
-        Route::post('/ready-to-ship/insert', 'storeDataReadyToShip')->name('ready.to.ship.insert');
-
-        Route::get('/mfrg-in-progress/new', 'newMfrgView')->name('mfrg.in.progress.new');
-        Route::get('/mfrg-in-progress/data', 'getMfrgProgressData')->name('mfrg.in.progress.data');
-    });
+    Route::get('/mfrg-in-progress', [MFRGInProgressController::class, 'index'])->name('mfrg.in.progress');
+    Route::post('/mfrg-progresses/inline-update-by-sku', [MFRGInProgressController::class, 'inlineUpdateBySku']);
+    Route::get('/convert-currency', [MFRGInProgressController::class, 'convert']);
+    Route::post('/ready-to-ship/insert', [MFRGInProgressController::class, 'storeDataReadyToShip'])->name('ready.to.ship.insert');
 
     //Ready To Ship
     Route::get('/ready-to-ship', [ReadyToShipController::class, 'index'])->name('ready.to.ship');
@@ -1169,9 +1152,7 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
     Route::post('/pricing-master/save', [PricingMasterViewsController::class, 'save']);
     Route::get('/parent.pricing-masters', [PricingMasterViewsController::class, 'pricingMasterCopy']);
     Route::get('/calculate-cvr-masters', [PricingMasterViewsController::class, 'calculateCVRMasters']);
-    Route::get('/calculate-wmp-masters', [PricingMasterViewsController::class, 'calculateWMPMasters']);
-    Route::get('/pricing-master-incremental', [PricingMasterViewsController::class, 'pricingMasterIncR']);
-    Route::post('/product-master/wmp-mark-as-done', [PricingMasterViewsController::class, 'wmpMarkAsDone']);
+
 
 
 
@@ -1788,6 +1769,18 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
         Route::get('/amazon/pink-dil/hl/ads/data', 'getAmazonPinkDilHlAdsData');
     });
 
+    Route::controller(EbayOverUtilizedBgtController::class)->group(function () {
+        Route::get('/ebay-over-uti', 'ebayOverUtilisation')->name('ebay-over-uti');
+        Route::get('/ebay/under/utilized', 'ebayOverUtilized')->name('ebay-under-utilize');
+        Route::get('/ebay/correctly/utlized', 'ebayCorrectlyUtilized')->name('ebay-correctly-utilize');
+        Route::get('/ebay/make-new/campaign/kw', 'ebayMakeCampaignKw')->name('ebay-make-new-campaign-kw');
+        Route::get('/ebay/make-new/campaign/kw/data', 'getEbayMakeNewCampaignKw');
+
+        Route::get('/ebay-over-uti/data', 'getEbayOverUtiData')->name('ebay-over-uti-data');
+        Route::post('/update-ebay-nr-data', 'updateNrData');
+        Route::put('/update-ebay-keywords-bid-price', 'updateKeywordsBidDynamic');
+    });
+
     //FaceBook Adds Manager 
     Route::controller(FacebookAddsManagerController::class)->group(function () {
         Route::get('/facebook-ads-control/data', 'index')->name('facebook.ads.index');
@@ -1812,57 +1805,21 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
         Route::put('/update-amazon-sb-campaign-bgt-price', 'updateAmazonSbCampaignBgt');
     });
 
-    Route::controller(AmazonFbaAcosController::class)->group(function(){
-        Route::get('/amazon-fba/acos-kw-control', 'amazonFbaAcosKwView')->name('amazon.fba.acos.kw.control');
-        Route::get('/amazon-fba/acos-kw-control-data', 'amazonFbaAcosKwControlData')->name('amazon.fba.acos.kw.control.data');
-        Route::get('/amazon-fba/acos-pt-control', 'amazonFbaAcosPtView')->name('amazon.fba.acos.pt.control');
-        Route::get('/amazon-fba/acos-pt-control-data', 'amazonFbaAcosPtControlData')->name('amazon.fba.acos.pt.control.data');
-    });
-
     Route::controller(AmazonCampaignReportsController::class)->group(function () {
         Route::get('/amazon/campaign/reports', 'index')->name('amazon.campaign.reports');
         Route::get('/amazon/kw/ads', 'amazonKwAdsView')->name('amazon.kw.ads');
         Route::get('/amazon/kw/ads/data', 'getAmazonKwAdsData');
         Route::get('/amazon-kw-ads/filter', 'filterKwAds')->name('amazonKwAds.filter');
-
         Route::get('/amazon/pt/ads', 'amazonPtAdsView')->name('amazon.pt.ads');
-    
         Route::get('/amazon/pt/ads/data', 'getAmazonPtAdsData');
-        Route::get('/amazon-pt-ads/filter', 'filterPtAds')->name('amazonPtAds.filter');
         Route::get('/amazon/hl/ads', 'amazonHlAdsView')->name('amazon.hl.ads');
         Route::get('/amazon/hl/ads/data', 'getAmazonHlAdsData');
 
         Route::get('/amazon/campaign/reports/data', 'getAmazonCampaignsData');
     });
 
-    Route::controller(AmazonFbaAdsController::class)->group(function(){
-        Route::get('/amazon/fba/over/kw/ads', 'amzFbaUtilizedBgtKw')->name('amazon.fba.over.kw.ads');
-        Route::get('/amazon/fba/over/pt/ads', 'amzFbaUtilizedBgtPt')->name('amazon.fba.over.pt.ads');
-        Route::get('/amazon/fba/under/kw/ads', 'amzFbaUnderUtilizedBgtKw')->name('amazon.fba.under.kw.ads');
-        Route::get('/amazon/fba/under/pt/ads', 'amzFbaUnderUtilizedBgtPt')->name('amazon.fba.under.pt.ads');
-        Route::get('/amazon/fba/correct/kw/ads', 'amzFbaCorrectlyUtilizedBgtKw')->name('amazon.fba.correct.kw.ads');
-        Route::get('/amazon/fba/correct/pt/ads', 'amzFbaCorrectlyUtilizedBgtPt')->name('amazon.fba.correct.pt.ads');
+    
 
-        Route::get('/amazon/fba/kw/ads/data', 'getAmazonFbaKwAdsData');
-        Route::get('/amazon/fba/pt/ads/data', 'getAmazonFbaPtAdsData');
-    });
-
-    Route::controller(AmazonMissingAdsController::class)->group(function () {
-        Route::get('/amazon/missing/ads', 'index')->name('amazon.missing.ads');
-        Route::get('/amazon/missing/ads/data', 'getAmazonMissingAdsData');
-    });
-    // ebay ads section
-    Route::controller(EbayOverUtilizedBgtController::class)->group(function () {
-        Route::get('/ebay-over-uti', 'ebayOverUtilisation')->name('ebay-over-uti');
-        Route::get('/ebay/under/utilized', 'ebayUnderUtilized')->name('ebay-under-utilize');
-        Route::get('/ebay/correctly/utlized', 'ebayCorrectlyUtilized')->name('ebay-correctly-utilize');
-        Route::get('/ebay/make-new/campaign/kw', 'ebayMakeCampaignKw')->name('ebay-make-new-campaign-kw');
-        Route::get('/ebay/make-new/campaign/kw/data', 'getEbayMakeNewCampaignKw');
-
-        Route::get('/ebay-over-uti/data', 'getEbayOverUtiData')->name('ebay-over-uti-data');
-        Route::post('/update-ebay-nr-data', 'updateNrData');
-        Route::put('/update-ebay-keywords-bid-price', 'updateKeywordsBidDynamic');
-    });
     Route::controller(EbayACOSController::class)->group(function () {
         Route::get('/ebay-over-uti-acos-pink', 'ebayOverUtiAcosPink')->name('ebay-over-uti-acos-pink');
         Route::get('/ebay-over-uti-acos-green', 'ebayOverUtiAcosGreen')->name('ebay-over-uti-acos-green');
@@ -1893,49 +1850,6 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
 
         Route::get('/ebay/keywords/ads/less-than-twenty', 'ebayPriceLessThanTwentyAdsView')->name('ebay.keywords.ads.less-than-twenty');
         Route::get('/ebay/keywords/ads/less-than-twenty/data', 'ebayPriceLessThanTwentyAdsData');
-
-    });
-
-    // ebay 3 ads section
-    Route::controller(Ebay3AcosController::class)->group(function () {
-        Route::get('/ebay-3/over-acos-pink', 'ebay3OverAcosPinkView')->name('ebay3-over-uti-acos-pink');
-        Route::get('/ebay-3/over-acos-green', 'ebay3OverAcosGreenView')->name('ebay3-over-uti-acos-green');
-        Route::get('/ebay-3/over-acos-red', 'ebay3OverAcosRedView')->name('ebay3-over-uti-acos-red');
-        Route::get('/ebay-3/under-acos-pink', 'ebay3UnderAcosPinkView')->name('ebay3-under-uti-acos-pink');
-        Route::get('/ebay-3/under-acos-green', 'ebay3UnderAcosGreenView')->name('ebay3-under-uti-acos-green');
-        Route::get('/ebay-3/under-acos-red', 'ebay3UnderAcosRedView')->name('ebay3-under-uti-acos-red');
-
-        Route::get('/ebay-3/acos/control/data', 'getEbay3AcosControlData');
-    });
-
-    Route::controller(Ebay3PinkDilAdController::class)->group(function () {
-        Route::get('/ebay-3/pink-dil/ads', 'index')->name('ebay3.pink.dil.ads');
-        Route::get('/ebay-3/pink-dil/ads/data', 'getEbay3PinkDilAdsData');
-    });
-
-    Route::controller(Ebay3PmtAdsController::class)->group(function () {
-        Route::get('/ebay-3/pmt/ads', 'index')->name('ebay3.pmt.ads');
-        Route::get('/ebay-3/pmp/ads/data', 'getEbay3PmtAdsData');
-        Route::post('/update-ebay-3-pmt-percenatge', 'updateEbay3Percentage');
-        Route::post('/update-ebay-3-pmt-sprice', 'saveEbay3PMTSpriceToDatabase');
-    });
-
-    Route::controller(Ebay3UtilizedAdsController::class)->group(function () {
-        Route::get('/ebay-3/over-utilized', 'ebay3OverUtilizedAdsView')->name('ebay3.over.utilized');
-        Route::get('/ebay-3/under-utilized', 'ebay3UnderUtilizedAdsView')->name('ebay3.under.utilized');
-        Route::get('/ebay-3/correctly-utilized', 'ebay3CorrectlyUtilizedAdsView')->name('ebay3.correctly.utilized');
-        Route::get('/ebay-3/utilized/ads/data', 'getEbay3UtilizedAdsData');
-    });
-
-    Route::controller(Ebay3KeywordAdsController::class)->group(function(){
-        Route::get('/ebay-3/keywords/ads', 'ebay3KeywordAdsView')->name('ebay3.keywords.ads');
-        Route::get('/ebay-3/keywords/ads/data', 'getEbay3KeywordAdsData');
-
-        Route::get('/ebay-3/keywords/ads/less-than-thirty', 'ebay3PriceLessThanThirtyAdsView')->name('ebay3.keywords.ads.less-than-thirty');
-        Route::get('/ebay-3/keywords/ads/less-than-thirty/data', 'ebay3PriceLessThanThirtyAdsData');
-
-        Route::get('/ebay-3/make-new/kw-ads', 'ebay3MakeNewKwAdsView')->name('ebay3.make.new.kw.ads');
-        Route::get('/ebay-3/make-new/kw-ads/data', 'getEbay3MMakeNewKwAdsData');
     });
 
     Route::controller(WalmartUtilisationController::class)->group(function () {
@@ -1952,6 +1866,8 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
         Route::get('/stock/mapping/inventory/data', 'getShopifyAmazonInventoryStock')->name('stock.mapping.inventory');
         Route::get('/stock/mapping/shopify/data', 'getShopifyStock')->name('stock.mapping.shopify');
         Route::get('/stock/mapping/amazon/data', 'getAmazonStock')->name('stock.mapping.amazon');
+        Route::post('/stock/mapping/inventory/update_not_required', 'updateNotRequired')->name('stock.mapping.update.notrequired');
+        Route::get('/stock/mapping/inventory/refetch_live_data', 'refetchLiveData')->name('stock.mapping.refetch_live_data');
         
     });
     // shopify amazon stock mapping
