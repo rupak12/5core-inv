@@ -192,20 +192,19 @@ class Kernel extends ConsoleKernel
         $schedule->command('sync:sync-temu-sip')->everyMinute();
         $schedule->command('sync:walmart-metrics-data')->everyMinute();
         $schedule->command('sync:tiktok-sheet-data')->everyMinute();
-<<<<<<< Updated upstream
-        $schedule->command('app:aliexpress-sheet-sync')->everyMinute();
-        $schedule->command('app:fetch-ebay-table-data')->dailyAt('00:00');
-          $schedule->call(function () {
-            DB::connection('apicentral')
-                ->table('google_ads_campaigns')
-                ->where('id', 1)
-                ->update(['sbid_status' => 0]);
-        })->dailyAt('00:00');
-        $schedule->command('sbid:update')
-            ->dailyAt('00:01') 
-            ->timezone('Asia/Kolkata');
-=======
->>>>>>> Stashed changes
+
+
+        // FBA Commands - Daily Updates
+        $schedule->command('app:fetch-fba-reports')
+            ->dailyAt('01:00')
+            ->timezone('America/Los_Angeles');
+        $schedule->command('app:fetch-fba-inventory --insert --prices')
+            ->dailyAt('01:30')
+            ->timezone('America/Los_Angeles');
+        $schedule->command('app:fetch-fba-monthly-sales')
+            ->dailyAt('02:00')
+            ->timezone('America/Los_Angeles');
+
     }
 
     /**

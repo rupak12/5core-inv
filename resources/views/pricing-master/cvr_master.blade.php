@@ -544,19 +544,11 @@
                         <label class="btn btn-outline-success" for="filterOther">Other</label>
                     </div>
 
-                    <div class="btn-group" id="dil-filter" role="group" aria-label="Dilution Filter">
-                        <input type="radio" class="btn-check" name="dilFilter" id="dilFilterAll" value="all">
-                        <label class="btn btn-outline-primary" for="dilFilterAll">All Dil</label>
-                        <input type="radio" class="btn-check" name="dilFilter" id="dilFilterVeryLow" value="verylow">
-                        <label class="btn btn-outline-danger" for="dilFilterVeryLow">Very Low Dil (≤ 10%)</label>
-                        <input type="radio" class="btn-check" name="dilFilter" id="dilFilterLow" value="low">
-                        <label class="btn btn-outline-warning" for="dilFilterLow">Low Dil (11-15%)</label>
-                        <input type="radio" class="btn-check" name="dilFilter" id="dilFilterMedium" value="medium">
-                        <label class="btn btn-outline-info" for="dilFilterMedium">Medium Dil (16-20%)</label>
-                        <input type="radio" class="btn-check" name="dilFilter" id="dilFilterHigh" value="high">
-                        <label class="btn btn-outline-success" for="dilFilterHigh">High Dil (21-40%)</label>
-                        <input type="radio" class="btn-check" name="dilFilter" id="dilFilterVeryHigh" value="veryhigh">
-                        <label class="btn btn-outline-secondary" for="dilFilterVeryHigh">Very High Dil (> 40%)</label>
+                   <div class="btn-group" id="dil-filter" role="group" aria-label="Dilution Filter">
+                        <input type="radio" class="btn-check" name="dilFilter" id="dilFilter10" value="10">
+                        <label class="btn btn-outline-danger" for="dilFilter10">Dil ≤ 10%</label>
+                        <input type="radio" class="btn-check" name="dilFilter" id="dilFilter50" value="50">
+                        <label class="btn btn-outline-info" for="dilFilter50">Dil < 50%</label>
                         <input type="radio" class="btn-check" name="dilFilter" id="dilFilterClear" value="clear" checked>
                         <label class="btn btn-outline-secondary" for="dilFilterClear">Clear</label>
                     </div>
@@ -1142,7 +1134,6 @@
         
 
 
-<<<<<<< Updated upstream
                 if (value === "clear") {
                     table.clearFilter();
                 } else if (value === "high") {
@@ -1157,10 +1148,6 @@
         });
         // Initialize Tabulator table
         const table = new Tabulator("#forecast-table", {
-=======
-
-       const table = new Tabulator("#forecast-table", {
->>>>>>> Stashed changes
             ajaxURL: "/pricing-master-data-views",
             fixedHeader: true,
             width: "100%",
@@ -1173,6 +1160,9 @@
             dataTreeElementColumn: "Parent",
             initialSort: [{
                 column: "avgCvr",
+                dir: "asc"
+            }, {
+                column: "Dil%",
                 dir: "asc"
             }],
             pagination: true,
@@ -1275,7 +1265,6 @@
                         showOVL30Modal(cell.getRow());
                     }
                 },
-<<<<<<< Updated upstream
                 {
                     title: "DIL%",
                     field: "Dil%",
@@ -1303,56 +1292,6 @@
                         data.dilPercentage = rounded;
                         return element;
                     },
-=======
-             
-
-
-                    {
-                        title: "DIL%",
-                        field: "Dil%",
-                        hozAlign: "center",
-                        formatter: function (cell) {
-                            const data = cell.getRow().getData();
-                            const value = cell.getValue() || 0;
-                            const element = document.createElement("div");
-                        
-                            const rounded = Math.round(value);
-                            element.textContent = rounded + "%";
-                            if (rounded >= 0 && rounded <= 10) {
-                                element.style.color = "red"; // red text
-                            } else if (rounded >= 11 && rounded <= 15) {
-                                element.style.backgroundColor = "yellow"; // yellow background
-                                element.style.color = "black";
-                                element.style.padding = "2px 4px";
-                                element.style.borderRadius = "4px";
-                            } else if (rounded >= 16 && rounded <= 20) {
-                                element.style.color = "blue"; // blue text
-                            } else if (rounded >= 21 && rounded <= 40) {
-                                element.style.color = "green"; // green text
-                            } else if (rounded >= 41) {
-                                element.style.color = "purple"; // purple text (41 and above)
-                            }
-
-                            data.dilPercentage = rounded;
-                           
-                            return element;
-                        },
-                    }
-
-                 ,
-
-            {
-                title: "Avg CVR",
-                field: "avgCvr",
-                hozAlign: "center",
-                headerSort: true,
-                
-              
-                formatterParams: {
-                    decimal: 2,
-                
-            
->>>>>>> Stashed changes
                 },
                 {
                     title: "Avg CVR",
@@ -1386,73 +1325,8 @@
                         }
                         return element;
                     }
-<<<<<<< Updated upstream
                 },
                 {
-=======
-                    value = parseFloat(value);
-                    if (isNaN(value)) value = 0;
-                    
-                    const rowData = cell.getRow().getData();
-                    const sku = rowData.SKU || '';
-                    const remark = rowData.remark || '';
-                    
-                    const container = document.createElement("div");
-                    container.style.display = "flex";
-                    container.style.alignItems = "center";
-                    container.style.justifyContent = "space-between";
-                    container.style.gap = "5px";
-                    
-                    const valueSpan = document.createElement("span");
-                    // Show value with 2 decimals
-                    valueSpan.textContent = value.toFixed(1) + "%";
-                    if (value >= 0 && value <= 3) {
-                        valueSpan.style.color = "red"; // red text
-                    } else if (value > 3 && value <= 6) {
-                        valueSpan.style.backgroundColor = "yellow"; // yellow background
-                        valueSpan.style.color = "black";
-                        valueSpan.style.padding = "2px 4px";
-                        valueSpan.style.borderRadius = "4px";
-                    } else if (value > 6 && value <= 9) {
-                        valueSpan.style.color = "blue"; // blue text
-                    } else if (value > 9 && value <= 13) {
-                        valueSpan.style.color = "green"; // green text
-                    } else if (value > 41) {
-                        valueSpan.style.color = "purple"; // purple text (41 and above)
-                    }
-                    
-                    const pencilBtn = document.createElement("button");
-                    pencilBtn.className = "btn btn-sm btn-outline-primary";
-                    pencilBtn.style.padding = "2px 6px";
-                    pencilBtn.style.border = "1px solid #007bff";
-                    pencilBtn.innerHTML = '<i class="fas fa-pencil-alt" style="font-size: 10px;"></i>';
-                    pencilBtn.title = remark ? `Current remark: ${remark}` : 'Add remark';
-                    pencilBtn.onclick = function(e) {
-                        e.stopPropagation();
-                        openRemarkModal(sku, remark);
-                    };
-                    
-                    // Add a small indicator if remark exists
-                    if (remark && remark.trim()) {
-                        pencilBtn.style.backgroundColor = "#e7f3ff";
-                        pencilBtn.style.borderColor = "#0066cc";
-                        const indicator = document.createElement("span");
-                        indicator.style.color = "#0066cc";
-                        indicator.style.fontSize = "8px";
-                        indicator.style.marginLeft = "2px";
-                        indicator.innerHTML = '●';
-                        pencilBtn.appendChild(indicator);
-                    }
-                    
-                    container.appendChild(valueSpan);
-                    container.appendChild(pencilBtn);
-                    return container;
-                }
-            },
-            
-
-            {
->>>>>>> Stashed changes
                     title: "Total Views",
                     field: "total_views",
                     hozAlign: "center",
@@ -1474,7 +1348,6 @@
                         return `<span class="text-dark">${Math.round(value)} </span>`;
                     }
                 },
-<<<<<<< Updated upstream
                 {
                     title: "Remark",
                     field: "remark",
@@ -1487,11 +1360,6 @@
                         return `<button class="btn ${buttonColor} btn-sm" onclick="openRemarkModal('${data.SKU}', '${remark}')" title="${remark ? 'Edit remark' : 'Add remark'}"><i class="fas fa-edit"></i></button>`;
                     }
                 },
-=======
-
-                
-
->>>>>>> Stashed changes
                 {
                     title: "Total L30 Count",
                     field: "total_l30_count",
@@ -1522,7 +1390,6 @@
                     formatter: function(cell) {
                         const data = cell.getRow().getData();
                         const calculateAvgPrice = () => {
-<<<<<<< Updated upstream
                             const marketplaces = [
                                 { price: data.amz_price, l30: data.amz_l30 },
                                 { price: data.ebay_price, l30: data.ebay_l30 },
@@ -1539,65 +1406,6 @@
                                 { price: data.tiendamia_price, l30: data.tiendamia_l30 },
                                 { price: data.tiktok_price, l30: data.tiktok_l30 },
                                 { price: data.aliexpress_price, l30: data.aliexpress_l30 }
-=======
-                            const marketplaces = [{
-                                    price: data.amz_price,
-                                    l30: data.amz_l30
-                                },
-                                {
-                                    price: data.ebay_price,
-                                    l30: data.ebay_l30
-                                },
-                                {
-                                    price: data.macy_price,
-                                    l30: data.macy_l30
-                                },
-                                {
-                                    price: data.reverb_price,
-                                    l30: data.reverb_l30
-                                },
-                                {
-                                    price: data.doba_price,
-                                    l30: data.doba_l30
-                                },
-                                {
-                                    price: data.temu_price,
-                                    l30: data.temu_l30
-                                },
-                               
-                                {
-                                    price: data.ebay3_price,
-                                    l30: data.ebay3_l30
-                                },
-                                {
-                                    price: data.ebay2_price,
-                                    l30: data.ebay2_l30
-                                },
-                                {
-                                    price: data.walmart_price,
-                                    l30: data.walmart_l30
-                                },
-                                {
-                                    price: data.shopify_price,
-                                    l30: data.shopify_l30
-                                },
-                                {
-                                    price: data.shein_price,
-                                    l30: data.shein_l30
-                                },
-                                {
-                                    price: data.bestbuy_price,
-                                    l30: data.bestbuy_l30
-                                },
-                                {
-                                    price: data.tiendamia_price,
-                                    l30: data.tiendamia_l30
-                                },
-                                {
-                                    price: data.tiktok_price,
-                                    l30: data.tiktok_l30
-                                }
->>>>>>> Stashed changes
                             ];
                             let totalWeightedPrice = 0;
                             let totalL30 = 0;
@@ -1672,11 +1480,7 @@
                         const bestbuyPrice = parseFloat(data.bestbuy_price) || 0;
                         const tiendamiaPrice = parseFloat(data.tiendamia_price) || 0;
                         const tiktokPrice = parseFloat(data.tiktok_price) || 0;
-<<<<<<< Updated upstream
                         const aliexpressPrice = parseFloat(data.aliexpress_price) || 0;
-=======
-
->>>>>>> Stashed changes
                         const amzL30 = parseFloat(data.amz_l30) || 0;
                         const ebayL30 = parseFloat(data.ebay_l30) || 0;
                         const shopifyL30 = parseFloat(data.shopifyb2c_l30_data) || 0;
@@ -1691,7 +1495,6 @@
                         const bestbuyL30 = parseFloat(data.bestbuy_l30) || 0;
                         const tiendamiaL30 = parseFloat(data.tiendamia_l30) || 0;
                         const tiktokL30 = parseFloat(data.tiktok_l30) || 0;
-<<<<<<< Updated upstream
                         const aliexpressL30 = parseFloat(data.aliexpress_l30) || 0;
                         const amzProfit = ((amzPrice * 0.70) - LP - SHIP);
                         const ebayProfit = ((ebayPrice * 0.72) - LP - SHIP);
@@ -1708,39 +1511,11 @@
                         const tiendamiaProfit = ((tiendamiaPrice * 0.83) - LP - SHIP);
                         const tiktokProfit = ((tiktokPrice * 0.64) - LP - SHIP);
                         const aliexpressProfit = ((aliexpressPrice * 0.89) - LP - SHIP);
-=======
-
-                        // Calculate profit for each marketplace
-                        const amzProfit = ((amzPrice * 0.70) - LP - SHIP)  ;
-                        const ebayProfit = ((ebayPrice * 0.72) - LP - SHIP) ;
-                        const shopifyProfit = ((shopifyPrice * 0.75) - LP - SHIP) ;
-                        const macyProfit = ((macyPrice * 0.76) - LP - SHIP) ;
-                        const reverbProfit = ((reverbPrice * 0.84) - LP - SHIP) ;
-                        const dobaProfit = ((dobaPrice * 0.95) - LP - SHIP) ;
-                        const temuProfit = ((temuPrice * 0.87) - LP - temuship) ;
-                        const ebay3Profit = ((ebay3Price * 0.71) - LP - SHIP);
-                        const ebay2Profit = ((ebay2Price * 0.80) - LP - SHIP) ;
-                        const walmartProfit = ((walmartPrice * 0.80) - LP - SHIP) ;
-                        const sheinProfit = ((sheinPrice * 0.89) - LP - SHIP) ;
-                        const bestbuyProfit = ((bestbuyPrice * 0.80) - LP - SHIP) ;
-                        const tiendamiaProfit = ((tiendamiaPrice * 0.83) - LP - SHIP) ;
-                        const tiktokProfit = ((tiktokPrice * 0.64) - LP - SHIP) ;
-
- 
-
-                        // Calculate total profit
->>>>>>> Stashed changes
                         const totalProfit = amzProfit * amzL30 + ebayProfit * ebayL30 + shopifyProfit * shopifyL30 + macyProfit * macyL30 +
                             reverbProfit * reverbL30 + dobaProfit * dobaL30 + temuProfit * temuL30 +
                             ebay3Profit * ebay3L30 + ebay2Profit * ebay2L30 + walmartProfit * walmartL30 +
                             sheinProfit * sheinL30 + bestbuyProfit * bestbuyL30 + tiendamiaProfit * tiendamiaL30 +
-<<<<<<< Updated upstream
                             tiktokProfit * tiktokL30 + aliexpressProfit * aliexpressL30;
-=======
-                            tiktokProfit * tiktokL30;
-
-                        // Calculate total revenue
->>>>>>> Stashed changes
                         const totalRevenue =
                             (amzPrice * amzL30) +
                             (ebayPrice * ebayL30) +
@@ -1755,14 +1530,8 @@
                             (sheinPrice * sheinL30) +
                             (bestbuyPrice * bestbuyL30) +
                             (tiendamiaPrice * tiendamiaL30) +
-<<<<<<< Updated upstream
                             (tiktokPrice * tiktokL30) +
                             (aliexpressPrice * aliexpressL30);
-=======
-                            (tiktokPrice * tiktokL30);
-
-                        // Calculate average profit percentage and round to nearest integer
->>>>>>> Stashed changes
                         let avgPftPercent = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
                         if (!isFinite(avgPftPercent) || isNaN(avgPftPercent)) {
                             avgPftPercent = 0;
@@ -1805,7 +1574,6 @@
                     }
                 },
                 {
-<<<<<<< Updated upstream
                     title: "AVG ROI%<br><span id='avgRoiHeader' style='font-size:12px; color:#fff; '></span>",
                     field: "avgRoi",
                     hozAlign: "right",
@@ -1886,108 +1654,6 @@
                     visible: true
                 },
                 {
-=======
-                        title: "AVG ROI%<br><span id='avgRoiHeader' style='font-size:12px; color:#fff; '></span>",
-                        field: "avgRoi",
-                        hozAlign: "right",
-                        headerSort: true,
-                        sorter: function(a, b) {
-                            const valA = parseFloat(a) || 0;
-                            const valB = parseFloat(b) || 0;
-                            return valA - valB;
-                        },
-                        formatter: function(cell) {
-                            const data = cell.getRow().getData();
-                            const LP = parseFloat(data.LP) || 0;
-                            const ovl30 = parseFloat(data.shopifyb2c_l30) || 0;
-                            const temuship = parseFloat(data.temu_ship) || 0;
-                            const avgPrice = parseFloat(data.formattedAvgPrice) || 0;
-                             const SHIP = parseFloat(data.SHIP) || 0;
-                            
-                            if (LP === 0) return "N/A";
-
-                            // Parse all L30 values
-                            const amzL30     = parseFloat(data.amz_l30) || 0;
-                            const ebayL30    = parseFloat(data.ebay_l30) || 0;
-                            const shopifyL30 = parseFloat(data.shopifyb2c_l30) || 0;
-                            const macyL30    = parseFloat(data.macy_l30) || 0;
-                            const reverbL30  = parseFloat(data.reverb_l30) || 0;
-                            const dobaL30    = parseFloat(data.doba_l30) || 0;
-                            const temuL30    = parseFloat(data.temu_l30) || 0;
-                            const ebay3L30   = parseFloat(data.ebay3_l30) || 0;
-                            const ebay2L30   = parseFloat(data.ebay2_l30) || 0;
-                            const walmartL30 = parseFloat(data.walmart_l30) || 0;
-                            const sheinL30   = parseFloat(data.shein_l30) || 0;
-                            const bestbuyL30  = parseFloat(data.bestbuy_l30) || 0;
-                            const tiendamiaL30 = parseFloat(data.tiendamia_l30) || 0;
-                            const tiktokL30   = parseFloat(data.tiktok_l30) || 0;
-
-                            // Total L30 across marketplaces
-                            const totalL30 = amzL30 + ebayL30 + shopifyL30 + macyL30 + reverbL30 + dobaL30 + temuL30  + ebay3L30 + ebay2L30 + walmartL30 + sheinL30 + bestbuyL30 + tiendamiaL30 + tiktokL30;
-
-                            // Profit calculations (use parsed *_L30 variables)
-                            const amzProfit     = data.amz_price        ? ((parseFloat(data.amz_price) * 0.70) - LP - SHIP) * amzL30 : 0;
-                            const ebayProfit    = data.ebay_price       ? ((parseFloat(data.ebay_price) * 0.72) - LP - SHIP) * ebayL30 : 0;
-                            const shopifyProfit = data.shopifyb2c_price ? ((parseFloat(data.shopifyb2c_price) * 0.75) - LP - SHIP) * shopifyL30 : 0;
-                            const macyProfit    = data.macy_price       ? ((parseFloat(data.macy_price) * 0.76) - LP - SHIP) * macyL30 : 0;
-                            const reverbProfit  = data.reverb_price     ? ((parseFloat(data.reverb_price) * 0.84) - LP - SHIP) * reverbL30 : 0;
-                            const dobaProfit    = data.doba_price       ? ((parseFloat(data.doba_price) * 0.95) - LP - SHIP) * dobaL30 : 0;
-                            const temuProfit    = data.temu_price       ? ((parseFloat(data.temu_price) * 0.87) - LP - temuship) * temuL30 : 0;
-                            const ebay3Profit   = data.ebay3_price      ? ((parseFloat(data.ebay3_price) * 0.71) - LP - SHIP) * ebay3L30 : 0;
-                            const ebay2Profit   = data.ebay2_price      ? ((parseFloat(data.ebay2_price) * 0.80) - LP - SHIP) * ebay2L30 : 0;
-                            const walmartProfit = data.walmart_price    ? ((parseFloat(data.walmart_price) * 0.80) - LP - SHIP) * walmartL30 : 0;
-                            const sheinProfit   = data.shein_price      ? ((parseFloat(data.shein_price) * 0.89) - LP - SHIP) * sheinL30 : 0;
-                            const bestbuyProfit  = data.bestbuy_price    ? ((parseFloat(data.bestbuy_price) * 0.80) - LP - SHIP) * bestbuyL30 : 0;
-                            const tiendamiaProfit = data.tiendamia_price ? ((parseFloat(data.tiendamia_price) * 0.83) - LP - SHIP) * tiendamiaL30 : 0;
-                            const tiktokProfit    = data.tiktok_price    ? ((parseFloat(data.tiktok_price) * 0.64) - LP - SHIP) * tiktokL30 : 0;
-
-                            // Total profit
-                            const totalProfit = amzProfit + ebayProfit + shopifyProfit + macyProfit +
-                                                reverbProfit + dobaProfit + temuProfit  +
-                                                ebay3Profit + ebay2Profit + walmartProfit + sheinProfit + bestbuyProfit + tiendamiaProfit + tiktokProfit;
-
-
-                            
-
-                            // ROI calculation
-                            const roi = totalL30 > 0 ? (totalProfit / totalL30) / LP * 100 : 0;
-
-                            data.TotalAvgRoiPer = Math.round(TotalAvgRoiPer);
-                            // Style based on ROI percentage
-                            let bgColor, textColor;
-                            if (roi < 11) {
-                                textColor = '#ff0000'; // red
-                            } else if (roi >= 10 && roi < 15) {
-                                bgColor = 'yellow';
-                                textColor = '#000000'; // black
-                            } else if (roi >= 15 && roi < 20) {
-                                textColor = '#0d6efd'; // blue
-                            } else if (roi >= 21 && roi < 50) {
-                                textColor = '#198754'; // green
-                            } else {
-                                textColor = '#800080'; // purple
-                            }
-
-                            // Build cell element
-                            const element = document.createElement('div');
-                            element.textContent = Math.round(roi) + '%';
-                            element.style.backgroundColor = bgColor;
-                            element.style.color = textColor;
-                            element.style.padding = '4px 8px';
-                            element.style.borderRadius = '4px';
-                            element.style.fontWeight = '600';
-                            element.style.textAlign = 'center';
-
-                            // Store for sorting
-                            data.avgRoi = Math.round(roi);
-                            return element;
-                        },
-                        visible: true
-                    }
-                    ,
-
-                 {
->>>>>>> Stashed changes
                     title: "MSRP",
                     field: "MSRP",
                     hozAlign: "right",
@@ -2066,13 +1732,7 @@
                 parent[field] = valid.length > 0 ? (valid.reduce((sum, v) => sum + v, 0) / valid.length).toFixed(2) :
                     (values.length > 0 ? (values.reduce((sum, v) => sum + v, 0) / values.length).toFixed(2) : 0);
             });
-<<<<<<< Updated upstream
             const mps = ['amz', 'ebay', 'macy', 'reverb', 'doba', 'temu', 'ebay3', 'ebay2', 'walmart', 'shein', 'shopifyb2c', 'aliexpress', 'tiktok', 'bestbuy' ,'tiendamia'];
-=======
-
-            // Marketplaces for l30 sum and price weighted average
-            const mps = ['amz', 'ebay', 'macy', 'reverb', 'doba', 'temu', 'ebay3', 'ebay2', 'walmart', 'shein', 'shopifyb2c'];
->>>>>>> Stashed changes
             mps.forEach(mp => {
                 const l30Field = (mp === 'shopifyb2c' ? 'shopifyb2c_l30' : `${mp}_l30`);
                 const priceField = (mp === 'shopifyb2c' ? 'shopifyb2c_price' : `${mp}_price`);
@@ -2093,11 +1753,6 @@
             parent.inv_value = (inv * shopifyPrice).toFixed(2);
             const lp = parseFloat(parent.LP) || 0;
             parent.COGS = (lp * inv).toFixed(2);
-<<<<<<< Updated upstream
-=======
-
-            // Recalculate avgPftPercent for parent
->>>>>>> Stashed changes
             const marketplaces = [
                 { price: parent.amz_price, l30: parent.amz_l30, factor: 0.70 },
                 { price: parent.ebay_price, l30: parent.ebay_l30, factor: 0.72 },
@@ -2109,7 +1764,6 @@
                 { price: parent.ebay3_price, l30: parent.ebay3_l30, factor: 0.71 },
                 { price: parent.ebay2_price, l30: parent.ebay2_l30, factor: 0.80 },
                 { price: parent.walmart_price, l30: parent.walmart_l30, factor: 0.80 },
-<<<<<<< Updated upstream
                 { price: parent.shein_price, l30: parent.shein_l30, factor: 0.89 },
                 { price: parent.aliexpress_price, l30: parent.aliexpress_l30, factor: 0.89 },
                 { price: parent.tiktok_price, l30: parent.tiktok_l30, factor: 0.64 },
@@ -2117,11 +1771,6 @@
                 { price: parent.tiendamia_price, l30: parent.tiendamia_price, factor: 0.83 },
                 { price: parent.aliexpress_price, l30: parent.aliexpress_price, factor: 0.89 }
             ];
-=======
-                { price: parent.shein_price, l30: parent.shein_l30, factor: 0.89 }
-            ];
-
->>>>>>> Stashed changes
             let totalProfit = 0;
             let totalRevenue = 0;
             marketplaces.forEach(mp => {

@@ -58,8 +58,9 @@ class FetchReverbData extends Command
                 continue;
             }
 
-            $r30 = $rL30[$sku] ?? 0;
-            $r60 = $rL60[$sku] ?? 0;
+            $r30 = $rL30[$sku]['qty'] ?? 0;
+            $r60 = $rL60[$sku]['qty'] ?? 0;
+            $status = $rL30[$sku]['status'] ?? null;
 
             // $this->line("Listing SKU: $sku | R_L30: $r30 | R_L60: $r60");
 
@@ -70,6 +71,7 @@ class FetchReverbData extends Command
                 'sku' => $sku,
                 'r_l30' => $r30,
                 'r_l60' => $r60,
+                'status' => $status,
                 'price' => $item['price']['amount'] ?? null,
                 'views' => $item['stats']['views'] ?? null,
             ]);
@@ -129,11 +131,19 @@ class FetchReverbData extends Command
             foreach ($orders as $order) {
                 $sku = $order['sku'] ?? null;
                 $qty = $order['quantity'] ?? 0;
+                $status = $order['status'] ?? ($order['status'] ?? null); 
 
-                if ($sku) {
-                    // $this->line("Order SKU: $sku, Qty: $qty");
-                    $quantityMap[$sku] = ($quantityMap[$sku] ?? 0) + $qty;
+            if ($sku) {
+                if (!isset($quantityMap[$sku])) {
+                        $quantityMap[$sku] = ['qty' => 0, 'status' => $status];
                 }
+
+                    $quantityMap[$sku]['qty'] += $qty;
+                    $quantityMap[$sku]['status'] = $status;
+                }
+                    // $this->line("Order SKU: $sku, Qty: $qty");
+                    // $quantityMap[$sku] = ($quantityMap[$sku] ?? 0) + $qty;
+                
             }
 
             $url = $response->json()['_links']['next']['href'] ?? null;
@@ -143,4 +153,5 @@ class FetchReverbData extends Command
         return $quantityMap;
     }
 
+    
 }

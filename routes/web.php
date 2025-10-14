@@ -189,6 +189,7 @@ use App\Http\Controllers\Channels\ReviewMaster\ReviewDashboardController;
 use App\Http\Controllers\Channels\SetupAccountChannelController;
 use App\Http\Controllers\Channels\ShippingMasterController;
 use App\Http\Controllers\Channels\TrafficMasterController;
+use App\Http\Controllers\FbaDataController;
 use App\Http\Controllers\InventoryManagement\AutoStockBalanceController;
 use App\Http\Controllers\InventoryManagement\StockBalanceController;
 use App\Http\Controllers\InventoryWarehouseController;
@@ -1881,7 +1882,13 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
         Route::get('/google/shopping/data', 'getGoogleShoppingAdsData');
     });
 
-    
+    Route::controller(FbaDataController::class)->group(function() {
+        Route::get('fba-view-page' ,'fbaPageView');
+        Route::get('fba-data-json', 'fbaDataJson');
+        Route::get('fba-monthly-sales/{sku}', 'getFbaMonthlySales');
+
+    });
+
     Route::post('/channel-promotion/store', [ChannelPromotionMasterController::class, 'storeOrUpdatePromotion']);
 
   
