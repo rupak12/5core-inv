@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\ProductMaster;
 use App\Models\ShopifySku;
 use App\Models\FbaTable;
 use App\Models\FbaPrice;
 use App\Models\FbaReportsMaster;
 use App\Models\FbaMonthlySale;
+use App\Models\FbaManualData;
 
 class FbaDataController extends Controller
 {
@@ -68,10 +70,14 @@ class FbaDataController extends Controller
             return strtoupper(trim($base));
          });
 
+      $fbaManualData = FbaManualData::all()->keyBy(function($item) {
+         return strtoupper(trim($item->sku));
+      });
+
       $matchedSkus = $fbaData->keys()->toArray();
       $unmatchedSkus = array_diff($skus, $matchedSkus);
 
-      return compact('productData', 'shopifyData', 'fbaData', 'fbaPriceData', 'fbaReportsData', 'matchedSkus', 'unmatchedSkus', 'fbaMonthlySales');
+      return compact('productData', 'shopifyData', 'fbaData', 'fbaPriceData', 'fbaReportsData', 'matchedSkus', 'unmatchedSkus', 'fbaMonthlySales', 'fbaManualData');
    }
 
    public function fbaPageView()
@@ -91,17 +97,19 @@ class FbaDataController extends Controller
       $fbaReportsData = $data['fbaReportsData'];
       $shopifyData = $data['shopifyData'];
       $fbaMonthlySales = $data['fbaMonthlySales'];
+      $fbaManualData = $data['fbaManualData'];
       $productData = $data['productData']->keyBy(function ($p) {
          return strtoupper(trim($p->sku));
       });
 
       // Prepare table data with repeated parent name for all child SKUs
-      $tableData = $fbaData->map(function ($fba, $sku) use ($fbaPriceData, $fbaReportsData, $shopifyData, $productData, $fbaMonthlySales) {
+      $tableData = $fbaData->map(function ($fba, $sku) use ($fbaPriceData, $fbaReportsData, $shopifyData, $productData, $fbaMonthlySales, $fbaManualData) {
          $fbaPriceInfo = $fbaPriceData->get($sku);
          $fbaReportsInfo = $fbaReportsData->get($sku);
          $shopifyInfo = $shopifyData->get($sku);
          $product = $productData->get($sku);
          $monthlySales = $fbaMonthlySales->get($sku);
+         $manual = $fbaManualData->get(strtoupper(trim($fba->seller_sku)));
 
          return [
             'Parent' => $product ? ($product->parent ?? '') : '',
@@ -115,6 +123,20 @@ class FbaDataController extends Controller
             'Fulfillment_Fee' => $fbaReportsInfo ? round(($fbaReportsInfo->fulfillment_fee ?? 0), 2) : 0,
             'ASIN' => $fba->asin,
             'Shopify_INV' => $shopifyInfo ? ($shopifyInfo->quantity ?? 0) : 0,
+            'Barcode' => $manual ? ($manual->data['barcode'] ?? '') : '',
+            'Dispatch_Date' => $manual ? ($manual->data['dispatch_date'] ?? '') : '',
+            'Weight' => $manual ? ($manual->data['weight'] ?? 0) : 0,
+            'Quantity_in_each_box' => $manual ? ($manual->data['quantity_in_each_box'] ?? 0) : 0,
+            'Send_Cost' => $manual ? ($manual->data['send_cost'] ?? 0) : 0,
+            'IN_Charges' => $manual ? ($manual->data['in_charges'] ?? 0) : 0,
+            'Total_quantity_sent' => $manual ? ($manual->data['total_quantity_sent'] ?? 0) : 0,
+            'Done' => $manual ? ($manual->data['done'] ?? false) : false,
+            'FBA_Send' => $manual ? ($manual->data['fba_send'] ?? false) : false,
+            'Warehouse_INV_Reduction' => $manual ? ($manual->data['warehouse_inv_reduction'] ?? false) : false,
+            'Shipping_Amount' => $manual ? ($manual->data['shipping_amount'] ?? 0) : 0,
+            'Inbound_Quantity' => $manual ? ($manual->data['inbound_quantity'] ?? 0) : 0,
+            'FBA_Send' => $manual ? ($manual->data['fba_send'] ?? false) : false,
+            'Dimensions' => $manual ? ($manual->data['Dimensions'] ?? 0) : 0,
             'Jan' => $monthlySales ? ($monthlySales->jan ?? 0) : 0,
             'Feb' => $monthlySales ? ($monthlySales->feb ?? 0) : 0,
             'Mar' => $monthlySales ? ($monthlySales->mar ?? 0) : 0,
@@ -155,6 +177,19 @@ class FbaDataController extends Controller
             'Fulfillment_Fee' => round($children->sum('Fulfillment_Fee'), 2),
             'ASIN' => '',
             'Shopify_INV' => $children->sum('Shopify_INV'),
+            'Barcode' => '',
+            'Dispatch_Date' => '',
+            'Weight' => $children->sum('Weight'),
+            'Quantity_in_each_box' => $children->sum('Quantity_in_each_box'),
+            'Total_quantity_sent' => $children->sum('Total_quantity_sent'),
+            'Send_Cost' => $children->sum('Send_Cost'),
+            'IN_Charges' => $children->sum('IN_Charges'),
+            'Done' => false,
+            'Warehouse_INV_Reduction' => false,
+            'FBA_Send' => false,
+            'Shipping_Amount' => $children->sum('Shipping_Amount'),
+            'Inbound_Quantity' => $children->sum('Inbound_Quantity'),
+            'Dimensions' => $children->sum('Dimensions'),
             'Jan' => $children->sum('Jan'),
             'Feb' => $children->sum('Feb'),
             'Mar' => $children->sum('Mar'),
@@ -215,5 +250,27 @@ class FbaDataController extends Controller
          'total_units' => $sales->total_units ?? 0,
          'avg_price' => $sales->avg_price ?? 0,
       ]);
+   }
+
+   public function updateFbaManualData(Request $request)
+   {
+      $sku = strtoupper(trim($request->input('sku')));
+      $field = $request->input('field');
+      $value = $request->input('value');
+
+      $manual = FbaManualData::where('sku', $sku)->first();
+
+      if (!$manual) {
+         $manual = new FbaManualData();
+         $manual->sku = $sku;
+         $manual->data = [];
+      }
+
+      $data = $manual->data ?? [];
+      $data[$field] = $value;
+      $manual->data = $data;
+      $manual->save();
+
+      return response()->json(['success' => true]);
    }
 }

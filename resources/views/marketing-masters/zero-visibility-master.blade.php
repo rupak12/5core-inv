@@ -649,6 +649,25 @@
         let selectedChannel = '';
         let selectedExec = '';
 
+        // Debounce function to limit function calls
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Debounced table reload
+        const debouncedTableReload = debounce(() => table.ajax.reload(), 300);
+
+        // Debounced save row
+        const debouncedSaveRow = debounce((row) => saveRow(row), 500);
+
         // Enhanced number parsing function
         function parseNumber(value) {
             if (value === null || value === undefined || value === '' ||
@@ -1254,9 +1273,7 @@
         jq(document).ready(function() {
 
             // Search Channel
-            jq('#searchInput').on('input', function() {
-                table.ajax.reload();
-            });
+            jq('#searchInput').on('input', debouncedTableReload);
         });
 
         //sort
@@ -1612,7 +1629,7 @@
                         const val = jq(this).val().trim();
                         if (val === '') {
                             selectedExec = '';
-                            table.ajax.reload();
+                            debouncedTableReload();
                         }
                     });
 

@@ -332,11 +332,11 @@ class ChannelMasterController extends Controller
 
         $query = EbayMetric::where('sku', 'not like', '%Parent%');
 
-        $l30Orders = $query->sum('ebay_data_l30');
-        $l60Orders = $query->sum('ebay_data_l60');
+        $l30Orders = $query->sum('ebay_l30');
+        $l60Orders = $query->sum('ebay_l60');
 
-        $l30Sales  = (clone $query)->selectRaw('SUM(ebay_data_l30 * ebay_data_price) as total')->value('total') ?? 0;
-        $l60Sales  = (clone $query)->selectRaw('SUM(ebay_data_l60 * ebay_data_price) as total')->value('total') ?? 0;
+        $l30Sales  = (clone $query)->selectRaw('SUM(ebay_l30 * ebay_price) as total')->value('total') ?? 0;
+        $l60Sales  = (clone $query)->selectRaw('SUM(ebay_l60 * ebay_price) as total')->value('total') ?? 0;
 
         $growth = $l30Sales > 0 ? (($l30Sales - $l60Sales) / $l30Sales) * 100 : 0;
 
@@ -350,7 +350,7 @@ class ChannelMasterController extends Controller
         });
 
         // Calculate total profit
-        $ebayRows     = $query->get(['sku', 'ebay_data_price', 'ebay_data_l30','ebay_data_l60']);
+        $ebayRows     = $query->get(['sku', 'ebay_price', 'ebay_l30','ebay_l60']);
         $totalProfit  = 0;
         $totalProfitL60  = 0;
         $totalCogs       = 0;
@@ -358,9 +358,9 @@ class ChannelMasterController extends Controller
 
         foreach ($ebayRows as $row) {
             $sku       = strtoupper($row->sku);
-            $price     = (float) $row->ebay_data_price;
-            $unitsL30  = (int) $row->ebay_data_l30;
-            $unitsL60  = (int) $row->ebay_data_l60;
+            $price     = (float) $row->ebay_price;
+            $unitsL30  = (int) $row->ebay_l30;
+            $unitsL60  = (int) $row->ebay_l60;
 
             $soldAmount = $unitsL30 * $price;
             if ($soldAmount <= 0) {
@@ -3410,6 +3410,124 @@ class ChannelMasterController extends Controller
     }
 
 
+    // public function getSalesTrendData()
+    // {
+    //     $today = now();
+    //     $l30Start = $today->copy()->subDays(30);
+    //     $l60Start = $today->copy()->subDays(60);
+
+    //     // Get daily sales for last 60 days
+    //     $salesData = DB::connection('apicentral')
+    //         ->table('shopify_order_items')
+    //         ->select(
+    //             DB::raw('DATE(order_date) as date'),
+    //             DB::raw('SUM(quantity * price) as total_sales')
+    //         )
+    //         ->where('order_date', '>=', $l60Start)
+    //         ->groupBy(DB::raw('DATE(order_date)'))
+    //         ->orderBy('date', 'asc')
+    //         ->get();
+
+    //     // Split into two datasets (L30 & L60)
+    //     $l30Data = [];
+    //     $l60Data = [];
+
+    //     foreach ($salesData as $row) {
+    //         $date = Carbon::parse($row->date)->format('Y-m-d');
+    //         if ($row->date >= $l30Start->toDateString()) {
+    //             $l30Data[$date] = $row->total_sales;
+    //         } else {
+    //             $l60Data[$date] = $row->total_sales;
+    //         }
+    //     }
+
+    //     // Prepare consistent date series
+    //     $period = new \DatePeriod(
+    //         $l60Start,
+    //         new \DateInterval('P1D'),
+    //         $today
+    //     );
+
+    //     $chartData = [];
+    //     foreach ($period as $date) {
+    //         $formatted = $date->format('Y-m-d');
+    //         $chartData[] = [
+    //             'date' => $formatted,
+    //             'l30_sales' => $l30Data[$formatted] ?? 0,
+    //             'l60_sales' => $l60Data[$formatted] ?? 0,
+    //         ];
+    //     }
+
+    //      // Calculate GPROFIT using Shopify order items + Product Master
+    //     $orderItems = DB::connection('apicentral')
+    //         ->table('shopify_order_items')
+    //         ->select('sku', 'quantity', 'price', 'order_date')
+    //         ->where('order_date', '>=', $l60Start)
+    //         ->get();
+
+    //     if ($orderItems->isEmpty()) {
+    //         foreach ($chartData as &$row) {
+    //             $row['gprofit'] = 0;
+    //         }
+    //         return response()->json(['chartData' => $chartData]);
+    //     }
+
+    //     // Load product_master LP & SHIP
+    //     $productMasters = ProductMaster::all()->keyBy(fn($item) => strtoupper($item->sku));
+
+    //     $totalSalesL30 = 0;
+    //     $totalProfitL30 = 0;
+
+    //     foreach ($orderItems as $item) {
+    //         $sku = strtoupper(trim($item->sku));
+    //         $price = (float) $item->price;
+    //         $qty = (int) $item->quantity;
+
+    //         // Only count L30 for profit (recent 30 days)
+    //         if ($item->order_date < $l30Start->toDateString()) {
+    //             continue;
+    //         }
+
+    //         $lp = 0;
+    //         $ship = 0;
+
+    //         if (isset($productMasters[$sku])) {
+    //             $pm = $productMasters[$sku];
+    //             $values = is_array($pm->Values)
+    //                 ? $pm->Values
+    //                 : (is_string($pm->Values) ? json_decode($pm->Values, true) : []);
+
+    //             $lp = $values['lp'] ?? $pm->lp ?? 0;
+    //             $ship = $values['ship'] ?? $pm->ship ?? 0;
+    //         }
+
+    //         $sales = $qty * $price;
+    //         $profit = ($price - $lp - $ship) * $qty;
+
+    //         $totalSalesL30 += $sales;
+    //         $totalProfitL30 += $profit;
+    //     }
+
+    //     $gProfitPct = $totalSalesL30 > 0 ? ($totalProfitL30 / $totalSalesL30) * 100 : 0;
+
+    //     // Add GProfit% (flat line or future extension: date-wise)
+    //     foreach ($chartData as &$row) {
+    //         $row['gprofit'] = round($gProfitPct, 2);
+    //     }
+
+    //     return response()->json([
+    //         'chartData' => $chartData,
+    //         'summary' => [
+    //             'total_sales_l30' => round($totalSalesL30, 2),
+    //             'total_profit_l30' => round($totalProfitL30, 2),
+    //             'gprofit' => round($gProfitPct, 2),
+    //         ],
+    //     ]);
+
+    //     // return response()->json(['chartData' => $chartData]);
+    // }
+
+
     public function getSalesTrendData()
     {
         $today = now();
@@ -3431,7 +3549,6 @@ class ChannelMasterController extends Controller
         // Split into two datasets (L30 & L60)
         $l30Data = [];
         $l60Data = [];
-
         foreach ($salesData as $row) {
             $date = Carbon::parse($row->date)->format('Y-m-d');
             if ($row->date >= $l30Start->toDateString()) {
@@ -3451,81 +3568,78 @@ class ChannelMasterController extends Controller
         $chartData = [];
         foreach ($period as $date) {
             $formatted = $date->format('Y-m-d');
-            $chartData[] = [
+            $chartData[$formatted] = [
                 'date' => $formatted,
                 'l30_sales' => $l30Data[$formatted] ?? 0,
                 'l60_sales' => $l60Data[$formatted] ?? 0,
+                'gprofit' => 0, // initialize
             ];
-        }
-
-         // Calculate GPROFIT using Shopify order items + Product Master
-        $orderItems = DB::connection('apicentral')
-            ->table('shopify_order_items')
-            ->select('sku', 'quantity', 'price', 'order_date')
-            ->where('order_date', '>=', $l60Start)
-            ->get();
-
-        if ($orderItems->isEmpty()) {
-            foreach ($chartData as &$row) {
-                $row['gprofit'] = 0;
-            }
-            return response()->json(['chartData' => $chartData]);
         }
 
         // Load product_master LP & SHIP
         $productMasters = ProductMaster::all()->keyBy(fn($item) => strtoupper($item->sku));
 
-        $totalSalesL30 = 0;
-        $totalProfitL30 = 0;
+        // Get order items for last 30 days (L30)
+        $orderItems = DB::connection('apicentral')
+            ->table('shopify_order_items')
+            ->select('sku', 'quantity', 'price', 'order_date')
+            ->where('order_date', '>=', $l30Start)
+            ->get();
 
-        foreach ($orderItems as $item) {
-            $sku = strtoupper(trim($item->sku));
-            $price = (float) $item->price;
-            $qty = (int) $item->quantity;
+        if ($orderItems->isNotEmpty()) {
+            $dailySales = [];
+            $dailyProfit = [];
 
-            // Only count L30 for profit (recent 30 days)
-            if ($item->order_date < $l30Start->toDateString()) {
-                continue;
+            foreach ($orderItems as $item) {
+                $sku = strtoupper(trim($item->sku));
+                $date = Carbon::parse($item->order_date)->format('Y-m-d');
+                $qty = (int) $item->quantity;
+                $price = (float) $item->price;
+
+                $lp = 0;
+                $ship = 0;
+                if (isset($productMasters[$sku])) {
+                    $pm = $productMasters[$sku];
+                    $values = is_array($pm->Values)
+                        ? $pm->Values
+                        : (is_string($pm->Values) ? json_decode($pm->Values, true) : []);
+                    $lp = $values['lp'] ?? $pm->lp ?? 0;
+                    $ship = $values['ship'] ?? $pm->ship ?? 0;
+                }
+
+                $sales = $qty * $price;
+                $profit = ($price - $lp - $ship) * $qty;
+
+                $dailySales[$date] = ($dailySales[$date] ?? 0) + $sales;
+                $dailyProfit[$date] = ($dailyProfit[$date] ?? 0) + $profit;
             }
 
-            $lp = 0;
-            $ship = 0;
-
-            if (isset($productMasters[$sku])) {
-                $pm = $productMasters[$sku];
-                $values = is_array($pm->Values)
-                    ? $pm->Values
-                    : (is_string($pm->Values) ? json_decode($pm->Values, true) : []);
-
-                $lp = $values['lp'] ?? $pm->lp ?? 0;
-                $ship = $values['ship'] ?? $pm->ship ?? 0;
+            // Assign GProfit per day
+            foreach ($chartData as $date => &$row) {
+                $sales = $dailySales[$date] ?? 0;
+                $profit = $dailyProfit[$date] ?? 0;
+                $row['gprofit'] = $sales > 0 ? round(($profit / $sales) * 100, 2) : 0;
             }
-
-            $sales = $qty * $price;
-            $profit = ($price - $lp - $ship) * $qty;
-
-            $totalSalesL30 += $sales;
-            $totalProfitL30 += $profit;
         }
 
-        $gProfitPct = $totalSalesL30 > 0 ? ($totalProfitL30 / $totalSalesL30) * 100 : 0;
+        // Convert chartData to indexed array for JSON
+        $chartData = array_values($chartData);
 
-        // Add GProfit% (flat line or future extension: date-wise)
-        foreach ($chartData as &$row) {
-            $row['gprofit'] = round($gProfitPct, 2);
-        }
+        // Optional: summary for total L30
+        $totalSalesL30 = array_sum($dailySales ?? []);
+        $totalProfitL30 = array_sum($dailyProfit ?? []);
+        $totalGProfit = $totalSalesL30 > 0 ? ($totalProfitL30 / $totalSalesL30) * 100 : 0;
 
         return response()->json([
             'chartData' => $chartData,
             'summary' => [
                 'total_sales_l30' => round($totalSalesL30, 2),
                 'total_profit_l30' => round($totalProfitL30, 2),
-                'gprofit' => round($gProfitPct, 2),
+                'gprofit' => round($totalGProfit, 2),
             ],
         ]);
-
-        // return response()->json(['chartData' => $chartData]);
     }
+
 
 
 
