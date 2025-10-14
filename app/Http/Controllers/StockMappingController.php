@@ -84,8 +84,8 @@ class StockMappingController extends Controller
 protected function fetchFreshData(){
     ini_set('max_execution_time', 1000);
      
-      $result = (new BestbuyusaApiService())->getChannels();
-      dd($result);
+    //   $result = (new BestbuyusaApiService())->getChannels();
+    //   dd($result);
     //  $result = (new WayfairApiService())->getInventory();    
     
     // $macyInventory = (new MacysApiService())->getInventory();
