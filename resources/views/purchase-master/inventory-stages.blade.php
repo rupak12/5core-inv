@@ -293,7 +293,7 @@
             ajaxConfig: "GET",
             layout: "fitDataFill",
             pagination: true,
-            paginationSize: 200,
+            paginationSize: 100,
             movableColumns: false,
             resizableColumns: true,
             height: "650px",
@@ -493,18 +493,6 @@
                     }
                 },
                 {
-                    title: "R2S",
-                    field: "readyToShipQty",
-                    accessor: row => (row ? row["readyToShipQty"] : null),
-                    sorter: "number",
-                    headerSort: true,
-                    formatter: function(cell) {
-                        const value = cell.getValue();
-                        
-                        return value ?? '';
-                    }
-                },
-                {
                     title: "Transit",
                     field: "c_sku_qty",
                     accessor: row => (row ? row["c_sku_qty"] : null),
@@ -547,8 +535,7 @@
                     title: "App. QTY",
                     field: "Approved QTY",
                     accessor: row => row?.["Approved QTY"] ?? null,
-                    sorter: "number",
-                    headerSort: true,
+                    headerSort: false,
                     formatter: function(cell) {
                         const value = cell.getValue();
                         const rowData = cell.getRow().getData();
@@ -557,14 +544,14 @@
                         const parent = rowData.Parent ?? '';
 
                         return `<div 
-                            class="editable-qty" 
-                            data-field="Approved QTY" 
-                            data-original="${value ?? ''}" 
-                            data-sku='${sku}' 
-                            data-parent='${parent}' 
-                            style="outline:none; min-width:40px; text-align:center; font-weight:bold;">
-                            ${value ?? ''}
-                        </div>`;
+                        class="editable-qty" 
+                        data-field="Approved QTY" 
+                        data-original="${value ?? ''}" 
+                        data-sku='${sku}' 
+                        data-parent='${parent}' 
+                        style="outline:none; min-width:40px; text-align:center; font-weight:bold;">
+                        ${value ?? ''}
+                    </div>`;
                     }
                 },
 

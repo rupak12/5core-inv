@@ -197,6 +197,7 @@
                                         <option value="">All Status</option>
                                         <option value="ENABLED">Enabled</option>
                                         <option value="PAUSED">Paused</option>
+                                        <option value="ARCHIVED">Archived</option>
                                     </select>
                                 </div>
                             </div>
@@ -232,8 +233,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-
-            document.body.style.zoom = "75%";
 
             const invFilter  = document.querySelector("#inv-filter");
             const nrlFilter  = document.querySelector("#nrl-filter");
@@ -451,10 +450,6 @@
                             }
                         }
                     },
-                    {
-                        title: "AD STATUS",
-                        field: "status",
-                    }
                 ],
                 initialSort: [
                     { column: "spend_L7", dir: "desc" }
@@ -527,15 +522,15 @@
             // });
 
 
-            table.on("dataLoaded", function () {
-                // ✅ Combined Filter Function
+            table.on("tableBuilt", function () {
+
                 function combinedFilter(data) {
                     let budget = parseFloat(data.campaignBudgetAmount) || 0;
                     let spend_L7 = parseFloat(data.spend_L7) || 0;
                     let spend_l1 = parseFloat(data.spend_l1) || 0;
+
                     let ub7 = budget > 0 ? (spend_L7 / (budget * 7)) * 100 : 0;
 
-                    // filter by UB7 > 90
                     if (!(ub7 > 90)) return false;
 
                     let searchVal = $("#global-search").val()?.toLowerCase() || "";
@@ -549,12 +544,14 @@
                     }
 
                     let statusVal = $("#status-filter").val();
-                    if (statusVal && data.status !== statusVal) {
+                    if (statusVal && data.campaignStatus !== statusVal) {
                         return false;
                     }
 
                     let invFilterVal = $("#inv-filter").val();
-                    if (invFilterVal === "INV_0") {
+                    if (invFilterVal === "ALL") {
+                        // if (parseFloat(data.INV) === 0) return false;
+                    } else if (invFilterVal === "INV_0") {
                         if (parseFloat(data.INV) !== 0) return false;
                     } else if (invFilterVal === "OTHERS") {
                         if (parseFloat(data.INV) === 0) return false;
@@ -577,11 +574,8 @@
                     let filtered = table.getDataCount("active");      
                     let percentage = total > 0 ? ((filtered / total) * 100).toFixed(0) : 0;
 
-                    const totalEl = document.getElementById("total-campaigns");
-                    const percentageEl = document.getElementById("percentage-campaigns");
-
-                    if (totalEl) totalEl.innerText = filtered;
-                    if (percentageEl) percentageEl.innerText = percentage + "%";
+                    document.getElementById("total-campaigns").innerText = filtered;
+                    document.getElementById("percentage-campaigns").innerText = percentage + "%";
                 }
 
                 function refreshFilters() {
@@ -600,7 +594,6 @@
 
                 updateCampaignStats();
             });
-
 
             document.addEventListener("click", function(e) {
                 if (e.target.classList.contains("toggle-cols-btn")) {

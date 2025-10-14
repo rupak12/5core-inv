@@ -161,7 +161,33 @@ class OverallAmazonController extends Controller
         $marketplaceData = MarketplacePercentage::where('marketplace', 'Amazon')->first();
 
         $percentage = $marketplaceData ? ($marketplaceData->percentage / 100) : 1; 
-        $adUpdates  = $marketplaceData ? $marketplaceData->ad_updates : 0;   
+        $adUpdates  = $marketplaceData ? $marketplaceData->ad_updates : 0;         
+        
+        $amazonKwL30 = AmazonSpCampaignReport::where('report_date_range', 'L30')
+            ->where(function ($q) use ($skus) {
+                foreach ($skus as $sku) {
+                    $q->orWhere('campaignName', 'LIKE', '%' . $sku . '%');
+                }
+            })
+            ->where('campaignName', 'NOT LIKE', '%PT')
+            ->where('campaignName', 'NOT LIKE', '%PT.')
+            ->get();
+
+        $amazonPtL30 = AmazonSpCampaignReport::where('report_date_range', 'L30')
+            ->where(function ($q) use ($skus) {
+                foreach ($skus as $sku) {
+                    $q->orWhere('campaignName', 'LIKE', '%' . strtoupper($sku) . '%');
+                }
+            })
+            ->get();
+
+        $amazonHlL30 = AmazonSbCampaignReport::where('report_date_range', 'L30')
+            ->where(function ($q) use ($skus) {
+                foreach ($skus as $sku) {
+                    $q->orWhere('campaignName', 'LIKE', '%' . strtoupper($sku) . '%');
+                }
+            })
+            ->get();
 
         $result = [];
 
@@ -192,6 +218,40 @@ class OverallAmazonController extends Controller
             $row['INV'] = $shopify->inv ?? 0;
             $row['L30'] = $shopify->quantity ?? 0;
             $row['fba'] = $pm->fba;
+
+            $campaignSpend = 0;
+
+            // KW campaigns (child SKU exact match)
+            $kwCampaign = $amazonKwL30->first(function ($item) use ($sku) {
+                return strcasecmp(trim($item->campaignName), $sku) === 0;
+            });
+            if ($kwCampaign) {
+                $campaignSpend = $kwCampaign->spend ?? 0;
+            } else {
+                // PT campaigns (child SKU ending with PT)
+                $ptCampaign = $amazonPtL30->first(function ($item) use ($sku) {
+                    $cleanName = strtoupper(trim($item->campaignName));
+                    return (
+                        str_ends_with($cleanName, $sku . ' PT') || str_ends_with($cleanName, $sku . ' PT.')
+                    ) && strtoupper($item->campaignStatus) === 'ENABLED';
+                });
+                if ($ptCampaign) {
+                    $campaignSpend = $ptCampaign->spend ?? 0;
+                } else {
+                    // HL campaigns (match parent SKU instead of child SKU)
+                    $parentSku = strtoupper(trim($pm->parent));
+                    $hlCampaign = $amazonHlL30->first(function ($item) use ($parentSku) {
+                        $cleanName = strtoupper(trim($item->campaignName));
+                        return ($cleanName === $parentSku || $cleanName === $parentSku . ' HEAD')
+                            && strtoupper($item->campaignStatus) === 'ENABLED';
+                    });
+                    if ($hlCampaign) {
+                        $campaignSpend = $hlCampaign->cost ?? 0;
+                    }
+                }
+            }
+
+            $row['ad_spend'] = round($campaignSpend, 2);
 
 
             // LP & ship cost
@@ -234,7 +294,6 @@ class OverallAmazonController extends Controller
             $row['SPRICE'] = null;
             $row['Spft'] = null;
             $row['SROI'] = null;
-            $row['ad_spend'] = null;
             $row['Listed'] = null;
             $row['Live'] = null;
             $row['APlus'] = null;
@@ -256,7 +315,6 @@ class OverallAmazonController extends Controller
                     $row['SPRICE'] = $raw['SPRICE'] ?? null;
                     $row['Spft%'] = $raw['SPFT'] ?? null;
                     $row['SROI'] = $raw['SROI'] ?? null;
-                    $row['ad_spend'] = $raw['Spend_L30'] ?? null;
                     $row['Listed'] = isset($raw['Listed']) ? filter_var($raw['Listed'], FILTER_VALIDATE_BOOLEAN) : null;
                     $row['Live'] = isset($raw['Live']) ? filter_var($raw['Live'], FILTER_VALIDATE_BOOLEAN) : null;
                     $row['APlus'] = isset($raw['APlus']) ? filter_var($raw['APlus'], FILTER_VALIDATE_BOOLEAN) : null;
@@ -369,11 +427,10 @@ class OverallAmazonController extends Controller
     public function saveNrToDatabase(Request $request)
     {
         $sku = $request->input('sku');
-        $nrInput = $request->input('nr');     
-        $fbaInput = $request->input('fba');   
-        $spend = $request->input('spend');    
-        $tpft = $request->input('tpft');      
-        $spend_l30 = $request->input('spend_l30');
+        $nrInput = $request->input('nr');     // Optional
+        $fbaInput = $request->input('fba');   // Optional
+        $spend = $request->input('spend');    // Optional
+        $tpft = $request->input('tpft');      // Optional, new
 
         if (!$sku) {
             return response()->json(['error' => 'SKU is required.'], 400);
@@ -418,11 +475,6 @@ class OverallAmazonController extends Controller
         // Handle tpft (total profit percentage)
         if (!is_null($tpft)) {
             $existing['TPFT'] = $tpft;
-        }
-
-        // Handle spend_l30
-        if (!is_null($spend_l30)) {
-            $existing['Spend_L30'] = $spend_l30;
         }
 
         $amazonDataView->value = $existing;

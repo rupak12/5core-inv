@@ -90,8 +90,7 @@ class FetchAmazonListings extends Command
 
             if ($asin) {                
                 AmazonDatasheet::updateOrCreate(
-                    ['asin' => $asin],
-                    [
+                    ['asin' => $asin],                    [
                         'sku' => $sku,
                         'price' => $price,
                     ]

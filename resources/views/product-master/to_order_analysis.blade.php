@@ -262,7 +262,6 @@
                 </div>
             </div>
         </div>
-        
         <!-- Review Modal -->
         <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">

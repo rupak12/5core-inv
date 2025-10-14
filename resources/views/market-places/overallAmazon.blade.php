@@ -3089,7 +3089,7 @@
                     const pftAmt = (soldAmount * rawPft) / 100;
                     const PFTafterPFT = pftAmt - spend;
                     const adSpend = Number(item.Spend) || 0;
-                    const tacos = (spend / soldAmount) * 100;
+                    const tacos = spend / soldAmount;
                     const totalProfit = (aL30 * price) * rawPft / 100;
                     
                     let percentage = {{ $amazonPercentage ?? 0 }};
@@ -3109,11 +3109,17 @@
                         `$${adSpend.toFixed(2)}`
                     ));
 
+<<<<<<< Updated upstream
 
                     // var tpft = rawPft + amazonAdUpdates - tacos;
                     if(isNaN(tpft) || !isFinite(tpft)) {
                         tpft = 0;
                     }
+=======
+                    const tpft = rawPft + amazonAdUpdates - tacos;
+
+                    const newPftPercentage = tpft > 0 ? tpft : 0;
+>>>>>>> Stashed changes
                     
                     $.ajax({
                         url: '/amazon/save-nr',
@@ -3133,7 +3139,7 @@
                     $row.append($('<td>').html(
                         `
                             <span class="dil-percent-value ${getPftColor(tpft)}">
-                                ${tpft.toFixed(0)}%
+                                ${Math.round(newPftPercentage)}%
                             </span>
                         ` 
                     ));
@@ -3151,7 +3157,7 @@
                     if (soldAmount === 0 && adSpend > 0) {
                         tacosValue = 100;
                     } else {
-                        tacosValue = (isNaN(tacos) || !isFinite(tacos)) ? 0 : tacos.toFixed(0);
+                        tacosValue = (isNaN(tacos) || !isFinite(tacos)) ? 0 : Math.round(tacos * 100);
                     }
 
                     $row.append($('<td>').html(

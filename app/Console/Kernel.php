@@ -98,7 +98,7 @@ class Kernel extends ConsoleKernel
         // Sync Newegg sheet command
         $schedule->command('sync:neweegg-sheet')->everyTenMinutes();
         // Sync Wayfair sheet command
-        $schedule->command('sync:wayfair-sheet')->everyTenMinutes();
+        $schedule->command('sync:-sheet')->everyTenMinutes();
 
         $schedule->command('sync:shein-sheet')->daily();
 
@@ -192,17 +192,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('sync:sync-temu-sip')->everyMinute();
         $schedule->command('sync:walmart-metrics-data')->everyMinute();
         $schedule->command('sync:tiktok-sheet-data')->everyMinute();
-        $schedule->command('app:aliexpress-sheet-sync')->everyMinute();
-        $schedule->command('app:fetch-ebay-table-data')->dailyAt('00:00');
-          $schedule->call(function () {
-            DB::connection('apicentral')
-                ->table('google_ads_campaigns')
-                ->where('id', 1)
-                ->update(['sbid_status' => 0]);
-        })->dailyAt('00:00');
-        $schedule->command('sbid:update')
-            ->dailyAt('00:01') 
-            ->timezone('Asia/Kolkata');
+
 
         // FBA Commands - Daily Updates
         $schedule->command('app:fetch-fba-reports')
@@ -214,6 +204,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('app:fetch-fba-monthly-sales')
             ->dailyAt('02:00')
             ->timezone('America/Los_Angeles');
+
     }
 
     /**

@@ -221,11 +221,15 @@ class ZeroVisibilityMasterController extends Controller
             'ebaythree' => 'Ebay3ZeroController',
             'ebaytwo'   => 'Ebay2ZeroController',
             'tiktokshop' => 'TiktokShopZeroController',
+<<<<<<< Updated upstream
             'doba'      => 'DobaZeroController',
             'walmart'      => 'WalmartZeroController',
             'shein'      => 'SheinZeroController',
             'bestbuyusa' => 'BestbuyUSAZeroController',
             'aliexpress' => 'AliexpressZeroController',
+=======
+            'doba'      => 'DobaZeroController'
+>>>>>>> Stashed changes
             // Add more mappings as needed
         ];
 

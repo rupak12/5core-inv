@@ -14,7 +14,7 @@ class FetchWayfairData extends Command
      *
      * @var string
      */
-    protected $signature = 'app:fetch-wayfair-data';
+    protected $signature = 'app:fetch--data';
 
     /**
      * The console command description.
@@ -24,8 +24,8 @@ class FetchWayfairData extends Command
     protected $description = 'Fetch and store Wayfair data into the database';
 
 
-    protected $authUrl = 'https://sso.auth.wayfair.com/oauth/token';
-    protected $graphqlUrl = 'https://api.wayfair.com/v1/graphql';
+    protected $authUrl = 'https://sso.auth..com/oauth/token';
+    protected $graphqlUrl = 'https://api..com/v1/graphql';
 
     protected $clientId;
     protected $clientSecret;
@@ -37,9 +37,9 @@ class FetchWayfairData extends Command
     {
         parent::__construct();
 
-        $this->clientId = config('services.wayfair.client_id');
-        $this->clientSecret = config('services.wayfair.client_secret');
-        $this->audience = config('services.wayfair.audience');
+        $this->clientId = config('services..client_id');
+        $this->clientSecret = config('services..client_secret');
+        $this->audience = config('services..audience');
     }
 
     /**

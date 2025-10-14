@@ -5,9 +5,6 @@ namespace App\Http\Controllers\PricingMaster;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\UpdatePriceApiController;
-use App\Models\AliexpressDataView;
-use App\Models\AliexpressListingStatus;
-use App\Models\AliExpressSheetData;
 use App\Models\AmazonListingStatus;
 use App\Models\EbayListingStatus;
 use App\Models\EbayTwoListingStatus;
@@ -233,7 +230,30 @@ class PricingMasterViewsController extends Controller
         $amazonData = AmazonDatasheet::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
         $amazonListingData = AmazonListingStatus::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
 
+<<<<<<< Updated upstream
         $ebayListingData = EbayListingStatus::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
+=======
+        $amazonData  = AmazonDatasheet::whereIn('sku', $skus)->get()->keyBy('sku');
+        $amazonListingData = AmazonListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
+        $ebayData    = EbayMetric::whereIn('sku', $skus)->get()->keyBy('sku');
+        $ebayListingData = EbayListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
+        $temuListingData = TemuListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
+        $ebayTwoListingData = EbayTwoListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
+        $ebayThreeListingData = EbayThreeListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
+        $shopifyb2cListingData = Shopifyb2cListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
+        $dobaListingData = DobaListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
+        $macysListingStatus = MacysListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
+        $reverbListingData = ReverbListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
+        $walmartListingData = WalmartListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
+        $sheinListingData = SheinListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
+        $bestbuyUsaListingData = BestbuyUSAListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
+        $dobaListingData = DobaListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
+        $tiendamiaListingData = TiendamiaListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
+        $tiktokListingData = TiktokShopListingStatus::whereIn('sku', $skus)->get()->keyBy('sku');
+
+
+
+>>>>>>> Stashed changes
         // $dobaData    = DobaMetric::whereIn('sku', $skus)->get()->keyBy('sku');
         $ebayData    = EbayMetric::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
         $temuListingData = TemuListingStatus::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
@@ -267,6 +287,14 @@ class PricingMasterViewsController extends Controller
             ->get()
             ->keyBy('sku');
 
+<<<<<<< Updated upstream
+=======
+
+            
+
+
+
+>>>>>>> Stashed changes
         $dobaData = DB::connection('apicentral')
             ->table('doba_api_data as api_doba')
             ->select(
@@ -305,7 +333,28 @@ class PricingMasterViewsController extends Controller
         $aliexpressDataView = AliexpressDataView::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
         $aliexpressLookup = AliExpressSheetData::whereIn('sku', $nonParentSkus)->get()->keyBy('sku');
 
+<<<<<<< Updated upstream
         // Fetch LMPA and LMP data
+=======
+
+        $ebay3Lookup = Ebay3Metric::whereIn('sku', $skus)->get()->keyBy('sku');
+        $temuMetricLookup = TemuMetric::whereIn('sku', $skus)->get()->keyBy('sku');
+        $amazonDataView = AmazonDataView::whereIn('sku', $skus)->get()->keyBy('sku');
+        $ebayDataView = EbayDataView::whereIn('sku', $skus)->get()->keyBy('sku');
+        $shopifyb2cDataView = Shopifyb2cDataView::whereIn('sku', $skus)->get()->keyBy('sku');
+        $dobaDataView = DobaDataView::whereIn('sku', $skus)->get()->keyBy('sku');
+        $temuDataView = TemuDataView::whereIn('sku', $skus)->get()->keyBy('sku');
+        $reverbDataView = ReverbViewData::whereIn('sku', $skus)->get()->keyBy('sku');
+        $macyDataView = MacyDataView::whereIn('sku', $skus)->get()->keyBy('sku');
+        $sheinDataView = SheinDataView::whereIn('sku', $skus)->get()->keyBy('sku');
+        $sheinData = SheinSheetData::whereIn('sku', $skus)->get()->keyBy('sku');
+        $bestbuyUsaLookup = BestbuyUsaProduct::whereIn('sku', $skus)->get()->keyBy('sku');
+        $bestbuyUsaDataView = BestbuyUSADataView::whereIn('sku', $skus)->get()->keyBy('sku');
+        $tiendamiaLookup = TiendamiaProduct::whereIn('sku', $skus)->get()->keyBy('sku');
+        $tiendamiaDataView = TiendamiaDataView::whereIn('sku', $skus)->get()->keyBy('sku');
+
+        // Fetch LMPA data from 5core_repricer database - get lowest price per SKU (excluding 0 prices)
+>>>>>>> Stashed changes
         $lmpaLookup = collect();
         try {
             $lmpaLookup = DB::connection('repricer')
@@ -378,7 +427,10 @@ class PricingMasterViewsController extends Controller
             $bestbuyUsa = $bestbuyUsaLookup[$sku] ?? null;
             $tiendamia = $tiendamiaLookup[$sku] ?? null;
             $tiktok = $tiktokLookup[$sku] ?? null;
+<<<<<<< Updated upstream
             $aliexpress = $aliexpressLookup[$sku] ?? null;
+=======
+>>>>>>> Stashed changes
 
             // Get Shopify data for L30 and INV
             $shopifyItem = $shopifyData[trim(strtoupper($sku))] ?? null;
@@ -409,8 +461,7 @@ class PricingMasterViewsController extends Controller
                 ($macy ? ($macy->m_l30 ?? 0) : 0) +
                 ($bestbuyUsa ? ($bestbuyUsa->m_l30 ?? 0) : 0) +
                 ($tiendamia ? ($tiendamia->m_l30 ?? 0) : 0) +
-                ($doba ? ($doba->l30 ?? 0) : 0) +
-                ($aliexpress ? ($aliexpress->aliexpress_l30 ?? 0) : 0);
+                ($doba ? ($doba->l30 ?? 0) : 0);
 
             $total_l60_count = ($tiktok ? ($tiktok->shopify_tiktokl60 ?? 0) : 0) +
                 ($shein ? ($shein->shopify_sheinl60 ?? 0) : 0) +
@@ -424,8 +475,13 @@ class PricingMasterViewsController extends Controller
                 ($macy ? ($macy->m_l60 ?? 0) : 0) +
                 ($bestbuyUsa ? ($bestbuyUsa->m_l60 ?? 0) : 0) +
                 ($tiendamia ? ($tiendamia->m_l60 ?? 0) : 0) +
+<<<<<<< Updated upstream
                 ($doba ? ($doba->l60 ?? 0) : 0) +
                 ($aliexpress ? ($aliexpress->aliexpress_l60 ?? 0) : 0);
+=======
+                ($doba ? ($doba->l60 ?? 0) : 0);
+            
+>>>>>>> Stashed changes
 
             // Calculate avg CVR
             $channels = [
@@ -478,9 +534,6 @@ class PricingMasterViewsController extends Controller
                 $total_l30_count_data++;
             }
             if ($shein && ($shein->shopify_sheinl30 ?? 0) > 0) {
-                $total_l30_count_data++;
-            }
-            if ($aliexpress && ($aliexpress->aliexpress_l30 ?? 0) > 0) {
                 $total_l30_count_data++;
             }
 
@@ -669,6 +722,7 @@ class PricingMasterViewsController extends Controller
                 'tiktok_cvr' => $tiktok ? $this->calculateCVR($tiktok->shopify_tiktokl30 ?? 0, $tiktok->views ?? 0) : null,
                 'tiktok_buyer_link' => isset($tiktokListingData[$sku]) ? ($tiktokListingData[$sku]->value['buyer_link'] ?? null) : null,
                 'tiktok_seller_link' => isset($tiktokListingData[$sku]) ? ($tiktokListingData[$sku]->value['seller_link'] ?? null) : null,
+<<<<<<< Updated upstream
                 // AliExpress
                 'aliexpress_price' => $aliexpress ? ($aliexpress->price ?? 0) : 0,
                 'aliexpress_l30' => $aliexpress ? ($aliexpress->aliexpress_l30 ?? 0) : 0,
@@ -681,6 +735,23 @@ class PricingMasterViewsController extends Controller
                 'views_clicks' => $shein ? ($shein->views_clicks ?? 0) : 0,
                 'lmp' => $shein ? ($shein->lmp ?? 0) : 0,
                 'shopify_sheinl30' => $shein ? ($shein->shopify_sheinl30 ?? 0) : 0,
+=======
+
+                // Direct assignments for blade template
+                'views_clicks' => $shein ? ($shein->views_clicks ?? 0) : 0,
+                'lmp' => $shein ? ($shein->lmp ?? 0) : 0,
+                'shopify_sheinl30' => $shein ? ($shein->shopify_sheinl30 ?? 0) : 0,
+
+
+                // Total required views from all channels
+                // 'total_req_view' => (
+                //     ($ebay && $ebay->views  && $ebay->ebay_l30 ? (($inv / 30) * 30) / (($ebay->ebay_l30 / $ebay->views)) : 0) +
+                //     ($ebay2 && $ebay2->views  && $ebay2->ebay_l30 ? (($inv / 30) * 30) / (($ebay2->ebay_l30 / $ebay2->views)) : 0) +
+                //     ($ebay3 && $ebay3->views  && $ebay3->ebay_l30 ? (($inv / 30) * 30) / (($ebay3->ebay_l30 / $ebay3->views)) : 0) +
+                //     ($amazon && $amazon->sessions_l30  && $amazon->units_ordered_l30 ? (($inv / 30) * 30) / (($amazon->units_ordered_l30 / $amazon->sessions_l30)) : 0)
+                // ),
+
+>>>>>>> Stashed changes
                 'total_req_view' => (
                     ($ebay && $ebay->views && $ebay->ebay_l30 ? ($inv * 20) : 0) +
                     ($ebay2 && $ebay2->views && $ebay2->ebay_l30 ? ($inv * 20) : 0) +
@@ -690,6 +761,7 @@ class PricingMasterViewsController extends Controller
                     ($reverb && $reverb->views && $reverb->r_l30 ? ($inv * 20) : 0) +
                     ($temuMetric && ($temuMetric->product_clicks_l30 ?? 0) && ($temuMetric->quantity_purchased_l30 ?? 0) ? ($inv * 20) : 0)
                 ),
+<<<<<<< Updated upstream
                 // DataView values
                 'amz_sprice' => isset($amazonDataView[$sku]) ? (is_array($amazonDataView[$sku]->value) ? ($amazonDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($amazonDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
                 'amz_spft' => isset($amazonDataView[$sku]) ? (is_array($amazonDataView[$sku]->value) ? ($amazonDataView[$sku]->value['SPFT'] ?? null) : (json_decode($amazonDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
@@ -734,6 +806,156 @@ class PricingMasterViewsController extends Controller
                 'aliexpress_sprice' => isset($aliexpressDataView[$sku]) ? (is_array($aliexpressDataView[$sku]->value) ? ($aliexpressDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($aliexpressDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
                 'aliexpress_spft' => isset($aliexpressDataView[$sku]) ? (is_array($aliexpressDataView[$sku]->value) ? ($aliexpressDataView[$sku]->value['SPFT'] ?? null) : (json_decode($aliexpressDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
                 'aliexpress_sroi' => isset($aliexpressDataView[$sku]) ? (is_array($aliexpressDataView[$sku]->value) ? ($aliexpressDataView[$sku]->value['SROI'] ?? null) : (json_decode($aliexpressDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+=======
+
+                
+                //  100 / cvr * inv not cvr percentage                             
+
+
+
+
+
+
+
+
+                            
+
+
+
+                // Amazon DataView values
+                'amz_sprice' => isset($amazonDataView[$sku]) ?
+                    (is_array($amazonDataView[$sku]->value) ?
+                        ($amazonDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($amazonDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'amz_spft' => isset($amazonDataView[$sku]) ?
+                    (is_array($amazonDataView[$sku]->value) ?
+                        ($amazonDataView[$sku]->value['SPFT'] ?? null) : (json_decode($amazonDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'amz_sroi' => isset($amazonDataView[$sku]) ?
+                    (is_array($amazonDataView[$sku]->value) ?
+                        ($amazonDataView[$sku]->value['SROI'] ?? null) : (json_decode($amazonDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+
+                'shopifyb2c_sprice' => isset($shopifyb2cDataView[$sku]) ?
+                    (is_array($shopifyb2cDataView[$sku]->value) ?
+                        ($shopifyb2cDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($shopifyb2cDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'shopifyb2c_spft' => isset($shopifyb2cDataView[$sku]) ?
+                    (is_array($shopifyb2cDataView[$sku]->value) ?
+                        ($shopifyb2cDataView[$sku]->value['SPFT'] ?? null) : (json_decode($shopifyb2cDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'shopifyb2c_sroi' => isset($shopifyb2cDataView[$sku]) ?
+                    (is_array($shopifyb2cDataView[$sku]->value) ?
+                        ($shopifyb2cDataView[$sku]->value['SROI'] ?? null) : (json_decode($shopifyb2cDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+
+                // eBay DataView values
+                'ebay_sprice' => isset($ebayDataView[$sku]) ?
+                    (is_array($ebayDataView[$sku]->value) ?
+                        ($ebayDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'ebay_spft' => isset($ebayDataView[$sku]) ?
+                    (is_array($ebayDataView[$sku]->value) ?
+                        ($ebayDataView[$sku]->value['SPFT'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'ebay_sroi' => isset($ebayDataView[$sku]) ?
+                    (is_array($ebayDataView[$sku]->value) ?
+                        ($ebayDataView[$sku]->value['SROI'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+
+                'ebay2_sprice' => isset($ebayDataView[$sku]) ?
+                    (is_array($ebayDataView[$sku]->value) ?
+                        ($ebayDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'ebay2_spft' => isset($ebayDataView[$sku]) ?
+                    (is_array($ebayDataView[$sku]->value) ?
+                        ($ebayDataView[$sku]->value['SPFT'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'ebay2_sroi' => isset($ebayDataView[$sku]) ?
+                    (is_array($ebayDataView[$sku]->value) ?
+                        ($ebayDataView[$sku]->value['SROI'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+
+                'ebay3_sprice' => isset($ebayDataView[$sku]) ?
+                    (is_array($ebayDataView[$sku]->value) ?
+                        ($ebayDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'ebay3_spft' => isset($ebayDataView[$sku]) ?
+                    (is_array($ebayDataView[$sku]->value) ?
+                        ($ebayDataView[$sku]->value['SPFT'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'ebay3_sroi' => isset($ebayDataView[$sku]) ?
+                    (is_array($ebayDataView[$sku]->value) ?
+                        ($ebayDataView[$sku]->value['SROI'] ?? null) : (json_decode($ebayDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+
+
+                'doba_sprice' => isset($dobaDataView[$sku]) ?
+                    (is_array($dobaDataView[$sku]->value) ?
+                        ($dobaDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($dobaDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'doba_final_price' => isset($dobaDataView[$sku]) ?
+                    (is_array($dobaDataView[$sku]->value) ?
+                        ($dobaDataView[$sku]->value['FINAL_PRICE'] ?? null) : (json_decode($dobaDataView[$sku]->value, true)['FINAL_PRICE'] ?? null)) : null,
+                'doba_spft' => isset($dobaDataView[$sku]) ? (is_array($dobaDataView[$sku]->value) ?
+                    ($dobaDataView[$sku]->value['SPFT'] ?? null) : (json_decode($dobaDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'doba_sroi' => isset($dobaDataView[$sku]) ?
+                    (is_array($dobaDataView[$sku]->value) ?
+                        ($dobaDataView[$sku]->value['SROI'] ?? null) : (json_decode($dobaDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+
+
+                'temu_sprice' => isset($temuDataView[$sku]) ?
+                    (is_array($temuDataView[$sku]->value) ?
+                        ($temuDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($temuDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'temu_spft' => isset($temuDataView[$sku]) ? (is_array($temuDataView[$sku]->value) ?
+                    ($temuDataView[$sku]->value['SPFT'] ?? null) : (json_decode($temuDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'temu_sroi' => isset($temuDataView[$sku]) ?
+                    (is_array($temuDataView[$sku]->value) ?
+                        ($temuDataView[$sku]->value['SROI'] ?? null) : (json_decode($temuDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+
+                'reverb_sprice' => isset($reverbDataView[$sku]) ?
+                    (is_array($reverbDataView[$sku]->value) ?
+                        ($reverbDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($reverbDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'reverb_spft' => isset($reverbDataView[$sku]) ? (is_array($reverbDataView[$sku]->value) ?
+                    ($reverbDataView[$sku]->value['SPFT'] ?? null) : (json_decode($reverbDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'reverb_sroi' => isset($reverbDataView[$sku]) ? (is_array($reverbDataView[$sku]->value) ?
+                    ($reverbDataView[$sku]->value['SROI'] ?? null) : (json_decode($reverbDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+
+                'macy_sprice' => isset($macyDataView[$sku]) ?
+                    (is_array($macyDataView[$sku]->value) ?
+                        ($macyDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($macyDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'macy_spft' => isset($macyDataView[$sku]) ? (is_array($macyDataView[$sku]->value) ?
+                    ($macyDataView[$sku]->value['SPFT'] ?? null) : (json_decode($macyDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'macy_sroi' => isset($macyDataView[$sku]) ?
+                    (is_array($macyDataView[$sku]->value) ?
+                        ($macyDataView[$sku]->value['SROI'] ?? null) : (json_decode($macyDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+
+                'shein_sprice' => isset($sheinDataView[$sku]) ?
+                    (is_array($sheinDataView[$sku]->value) ?
+                        ($sheinDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($sheinDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'shein_spft' => isset($sheinDataView[$sku]) ? (is_array($sheinDataView[$sku]->value) ?
+                    ($sheinDataView[$sku]->value['SPFT'] ?? null) : (json_decode($sheinDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'shein_sroi' => isset($sheinDataView[$sku]) ?
+                    (is_array($sheinDataView[$sku]->value) ?
+                        ($sheinDataView[$sku]->value['SROI'] ?? null) : (json_decode($sheinDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+
+                'bestbuy_sprice' => isset($bestbuyUsaDataView[$sku]) ?
+                    (is_array($bestbuyUsaDataView[$sku]->value) ?
+                        ($bestbuyUsaDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($bestbuyUsaDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'bestbuy_spft' => isset($bestbuyUsaDataView[$sku]) ? (is_array($bestbuyUsaDataView[$sku]->value) ?
+                    ($bestbuyUsaDataView[$sku]->value['SPFT'] ?? null) : (json_decode($bestbuyUsaDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'bestbuy_sroi' => isset($bestbuyUsaDataView[$sku]) ?
+                    (is_array($bestbuyUsaDataView[$sku]->value) ?
+                        ($bestbuyUsaDataView[$sku]->value['SROI'] ?? null) : (json_decode($bestbuyUsaDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+
+                'tiendamia_sprice' => isset($tiendamiaDataView[$sku]) ?
+                    (is_array($tiendamiaDataView[$sku]->value) ?
+                        ($tiendamiaDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($tiendamiaDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'tiendamia_spft' => isset($tiendamiaDataView[$sku]) ? (is_array($tiendamiaDataView[$sku]->value) ?
+                    ($tiendamiaDataView[$sku]->value['SPFT'] ?? null) : (json_decode($tiendamiaDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'tiendamia_sroi' => isset($tiendamiaDataView[$sku]) ?
+                    (is_array($tiendamiaDataView[$sku]->value) ?
+                        ($tiendamiaDataView[$sku]->value['SROI'] ?? null) : (json_decode($tiendamiaDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+
+
+
+ 
+                'tiktok_sprice' => isset($tiktokDataView[$sku]) ?
+                    (is_array($tiktokDataView[$sku]->value) ?
+                        ($tiktokDataView[$sku]->value['SPRICE'] ?? null) : (json_decode($tiktokDataView[$sku]->value, true)['SPRICE'] ?? null)) : null,
+                'tiktok_spft' => isset($tiktokDataView[$sku]) ? (is_array($tiktokDataView[$sku]->value) ?
+                    ($tiktokDataView[$sku]->value['SPFT'] ?? null) : (json_decode($tiktokDataView[$sku]->value, true)['SPFT'] ?? null)) : null,
+                'tiktok_sroi' => isset($tiktokDataView[$sku]) ?
+                    (is_array($tiktokDataView[$sku]->value) ?
+                        ($tiktokDataView[$sku]->value['SROI'] ?? null) : (json_decode($tiktokDataView[$sku]->value, true)['SROI'] ?? null)) : null,
+
+
+
+>>>>>>> Stashed changes
             ];
 
             // Set inventory calculations
@@ -751,9 +973,12 @@ class PricingMasterViewsController extends Controller
             $item->shopifyb2c_pft = $item->shopifyb2c_price > 0 ? (($item->shopifyb2c_price * 0.75 - $lp - $ship) / $item->shopifyb2c_price) : 0;
             $item->shopifyb2c_roi = ($lp > 0 && $item->shopifyb2c_price > 0) ? (($item->shopifyb2c_price * 0.75 - $lp - $ship) / $lp) : 0;
 
+<<<<<<< Updated upstream
             // Add inv_value and COGS calculations
             $item->inv_value = $inv * $item->shopifyb2c_price;
             $item->COGS = $lp * $inv;
+=======
+>>>>>>> Stashed changes
 
             // Add analysis action buttons
             $item->l30_analysis = '<button class="btn btn-sm btn-info" onclick="showL30Modal(this)" data-sku="' . $item->SKU . '">L30</button>';
@@ -1160,8 +1385,7 @@ class PricingMasterViewsController extends Controller
                     'reverb' => 0.84,
                     'macy' => 0.76,
                     'walmart' => 0.80,
-                    'tiktok' => 0.64,
-                    'aliexpress' => 0.89
+                    'tiktok' => 0.64
                 ];
 
                 foreach ($marketplaces as $mp => $percent) {
@@ -1221,10 +1445,6 @@ class PricingMasterViewsController extends Controller
                             $tiktokSheet->price = $sprice;
                             $tiktokSheet->save();
                             continue 2; // Skip the rest of the processing for TikTok
-                        case 'aliexpress':
-                            $dataView = AliexpressDataView::firstOrNew(['sku' => $sku]);
-                            $existing = is_array($dataView->value) ? $dataView->value : (json_decode($dataView->value, true) ?: []);
-                            break;
                     }
 
                     $existing['SPRICE'] = number_format($sprice, 2, '.', '');
@@ -1252,22 +1472,6 @@ class PricingMasterViewsController extends Controller
                     $product->Values = json_encode($values);
                     $product->save();
                 }
-                break;
-
-            case 'aliexpress':
-                // AliExpress logic
-                $aliexpressDataView = AliexpressDataView::firstOrNew(['sku' => $sku]);
-                $existing = is_array($aliexpressDataView->value) ? $aliexpressDataView->value : (json_decode($aliexpressDataView->value, true) ?: []);
-
-                $spft = $sprice > 0 ? round(((($sprice * 0.89) - $lp - $ship) / $sprice) * 100, 2) : 0;
-                $sroi = $lp > 0 ? ((($sprice * 0.89) - $lp - $ship) / $lp) * 100 : 0;
-
-                $existing['SPRICE'] = number_format($sprice, 2, '.', '');
-                $existing['SPFT'] = number_format($spft, 2, '.', '');
-                $existing['SROI'] = number_format($sroi, 2, '.', '');
-
-                $aliexpressDataView->value = $existing;
-                $aliexpressDataView->save();
                 break;
 
             default:

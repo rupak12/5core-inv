@@ -534,6 +534,90 @@ Object.entries(groupedData).forEach(([tabName, data], index) => {
 
 });
 
+//push container to inventory warehouse 
+document.getElementById("push-inventory-btn").addEventListener("click", function () {
+    // Find the active tab index
+    const activeTab = document.querySelector(".nav-link.active");
+    if (!activeTab) {
+        alert("No container tab selected.");
+        return;
+    }
+
+    const tabId = activeTab.getAttribute("data-bs-target"); // e.g. #tab-0
+    const index = tabId.replace("#tab-", ""); // get the index
+    const table = window.tabTables[index];
+
+    if (!table) {
+        alert("No data found for this container.");
+        return;
+    }
+
+    // Get data from the active container tab
+    const containerData = table.getData();
+
+    if (containerData.length === 0) {
+        alert("This container has no data to push.");
+        return;
+    }
+
+    // Confirm before pushing
+    if (!confirm("Are you sure you want to push this container’s inventory?")) {
+        return;
+    }
+
+    // Send data to backend
+    fetch("/inventory-warehouse/push", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({
+            tab_name: activeTab.textContent.trim(),
+            data: containerData
+        })
+    })
+    .then(res => res.json())
+    .then(response => {
+        if (response.success) {
+            alert("Inventory pushed successfully!");
+            window.location.href = "/inventory-warehouse";
+        } else {
+            alert(response.message || "Push failed!");
+        }
+    })
+    .catch(err => {
+        console.error("Push error:", err);
+        alert("Something went wrong while pushing inventory.");
+    });
+});
+
+
+document.getElementById('add-tab-btn').addEventListener('click', async function () {
+    const tabName = prompt("Enter new container name:");
+    if (!tabName || tabName.trim() === "") {
+        alert("Tab name is required.");
+        return;
+    }
+
+    const response = await fetch('/transit-container/add-tab', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        },
+        body: JSON.stringify({ tab_name: tabName.trim() })
+    });
+
+    const result = await response.json();
+    if (!result.success) {
+        alert(result.message || 'Failed to create tab.');
+        return;
+    }
+
+    location.reload();
+});
+
 function updateActiveTabSummary(index, table) {
   const data = table.getData();
   let totalCtn = 0;
@@ -660,6 +744,39 @@ document.getElementById('search-input').addEventListener('input', function () {
 
 document.body.style.zoom = "90%"; 
 
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+      const wrapper = document.getElementById("productRowsWrapper");
+      const addBtn = document.getElementById("addItemRowBtn");
+
+      addBtn.addEventListener("click", function () {
+          const newRow = wrapper.querySelector(".product-row").cloneNode(true);
+
+          newRow.querySelectorAll("input, select, textarea").forEach(el => {
+              el.value = "";
+          });
+
+          wrapper.appendChild(newRow);
+
+          bindDeleteBtns();
+      });
+
+      function bindDeleteBtns() {
+          wrapper.querySelectorAll(".delete-product-row-btn").forEach(btn => {
+              btn.onclick = function () {
+                  if (wrapper.querySelectorAll(".product-row").length > 1) {
+                      btn.closest(".product-row").remove();
+                  } else {
+                      alert("At least one row is required.");
+                  }
+              };
+          });
+      }
+
+      bindDeleteBtns();
+  });
 </script>
 
 @endsection

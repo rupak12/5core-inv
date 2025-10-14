@@ -1020,8 +1020,16 @@ const table = new Tabulator("#forecast-table", {
     height: "700px",
     pagination: true, 
     paginationSize: 50,
+<<<<<<< Updated upstream
     initialFilter: [
         {field: "INV", type: ">", value: 0}
+=======
+
+      initialSort: [{
+            column: "inv_value",
+            dir: "desc"
+        }
+>>>>>>> Stashed changes
     ],
     initialSort: [{
         column: "inv_value",
@@ -1112,7 +1120,7 @@ const table = new Tabulator("#forecast-table", {
             hozAlign: "right",
             formatter: function(cell) {
                 const value = cell.getValue();
-                return `<strong>${Math.round(value)}</strong>`;
+                return `<strong>${value}</strong>`;
             }
         },
         {
@@ -1144,7 +1152,7 @@ const table = new Tabulator("#forecast-table", {
                     value = (l30 / inv) * 100;
                 }
                 const element = document.createElement("div");
-                const rounded = parseFloat(Math.round(value));
+                const rounded = parseFloat(value.toFixed(2));
                 element.textContent = rounded + "%";
                 if (rounded >= 0 && rounded <= 10) {
                     element.style.color = "red";
@@ -1211,7 +1219,7 @@ const table = new Tabulator("#forecast-table", {
             headerSort: false,
             formatter: function(cell) {
                 const value = cell.getValue() || 0;
-                return `<span class="text-danger">${Math.round(value)} </span>`;
+                return `<span class="text-danger">${value} </span>`;
             }
         },
         {
@@ -1950,64 +1958,7 @@ function setCombinedFilters() {
 
         // On TOp Caalculation
 
-    
-// Variable to prevent infinite scroll loop
-let isSyncingScroll = false;
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Get the scrollable containers
-    const mainTableHolder = document.querySelector('#forecast-table .tabulator-tableholder');
-    const modalTableHolder = document.querySelector('#ovl30Modal .table-responsive');
-
-    // Function to sync scroll from main table to modal table
-    function syncMainToModal() {
-        if (!isSyncingScroll && mainTableHolder && modalTableHolder) {
-            isSyncingScroll = true;
-            modalTableHolder.scrollTop = mainTableHolder.scrollTop;
-            isSyncingScroll = false;
-        }
-    }
-
-    // Function to sync scroll from modal table to main table
-    function syncModalToMain() {
-        if (!isSyncingScroll && mainTableHolder && modalTableHolder) {
-            isSyncingScroll = true;
-            mainTableHolder.scrollTop = modalTableHolder.scrollTop;
-            isSyncingScroll = false;
-        }
-    }
-
-    // Add scroll event listeners
-    if (mainTableHolder) {
-        mainTableHolder.addEventListener('scroll', syncMainToModal);
-    }
-    if (modalTableHolder) {
-        modalTableHolder.addEventListener('scroll', syncModalToMain);
-    }
-
-    // Clean up event listeners when modal is closed
-    const ovl30Modal = document.getElementById('ovl30Modal');
-    ovl30Modal.addEventListener('hidden.bs.modal', function() {
-        if (mainTableHolder) {
-            mainTableHolder.removeEventListener('scroll', syncMainToModal);
-        }
-        if (modalTableHolder) {
-            modalTableHolder.removeEventListener('scroll', syncModalToMain);
-        }
-    });
-
-    // Re-attach event listeners when modal is shown
-    ovl30Modal.addEventListener('shown.bs.modal', function() {
-        const newMainTableHolder = document.querySelector('#forecast-table .tabulator-tableholder');
-        const newModalTableHolder = document.querySelector('#ovl30Modal .table-responsive');
-        if (newMainTableHolder) {
-            newMainTableHolder.addEventListener('scroll', syncMainToModal);
-        }
-        if (newModalTableHolder) {
-            newModalTableHolder.addEventListener('scroll', syncModalToMain);
-        }
-    });
-});
+        
 
     </script>
 
@@ -2581,7 +2532,7 @@ document.addEventListener('DOMContentLoaded', function() {
             initTableSorting(modalEl.querySelector('.sortable-table'));
             modal.show();
         }
-    
+    }
     // Calculate dilPercentage using the formula: L30 / INV
     let dilPercentage = 0;
     const l30 = ovl30Value; // Use the same ovl30Value for consistency
@@ -2743,7 +2694,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     initTableSorting(modalEl.querySelector('.sortable-table'));
     modal.show();
-
+}
         // Table sorting functionality
         function initTableSorting(table) {
             const headers = table.querySelectorAll('th[data-sort]');

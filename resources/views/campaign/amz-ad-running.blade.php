@@ -425,16 +425,7 @@
                     {
                         title: "HL Spend L30",
                         field: "hl_spend_L30",
-                        visible: false,
-                        formatter: function(cell) {
-                            let HL_SPEND_L30 = cell.getValue().toFixed(2);
-                            return `
-                                <span>${HL_SPEND_L30}</span>
-                                <i class="fa fa-info-circle text-primary toggle-hlSpendL30-btn" 
-                                data-hl-spend-l30="${HL_SPEND_L30}" 
-                                style="cursor:pointer; margin-left:8px;"></i>
-                            `;
-                        }
+                        visible: false
                     },
                     {
                         title: "SPEND L7",
@@ -462,7 +453,7 @@
                     {
                         title: "HL Spend L7",
                         field: "hl_spend_L7",
-                        visible: false,
+                        visible: false
                     },
                     {
                         title: "CLICKS L30",
@@ -675,26 +666,6 @@
                     })
                     .catch(err => console.error(err));
                 }
-            });
-
-            table.on("dataLoaded", function(data){
-                data.forEach(function(row){
-                    $.ajax({
-                        url: '/amazon/save-nr', 
-                        type: 'POST',
-                        data: {
-                            sku: row.sku,
-                            spend_l30: row.SPEND_L30,
-                            _token: $('meta[name="csrf-token"]').attr('content')
-                        },
-                        success: function(res){
-                            console.log("SPEND saved for SKU:", row.sku);
-                        },
-                        error: function(err){
-                            console.error("SPEND save failed for SKU:", row.sku, err);
-                        }
-                    });
-                });
             });
 
             table.on("tableBuilt", function() {
