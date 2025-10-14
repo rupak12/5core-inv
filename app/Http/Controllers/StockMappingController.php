@@ -87,7 +87,7 @@ protected function fetchFreshData(){
     //   $result = (new BestbuyusaApiService())->getChannels();
     //   dd($result);
     //  $result = (new WayfairApiService())->getInventory();    
-
+    
     // $macyInventory = (new MacysApiService())->getInventory();
     // die();
 
