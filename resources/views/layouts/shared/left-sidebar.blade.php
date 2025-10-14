@@ -2149,8 +2149,10 @@
                                         <a href="{{ route('walmart.under.utilized') }}">Walmart Under Utili.</a>
                                     </li>
                                     <li>
-                                        <a href="{{ route('walmart.correctly.utilized') }}">Walmart Correctly
-                                            Utili.</a>
+                                        <a href="{{ route('walmart.correctly.utilized') }}">Walmart Correctly Utili.</a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('walmart.missing.ads') }}">Walmart Missing Ads</a>
                                     </li>
                                 </ul>
                             </div>

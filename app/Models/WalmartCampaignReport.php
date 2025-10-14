@@ -22,6 +22,7 @@ class WalmartCampaignReport extends Model
         'cpc',
         'impression',
         'clicks',
+        'status',
         'created_at',
         'updated_at',
     ];

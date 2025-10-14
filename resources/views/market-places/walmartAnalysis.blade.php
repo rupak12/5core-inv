@@ -2619,7 +2619,7 @@
 
                     // Send AJAX
                     $.ajax({
-                        url: '/temu/save-nr',
+                        url: '/walmart/save-nr',
                         type: 'POST',
                         data: {
                             sku: sku,

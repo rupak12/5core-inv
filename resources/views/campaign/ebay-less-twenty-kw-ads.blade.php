@@ -441,7 +441,7 @@
                         hozAlign: "center",
                         formatter: function(cell) {
                             var row = cell.getRow().getData();
-                            var sbid = parseFloat(row.sbid) || 0;
+                            var sbid = row.sbid || 0;
                             return sbid.toFixed(2);
                         }
                     },
@@ -513,6 +513,8 @@
             table.on("tableBuilt", function () {
 
                 function combinedFilter(data) {
+
+
                     // Global search filter
                     let searchVal = $("#global-search").val()?.toLowerCase() || "";
                     if (searchVal && !(data.campaignName?.toLowerCase().includes(searchVal))) {

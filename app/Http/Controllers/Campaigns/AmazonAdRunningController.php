@@ -107,6 +107,14 @@ class AmazonAdRunningController extends Controller
                 $parentHlSpendData[$parent] = [
                     'total_L30' => $matchedCampaignHlL30->cost ?? 0,
                     'total_L7'  => $matchedCampaignHlL7->cost ?? 0,
+                    'total_L30_sales' => $matchedCampaignHlL30->sales ?? 0,
+                    'total_L7_sales'  => $matchedCampaignHlL7->sales ?? 0,
+                    'total_L30_sold'  => $matchedCampaignHlL30->unitsSold ?? 0,
+                    'total_L7_sold'   => $matchedCampaignHlL7->unitsSold ?? 0,
+                    'total_L30_impr'  => $matchedCampaignHlL30->impressions ?? 0,
+                    'total_L7_impr'   => $matchedCampaignHlL7->impressions ?? 0,
+                    'total_L30_clicks'=> $matchedCampaignHlL30->clicks ?? 0,
+                    'total_L7_clicks' => $matchedCampaignHlL7->clicks ?? 0,
                     'childCount'=> $childCount,
                 ];
             }
@@ -157,6 +165,10 @@ class AmazonAdRunningController extends Controller
             $row['kw_clicks_L7']  = $matchedCampaignKwL7->clicks ?? 0;
             $row['kw_spend_L30']  = $matchedCampaignKwL30->spend ?? 0;
             $row['kw_spend_L7']   = $matchedCampaignKwL7->spend ?? 0;
+            $row['kw_sales_L30']  = $matchedCampaignKwL30->sales30d ?? 0;
+            $row['kw_sales_L7']   = $matchedCampaignKwL7->sales7d ?? 0;
+            $row['kw_sold_L30']  = $matchedCampaignKwL30->unitsSoldClicks30d ?? 0;
+            $row['kw_sold_L7']   = $matchedCampaignKwL7->unitsSoldClicks7d ?? 0;
 
             // --- PT ---
             $row['pt_impr_L30'] = $matchedCampaignPtL30->impressions ?? 0;
@@ -165,6 +177,10 @@ class AmazonAdRunningController extends Controller
             $row['pt_clicks_L7']  = $matchedCampaignPtL7->clicks ?? 0;
             $row['pt_spend_L30']  = $matchedCampaignPtL30->spend ?? 0;
             $row['pt_spend_L7']   = $matchedCampaignPtL7->spend ?? 0;
+            $row['pt_sales_L30']  = $matchedCampaignPtL30->sales30d ?? 0;
+            $row['pt_sales_L7']   = $matchedCampaignPtL7->sales7d ?? 0;
+            $row['pt_sold_L30']  = $matchedCampaignPtL30->unitsSoldClicks30d ?? 0;
+            $row['pt_sold_L7']   = $matchedCampaignPtL7->unitsSoldClicks7d ?? 0;
 
             // --- HL  ---
             $row['hl_impr_L30'] = $matchedCampaignHlL30->impressions ?? 0;
@@ -173,17 +189,45 @@ class AmazonAdRunningController extends Controller
             $row['hl_clicks_L7']  = $matchedCampaignHlL7->clicks ?? 0;
             $row['hl_campaign_L30'] = $matchedCampaignHlL30->campaignName ?? null;
             $row['hl_campaign_L7']  = $matchedCampaignHlL7->campaignName ?? null;
+            $row['hl_sales_L30']  = 0;
+            $row['hl_sales_L7']   = 0;
+            $row['hl_sold_L30']  = 0;
+            $row['hl_sold_L7']   = 0;
 
             if (str_starts_with($sku, 'PARENT')) {
                 $row['hl_spend_L30'] = $matchedCampaignHlL30->cost ?? 0;
                 $row['hl_spend_L7']  = $matchedCampaignHlL7->cost ?? 0;
+                $row['hl_sales_L30']  = $matchedCampaignHlL30->sales ?? 0;
+                $row['hl_sales_L7']   = $matchedCampaignHlL7->sales ?? 0;
+                $row['hl_sold_L30']  = $matchedCampaignHlL30->unitsSold ?? 0;
+                $row['hl_sold_L7']   = $matchedCampaignHlL7->unitsSold ?? 0;
+                $row['hl_impr_L30'] = $matchedCampaignHlL30->impressions ?? 0;
+                $row['hl_impr_L7']  = $matchedCampaignHlL7->impressions ?? 0;
+                $row['hl_clicks_L30'] = $matchedCampaignHlL30->clicks ?? 0;
+                $row['hl_clicks_L7']  = $matchedCampaignHlL7->clicks ?? 0;
             } 
             elseif (isset($parentHlSpendData[$parent]) && $parentHlSpendData[$parent]['childCount'] > 0) {
                 $row['hl_spend_L30'] = $parentHlSpendData[$parent]['total_L30'] / $parentHlSpendData[$parent]['childCount'];
                 $row['hl_spend_L7']  = $parentHlSpendData[$parent]['total_L7'] / $parentHlSpendData[$parent]['childCount'];
+                $row['hl_sales_L30']  = $parentHlSpendData[$parent]['total_L30_sales'] / $parentHlSpendData[$parent]['childCount'];
+                $row['hl_sales_L7']   = $parentHlSpendData[$parent]['total_L7_sales'] / $parentHlSpendData[$parent]['childCount'];
+                $row['hl_sold_L30']  = $parentHlSpendData[$parent]['total_L30_sold'] / $parentHlSpendData[$parent]['childCount'];
+                $row['hl_sold_L7']   = $parentHlSpendData[$parent]['total_L7_sold'] / $parentHlSpendData[$parent]['childCount'];
+                $row['hl_impr_L30'] = $parentHlSpendData[$parent]['total_L30_impr'] / $parentHlSpendData[$parent]['childCount'];
+                $row['hl_impr_L7']  = $parentHlSpendData[$parent]['total_L7_impr'] / $parentHlSpendData[$parent]['childCount'];
+                $row['hl_clicks_L30'] = $parentHlSpendData[$parent]['total_L30_clicks'] / $parentHlSpendData[$parent]['childCount'];
+                $row['hl_clicks_L7']  = $parentHlSpendData[$parent]['total_L7_clicks'] / $parentHlSpendData[$parent]['childCount'];
             } else {
                 $row['hl_spend_L30'] = 0;
                 $row['hl_spend_L7']  = 0;
+                $row['hl_sales_L30'] = 0;
+                $row['hl_sales_L7']  = 0;
+                $row['hl_sold_L30']  = 0;
+                $row['hl_sold_L7']   = 0;
+                $row['hl_impr_L30'] = 0;
+                $row['hl_impr_L7']  = 0;
+                $row['hl_clicks_L30'] = 0;
+                $row['hl_clicks_L7']  = 0;
             }
             
             $childCount = $parentSkuCounts[$parent] ?? 0;
@@ -203,6 +247,12 @@ class AmazonAdRunningController extends Controller
 
             $row['SPEND_L30'] = $row['pt_spend_L30'] + $row['kw_spend_L30'] + $row['hl_spend_L30'];
             $row['SPEND_L7']  = $row['pt_spend_L7'] + $row['kw_spend_L7'] + $row['hl_spend_L7'];
+
+            $row['SALES_L30'] = $row['pt_sales_L30'] + $row['kw_sales_L30'] + $row['hl_sales_L30'];
+            $row['SALES_L7']  = $row['pt_sales_L7'] + $row['kw_sales_L7'] + $row['hl_sales_L7'];
+
+            $row['SOLD_L30'] = $row['pt_sold_L30'] + $row['kw_sold_L30'] + $row['hl_sold_L30'];
+            $row['SOLD_L7']  = $row['pt_sold_L7'] + $row['kw_sold_L7'] + $row['hl_sold_L7'];
 
             $row['NRL'] = '';
             $row['NRA'] = '';

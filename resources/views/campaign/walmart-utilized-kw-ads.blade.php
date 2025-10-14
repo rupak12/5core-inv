@@ -186,14 +186,12 @@
                             <div class="col-md-6">
                                 <div class="d-flex gap-2">
                                     <div class="input-group">
-                                        <input type="text" id="global-search" class="form-control form-control-md" 
-                                               placeholder="Search campaign...">
+                                        <input type="text" id="global-search" class="form-control form-control-md" placeholder="Search campaign...">
                                     </div>
                                     <select id="status-filter" class="form-select form-select-md" style="width: 140px;">
                                         <option value="">All Status</option>
-                                        <option value="ENABLED">Enabled</option>
+                                        <option value="LIVE">Live</option>
                                         <option value="PAUSED">Paused</option>
-                                        <option value="ARCHIVED">Archived</option>
                                     </select>
                                 </div>
                             </div>
@@ -316,27 +314,27 @@
                         visible: false
                     },
                     {
-                        title: "NRL",
-                        field: "NRL",
+                        title: "NRA",
+                        field: "NRA",
                         formatter: function(cell) {
                             const row = cell.getRow();
                             const sku = row.getData().sku;
                             const value = cell.getValue();
 
                             let bgColor = "";
-                            if (value === "NRL") {
+                            if (value === "NRA") {
                                 bgColor = "background-color:#dc3545;color:#fff;"; // red
-                            } else if (value === "RL") {
+                            } else if (value === "RA") {
                                 bgColor = "background-color:#28a745;color:#fff;"; // green
                             }
 
                             return `
                                 <select class="form-select form-select-sm editable-select" 
                                         data-sku="${sku}" 
-                                        data-field="NRL"
+                                        data-field="NR"
                                         style="width: 90px; ${bgColor}">
-                                    <option value="RL" ${value === 'RL' ? 'selected' : ''}>RL</option>
-                                    <option value="NRL" ${value === 'NRL' ? 'selected' : ''}>NRL</option>
+                                    <option value="RA" ${value === 'RA' ? 'selected' : ''}>RA</option>
+                                    <option value="NRA" ${value === 'NRA' ? 'selected' : ''}>NRA</option>
                                 </select>
                             `;
                         },
@@ -457,6 +455,7 @@
                             }
                             return sbid;
                         },
+                        visible: false
                     },
                     {
                         title: "APR BID",
@@ -483,8 +482,28 @@
                                 }
                                 updateBid(sbid, rowData.campaign_id);
                             }
-                        }
+                        },
+                        visible: false
                     },
+                    {
+                        title: "Status",
+                        field: "campaignStatus",
+                        hozAlign: "center",
+                        formatter: function(cell) {
+                            const row = cell.getRow();
+                            const sku = row.getData().sku;
+                            const value = cell.getValue();
+                            return `
+                                <select class="form-select form-select-sm editable-select" 
+                                        data-sku="${sku}" 
+                                        data-field="status"
+                                        style="width: 110px;">
+                                    <option value="PAUSED" ${value === 'PAUSED' ? 'selected' : ''}>PAUSED</option>
+                                    <option value="LIVE" ${value === 'LIVE' ? 'selected' : ''}>LIVE</option>
+                                </select>
+                            `;
+                        }
+                    }
                 ],
                 ajaxResponse: function(url, params, response) {
                     return response.data;
@@ -527,6 +546,42 @@
                 }
             });
 
+            $(document).on("change", ".editable-select", function () {
+                let select = this;
+                let sku = select.getAttribute("data-sku");
+                let field = select.getAttribute("data-field");
+                let value = select.value;
+
+                console.log(`SKU: ${sku}, Field: ${field}, Value: ${value}`);
+
+                fetch('/walmart/save-nr', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ sku, nr: value })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        let bgColor = "";
+                        if (value === "NRA") {
+                            bgColor = "background-color:#dc3545;color:#fff;"; 
+                        } else if (value === "RA") {
+                            bgColor = "background-color:#28a745;color:#fff;";
+                        } else if (value === "LATER") {
+                            bgColor = "background-color:#ffc107;color:#000;";
+                        }
+                        select.style = `width: 100px; ${bgColor}`;
+                    } else {
+                        console.error('Failed to update status');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
 
             table.on("tableBuilt", function () {
 

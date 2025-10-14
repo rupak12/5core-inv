@@ -2661,17 +2661,14 @@
                         sbidColor = "pink";
                     }
 
-                    // Special override: pink dilution but sold = 0
-                    if (sbidColor === "pink" && item['eBay L30'] === 0) {
-                        sbid = 6;  // override
-                    }
-
                     let reqViews = item.INV * 10;
                     let reqViewsColor = "";
 
                     if (reqViews > item.VIEWS) {
                         reqViewsColor = "red";
-                        sbid = sbid + 2;       
+                        if (sbidColor !== "pink") {
+                            sbid = sbid + 2;
+                        }  
                     } else {
                         reqViewsColor = "green";
                     }

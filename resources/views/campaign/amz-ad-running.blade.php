@@ -173,6 +173,9 @@
                             <!-- Stats -->
                             <div class="col-md-6">
                                 <div class="d-flex gap-2 justify-content-end">
+                                    <a href="javascript:void(0)" id="export-btn" class="btn btn-sm btn-success d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-file-export me-1"></i> Export Excel/CSV
+                                    </a>
                                     <button class="btn btn-success btn-md">
                                         <i class="fa fa-arrow-up me-1"></i>
                                         Need to increase bids: <span id="total-campaigns" class="fw-bold ms-1 fs-4">0</span>
@@ -215,6 +218,8 @@
 @section('script')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
 
@@ -415,24 +420,33 @@
                     {
                         title: "KW Spend L30",
                         field: "kw_spend_L30",
-                        visible: false
+                        visible: false,
+                        formatter: function(cell) {
+                            let KW_SPEND_L30 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(KW_SPEND_L30).toFixed(0)}</span>
+                            `;
+                        }
                     },
                     {
                         title: "PT Spend L30",
                         field: "pt_spend_L30",
-                        visible: false
+                        visible: false,
+                        formatter: function(cell) {
+                            let PT_SPEND_L30 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(PT_SPEND_L30).toFixed(0)}</span>
+                            `;
+                        }
                     },
                     {
                         title: "HL Spend L30",
                         field: "hl_spend_L30",
                         visible: false,
                         formatter: function(cell) {
-                            let HL_SPEND_L30 = cell.getValue().toFixed(2);
+                            let HL_SPEND_L30 = cell.getValue() || 0;
                             return `
-                                <span>${HL_SPEND_L30}</span>
-                                <i class="fa fa-info-circle text-primary toggle-hlSpendL30-btn" 
-                                data-hl-spend-l30="${HL_SPEND_L30}" 
-                                style="cursor:pointer; margin-left:8px;"></i>
+                                <span>${parseFloat(HL_SPEND_L30).toFixed(0)}</span>
                             `;
                         }
                     },
@@ -440,9 +454,9 @@
                         title: "SPEND L7",
                         field: "SPEND_L7",
                         formatter: function(cell) {
-                            let SPEND_L7 = cell.getValue();
+                            let SPEND_L7 = cell.getValue() || 0;
                             return `
-                                <span>${SPEND_L7.toFixed(0)}</span>
+                                <span>${parseFloat(SPEND_L7).toFixed(0)}</span>
                                 <i class="fa fa-info-circle text-primary toggle-spendL7-btn" 
                                 data-spend-l7="${SPEND_L7}" 
                                 style="cursor:pointer; margin-left:8px;"></i>
@@ -452,25 +466,227 @@
                     {
                         title: "KW Spend L7",
                         field: "kw_spend_L7",
-                        visible: false
+                        visible: false,
+                        formatter: function(cell) {
+                            let KW_SPEND_L7 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(KW_SPEND_L7).toFixed(0)}</span>
+                            `;
+                        }
                     },
                     {
                         title: "PT Spend L7",
                         field: "pt_spend_L7",
-                        visible: false
+                        visible: false,
+                        formatter: function(cell) {
+                            let PT_SPEND_L7 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(PT_SPEND_L7).toFixed(0)}</span>
+                            `;
+                        }
                     },
                     {
                         title: "HL Spend L7",
                         field: "hl_spend_L7",
                         visible: false,
+                        formatter: function(cell) {
+                            let HL_SPEND_L7 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(HL_SPEND_L7).toFixed(0)}</span>
+                            `;
+                        }
+                    },
+                    {
+                        title: "SOLD L30",
+                        field: "SOLD_L30",
+                        formatter: function(cell) {
+                            let SOLD_L30 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(SOLD_L30).toFixed(0)}</span>
+                                <i class="fa fa-info-circle text-primary toggle-soldL30-btn" 
+                                data-sold-l30="${SOLD_L30}" 
+                                style="cursor:pointer; margin-left:8px;"></i>
+                            `;
+                        }
+                    },
+                    {
+                        title: "KW Sold L30",
+                        field: "kw_sold_L30",
+                        visible: false,
+                        formatter: function(cell) {
+                            let KW_SOLD_L30 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(KW_SOLD_L30).toFixed(0)}</span>
+                            `;
+                        }
+                    },
+                    {
+                        title: "PT Sold L30",
+                        field: "pt_sold_L30",
+                        visible: false,
+                        formatter: function(cell) {
+                            let PT_SOLD_L30 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(PT_SOLD_L30).toFixed(0)}</span>
+                            `;
+                        }
+                    },
+                    {
+                        title: "HL Sold L30",
+                        field: "hl_sold_L30",
+                        visible: false,
+                        formatter: function(cell) {
+                            let HL_SOLD_L30 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(HL_SOLD_L30).toFixed(0)}</span>
+                            `;
+                        }
+                    },
+                    {
+                        title: "SOLD L7",
+                        field: "SOLD_L7",
+                        formatter: function(cell) {
+                            let SOLD_L7 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(SOLD_L7).toFixed(0)}</span>
+                                <i class="fa fa-info-circle text-primary toggle-soldL7-btn" 
+                                data-sold-l7="${SOLD_L7}" 
+                                style="cursor:pointer; margin-left:8px;"></i>
+                            `;
+                        }
+                    },
+                    {
+                        title: "KW Sold L7",
+                        field: "kw_sold_L7",
+                        visible: false,
+                        formatter: function(cell) {
+                            let KW_SOLD_L7 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(KW_SOLD_L7).toFixed(0)}</span>
+                            `;
+                        }
+                    },
+                    {
+                        title: "PT Sold L7",
+                        field: "pt_sold_L7",
+                        visible: false,
+                        formatter: function(cell) {
+                            let PT_SOLD_L7 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(PT_SOLD_L7).toFixed(0)}</span>
+                            `;
+                        }
+                    },
+                    {
+                        title: "HL Sold L7",
+                        field: "hl_sold_L7",
+                        visible: false,
+                        formatter: function(cell) {
+                            let HL_SOLD_L7 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(HL_SOLD_L7).toFixed(0)}</span>
+                            `;
+                        }
+                    },
+                    {
+                        title: "SALES L30",
+                        field: "SALES_L30",
+                        formatter: function(cell) {
+                            let SALES_L30 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(SALES_L30).toFixed(0)}</span>
+                                <i class="fa fa-info-circle text-primary toggle-salesL30-btn" 
+                                data-sales-l30="${SALES_L30}" 
+                                style="cursor:pointer; margin-left:8px;"></i>
+                            `;
+                        }
+                    },
+                    {
+                        title: "KW Sales L30",
+                        field: "kw_sales_L30",
+                        visible: false,
+                        formatter: function(cell) {
+                            let KW_SALES_L30 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(KW_SALES_L30).toFixed(0)}</span>
+                            `;
+                        }
+                    },
+                    {
+                        title: "PT Sales L30",
+                        field: "pt_sales_L30",
+                        visible: false,
+                        formatter: function(cell) {
+                            let PT_SALES_L30 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(PT_SALES_L30).toFixed(0)}</span>
+                            `;
+                        }
+                    },
+                    {
+                        title: "HL Sales L30",
+                        field: "hl_sales_L30",
+                        visible: false,
+                        formatter: function(cell) {
+                            let HL_SALES_L30 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(HL_SALES_L30).toFixed(0)}</span>
+                            `;
+                        }
+                    },
+                    {
+                        title: "SALES L7",
+                        field: "SALES_L7",
+                        formatter: function(cell) {
+                            let SALES_L7 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(SALES_L7).toFixed(0)}</span>
+                                <i class="fa fa-info-circle text-primary toggle-salesL7-btn" 
+                                data-sales-l30="${SALES_L7}" 
+                                style="cursor:pointer; margin-left:8px;"></i>
+                            `;
+                        }
+                    },
+                    {
+                        title: "KW Sales L7",
+                        field: "kw_sales_L7",
+                        visible: false,
+                        formatter: function(cell) {
+                            let KW_SALES_L7 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(KW_SALES_L7).toFixed(0)}</span>
+                            `;
+                        }
+                    },
+                    {
+                        title: "PT Sales L7",
+                        field: "pt_sales_L7",
+                        visible: false,
+                        formatter: function(cell) {
+                            let PT_SALES_L7 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(PT_SALES_L7).toFixed(0)}</span>
+                            `;
+                        }
+                    },
+                    {
+                        title: "HL Sales L7",
+                        field: "hl_sales_L7",
+                        visible: false,
+                        formatter: function(cell) {
+                            let HL_SALES_L7 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(HL_SALES_L7).toFixed(0)}</span>
+                            `;
+                        }
                     },
                     {
                         title: "CLICKS L30",
                         field: "CLICKS_L30",
                         formatter: function(cell) {
-                            let CLICKS_L30 = cell.getValue();
+                            let CLICKS_L30 = cell.getValue() || 0;
                             return `
-                                <span>${CLICKS_L30.toFixed(0)}</span>
+                                <span>${parseFloat(CLICKS_L30).toFixed(0)}</span>
                                 <i class="fa fa-info-circle text-primary toggle-clicksL30-btn" 
                                 data-clicks-l30="${CLICKS_L30}" 
                                 style="cursor:pointer; margin-left:8px;"></i>
@@ -480,25 +696,43 @@
                     {
                         title: "KW Clicks L30",
                         field: "kw_clicks_L30",
-                        visible: false
+                        visible: false,
+                        formatter: function(cell) {
+                            let KW_CLICKS_L30 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(KW_CLICKS_L30).toFixed(0)}</span>
+                            `;
+                        }
                     },
                     {
                         title: "PT Clicks L30",
                         field: "pt_clicks_L30",
-                        visible: false
+                        visible: false,
+                        formatter: function(cell) {
+                            let PT_CLICKS_L30 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(PT_CLICKS_L30).toFixed(0)}</span>
+                            `;
+                        }
                     },
                     {
                         title: "HL Clicks L30",
                         field: "hl_clicks_L30",
-                        visible: false
+                        visible: false,
+                        formatter: function(cell) {
+                            let HL_CLICKS_L30 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(HL_CLICKS_L30).toFixed(0)}</span>
+                            `;
+                        }
                     },
                     {
                         title: "CLICKS L7",
                         field: "CLICKS_L7",
                         formatter: function(cell) {
-                            let CLICKS_L7 = cell.getValue();
+                            let CLICKS_L7 = cell.getValue() || 0;
                             return `
-                                <span>${CLICKS_L7.toFixed(0)}</span>
+                                <span>${parseFloat(CLICKS_L7).toFixed(0)}</span>
                                 <i class="fa fa-info-circle text-primary toggle-clicksL7-btn" 
                                 data-clicks-l7="${CLICKS_L7}" 
                                 style="cursor:pointer; margin-left:8px;"></i>
@@ -508,25 +742,43 @@
                     {
                         title: "KW Clicks L7",
                         field: "kw_clicks_L7",
-                        visible: false
+                        visible: false,
+                        formatter: function(cell) {
+                            let KW_CLICKS_L7 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(KW_CLICKS_L7).toFixed(0)}</span>
+                            `;
+                        }
                     },
                     {
                         title: "PT Clicks L7",
                         field: "pt_clicks_L7",
-                        visible: false
+                        visible: false,
+                        formatter: function(cell) {
+                            let PT_CLICKS_L7 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(PT_CLICKS_L7).toFixed(0)}</span>
+                            `;
+                        }
                     },
                     {
                         title: "HL Clicks L7",
                         field: "hl_clicks_L7",
-                        visible: false
+                        visible: false,
+                        formatter: function(cell) {
+                            let HL_CLICKS_L7 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(HL_CLICKS_L7).toFixed(0)}</span>
+                            `;
+                        }
                     },
                     {
                         title: "IMP L30",
                         field: "IMP_L30",
                         formatter: function(cell) {
-                            let IMP_L30 = cell.getValue();
+                            let IMP_L30 = cell.getValue() || 0;
                             return `
-                                <span>${IMP_L30.toFixed(0)}</span>
+                                <span>${parseFloat(IMP_L30).toFixed(0)}</span>
                                 <i class="fa fa-info-circle text-primary toggle-impL30-btn" 
                                 data-clicks-l7="${IMP_L30}" 
                                 style="cursor:pointer; margin-left:8px;"></i>
@@ -537,24 +789,42 @@
                         title: "KW IMP L30",
                         field: "kw_impr_L30",
                         visible: false,
+                        formatter: function(cell) {
+                            let KW_IMP_L30 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(KW_IMP_L30).toFixed(0)}</span>
+                            `;
+                        }
                     },
                     {
                         title: "PT IMP L30",
                         field: "pt_impr_L30",
-                        visible: false
+                        visible: false,
+                        formatter: function(cell) {
+                            let PT_IMP_L30 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(PT_IMP_L30).toFixed(0)}</span>
+                            `;
+                        }
                     },
                     {
                         title: "HL IMP L30",
                         field: "hl_impr_L30",
-                        visible: false
+                        visible: false,
+                        formatter: function(cell) {
+                            let HL_IMP_L30 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(HL_IMP_L30).toFixed(0)}</span>
+                            `;
+                        }
                     },
                     {
                         title: "IMP L7",
                         field: "IMP_L7",
                         formatter: function(cell) {
-                            let IMP_L7 = cell.getValue();
+                            let IMP_L7 = cell.getValue() || 0;
                             return `
-                                <span>${IMP_L7.toFixed(0)}</span>
+                                <span>${parseFloat(IMP_L7).toFixed(0)}</span>
                                 <i class="fa fa-info-circle text-primary toggle-impL7-btn" 
                                 data-clicks-l7="${IMP_L7}" 
                                 style="cursor:pointer; margin-left:8px;"></i>
@@ -564,17 +834,35 @@
                     {
                         title: "KW IMP L7",
                         field: "kw_impr_L7",
-                        visible: false
+                        visible: false,
+                        formatter: function(cell) {
+                            let KW_IMP_L7 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(KW_IMP_L7).toFixed(0)}</span>
+                            `;
+                        }
                     },
                     {
                         title: "PT IMP L7",
                         field: "pt_impr_L7",
-                        visible: false
+                        visible: false,
+                        formatter: function(cell) {
+                            let PT_IMP_L7 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(PT_IMP_L7).toFixed(0)}</span>
+                            `;
+                        }
                     },
                     {
                         title: "HL IMP L7",
                         field: "hl_impr_L7",
-                        visible: false
+                        visible: false,
+                        formatter: function(cell) {
+                            let HL_IMP_L7 = cell.getValue() || 0;
+                            return `
+                                <span>${parseFloat(HL_IMP_L7).toFixed(0)}</span>
+                            `;
+                        }
                     },
                     {
                         title: "START AD",
@@ -688,7 +976,7 @@
                             _token: $('meta[name="csrf-token"]').attr('content')
                         },
                         success: function(res){
-                            console.log("SPEND saved for SKU:", row.sku);
+                            // console.log("SPEND saved for SKU:", row.sku);
                         },
                         error: function(err){
                             console.error("SPEND save failed for SKU:", row.sku, err);
@@ -823,6 +1111,46 @@
                         }
                     });
                 }
+                if (e.target.classList.contains("toggle-soldL30-btn")) {
+                    let colsToToggle = ["kw_sold_L30", "pt_sold_L30", "hl_sold_L30"];
+
+                    colsToToggle.forEach(colField => {
+                        let col = table.getColumn(colField);
+                        if (col) {
+                            col.toggle();
+                        }
+                    });
+                }
+                if (e.target.classList.contains("toggle-soldL7-btn")) {
+                    let colsToToggle = ["kw_sold_L7", "pt_sold_L7", "hl_sold_L7"];
+
+                    colsToToggle.forEach(colField => {
+                        let col = table.getColumn(colField);
+                        if (col) {
+                            col.toggle();
+                        }
+                    });
+                }
+                if (e.target.classList.contains("toggle-salesL30-btn")) {
+                    let colsToToggle = ["kw_sales_L30", "pt_sales_L30", "hl_sales_L30"];
+
+                    colsToToggle.forEach(colField => {
+                        let col = table.getColumn(colField);
+                        if (col) {
+                            col.toggle();
+                        }
+                    });
+                }
+                if (e.target.classList.contains("toggle-salesL7-btn")) {
+                    let colsToToggle = ["kw_sales_L7", "pt_sales_L7", "hl_sales_L7"];
+
+                    colsToToggle.forEach(colField => {
+                        let col = table.getColumn(colField);
+                        if (col) {
+                            col.toggle();
+                        }
+                    });
+                }
                 if (e.target.classList.contains("toggle-clicksL30-btn")) {
                     let colsToToggle = ["kw_clicks_L30", "pt_clicks_L30", "hl_clicks_L30"];
 
@@ -864,6 +1192,26 @@
                     });
                 }
                 
+            });
+
+            document.getElementById("export-btn").addEventListener("click", function () {
+                let allData = table.getData("active"); 
+
+                if (allData.length === 0) {
+                    alert("No data available to export!");
+                    return;
+                }
+
+                let exportData = allData.map(row => ({
+                    sku: row.sku,
+                    SPEND_L30: row.SPEND_L30.toFixed(2),
+                }));
+
+                let ws = XLSX.utils.json_to_sheet(exportData);
+                let wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Campaigns");
+
+                XLSX.writeFile(wb, "amazon_ad_running.xlsx");
             });
 
             document.body.style.zoom = "85%";

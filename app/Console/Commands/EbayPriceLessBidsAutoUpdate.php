@@ -99,14 +99,33 @@ class EbayPriceLessBidsAutoUpdate extends Command
             $row['L30']    = $shopify->quantity ?? 0;
             $row['price']  = $ebay->ebay_price ?? 0;
             $row['campaign_id'] = $matchedCampaignL7->campaign_id ?? ($matchedCampaignL1->campaign_id ?? '');
-            $row['sbid'] = 0.10;
+            $row['sbid'] = 0;
 
-            if($row['price'] < 30){
-                if($row['price'] < 10){
+            $budget = floatval($row['campaignBudgetAmount']);
+            $l7_spend = floatval($row['l7_spend']);
+            $l1_cpc = floatval($row['l1_cpc']);
+            $l7_cpc = floatval($row['l7_cpc']);
+
+            $ub7 = $budget > 0 ? ($l7_spend / ($budget * 7)) * 100 : 0;
+            
+            if($ub7 < 70){
+                if($l1_cpc > $l7_cpc){
+                    $row['sbid'] = floor($l1_cpc * 1.05 * 100) / 100;
+                }else{
+                    $row['sbid'] = floor($l7_cpc * 1.05 * 100) / 100;
+                }
+            }else if($ub7 > 90){
+                $row['sbid'] = floor($l1_cpc * 0.90 * 100) / 100;
+            }
+            
+            if($row['price'] < 30 && $row['campaignName'] !== ''){
+                if($row['price'] <= 10 && $row['sbid'] > 0.10){
                     $row['sbid'] = 0.10;
-                }elseif($row['price'] > 10 && $row['price'] <= 20){
+                }
+                elseif($row['price'] > 10 && $row['price'] <= 20 && $row['sbid'] > 0.20){
                     $row['sbid'] = 0.20;
-                }elseif($row['price'] > 20 && $row['price'] <= 30){
+                }
+                elseif($row['price'] > 20 && $row['price'] <= 30 && $row['sbid'] > 0.30){
                     $row['sbid'] = 0.30;
                 }
                 $result[] = (object) $row;

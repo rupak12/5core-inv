@@ -259,7 +259,7 @@ class WalmartControllerMarket extends Controller
 
         $dataView = WalmartDataView::firstOrNew(['sku' => $sku]);
         $value = is_array($dataView->value) ? $dataView->value : (json_decode($dataView->value, true) ?: []);
-        $value['NR'] = filter_var($nr, FILTER_VALIDATE_BOOLEAN);
+        $value['NR'] = $nr;
         $dataView->value = $value;
         $dataView->save();
 

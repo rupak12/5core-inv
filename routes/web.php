@@ -180,6 +180,7 @@ use App\Http\Controllers\Campaigns\EbayOverUtilizedBgtController;
 use App\Http\Controllers\Campaigns\EbayPinkDilAdController;
 use App\Http\Controllers\Campaigns\EbayPMPAdsController;
 use App\Http\Controllers\Campaigns\GoogleShoppingAdsController;
+use App\Http\Controllers\Campaigns\WalmartMissingAdsController;
 use App\Http\Controllers\Campaigns\WalmartUtilisationController;
 use App\Http\Controllers\Channels\ApprovalsChannelMasterController;
 use App\Http\Controllers\EbayDataUpdateController;
@@ -1944,6 +1945,11 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
         Route::get('/walmart/under/utilized', 'underUtilisedView')->name('walmart.under.utilized');
         Route::get('/walmart/correctly/utilized', 'correctlyUtilisedView')->name('walmart.correctly.utilized');
         Route::get('/walmart/utilized/kw/data', 'getWalmartAdsData');
+    });
+
+    Route::controller(WalmartMissingAdsController::class)->group(function () {
+        Route::get('/walmart/missing/ads', 'index')->name('walmart.missing.ads');
+        Route::get('/walmart/missing/ads/data', 'getWalmartMissingAdsData');
     });
 
     // shopify amazon stock mapping
