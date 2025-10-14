@@ -109,7 +109,110 @@
                         field: "ASIN"
                     },
                     {
-                        
+                        title: "Barcode",
+                        field: "Barcode",
+                        editor: "list",
+                        editorParams: {
+                            values: ["", "M", "A"],
+                            autocomplete: true,
+                            allowEmpty: true,
+                            listOnEmpty: true
+                        },
+                        hozAlign: "center"
+                    },
+                    {
+                        title: "Done",
+                        field: "Done",
+                        formatter: "tickCross",
+                        hozAlign: "center",
+                        editor: true,
+                        cellClick: function(e, cell) {
+                            var currentValue = cell.getValue();
+                            cell.setValue(!currentValue);
+                        }
+                    },
+
+                
+                    {
+                        title: "Dispatch Date",
+                        field: "Dispatch_Date",
+                        hozAlign: "center",
+                        editor: "input"
+                    },
+                    {
+                        title: "Weight",
+                        field: "Weight",
+                        hozAlign: "center",
+                        editor: "input"
+                    },
+                    {
+                        title: "Quantity Box",
+                        field: "Quantity_in_each_box",
+                        hozAlign: "center",
+                        editor: "input"
+                    },
+                    {
+                        title: "Sent Quantity",
+                        field: "Total_quantity_sent",
+                        hozAlign: "center",
+                        editor: "input"
+                    },
+                    {
+                        title: "Send Cost",
+                        field: "Send_Cost",
+                        hozAlign: "center",
+                        editor: "input"
+                    },
+                    {
+                        title: "IN Charges",
+                        field: "IN_Charges",
+                        hozAlign: "center",
+                        editor: "input"
+                    },
+                    {
+                        title: "Warehouse INV Reduction",
+                        field: "Warehouse_INV_Reduction",
+                        formatter: "tickCross",
+                        hozAlign: "center",
+                        editor: true,
+                        cellClick: function(e, cell) {
+                            var currentValue = cell.getValue();
+                            cell.setValue(!currentValue);
+                        }
+                    },
+                    {
+                        title: "Shipping Amount",
+                        field: "Shipping_Amount",
+                        hozAlign: "center",
+                        editor: "input"
+                    },
+                    {
+                        title: "Inbound Quantity",
+                        field: "Inbound_Quantity",
+                        hozAlign: "center",
+                        editor: "input"
+                    },
+
+                        {
+                        title: "FBA Send",
+                        field: "FBA_Send",
+                        hozAlign: "center",
+                         formatter: "tickCross",
+                        editor: true,
+                        cellClick: function(e, cell) {
+                            var currentValue = cell.getValue();
+                            cell.setValue(!currentValue);
+                        }
+                    },
+
+                    {
+                        title: "L x W x H",
+                        field: "Dimensions",
+                        placeholder: "Length x Width x Height",
+                        hozAlign: "center",
+                        editor: "input"
+                    },
+                    {
                         title: "Jan",
                         field: "Jan",
                         hozAlign: "center"
@@ -170,6 +273,32 @@
                         hozAlign: "center"
                     }
                 ]
+            });
+
+            table.on('cellEdited', function(cell) {
+                var row = cell.getRow();
+                var data = row.getData();
+                var field = cell.getColumn().getField();
+                var value = cell.getValue();
+
+                if (field === 'Barcode' || field === 'Done' || field === 'Dispatch_Date' || field === 'Weight' || field === 'Quantity_in_each_box' || field === 'Total_quantity_sent' || field === 'Send_Cost' || field === 'IN_Charges' || field === 'Warehouse_INV_Reduction' || field === 'Shipping_Amount' || field === 'Inbound_Quantity' || field === 'FBA_Send' || field === 'Dimensions') {
+                    $.ajax({
+                        url: '/update-fba-manual-data',
+                        method: 'POST',
+                        data: {
+                            sku: data.FBA_SKU,
+                            field: field.toLowerCase(),
+                            value: value,
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            console.log('Data saved successfully');
+                        },
+                        error: function(xhr) {
+                            console.error('Error saving data');
+                        }
+                    });
+                }
             });
         });
     </script>

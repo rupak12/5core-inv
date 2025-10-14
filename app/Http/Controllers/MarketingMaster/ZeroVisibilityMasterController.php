@@ -109,13 +109,41 @@ class ZeroVisibilityMasterController extends Controller
 
         $channels = ZeroVisibilityMaster::all();
 
+        // Mapping for special channel/controller names
+        $controllerMap = [
+            'ebay' => 'EbayZeroController',
+            'ebaythree' => 'Ebay3ZeroController',
+            'ebay3' => 'Ebay3ZeroController',
+            'ebaytwo' => 'Ebay2ZeroController',
+            'ebay2' => 'Ebay2ZeroController',
+            'ebayvariation' => 'EbayVariationZeroController',
+            'tiktokshop' => 'TiktokShopZeroController',
+            'doba' => 'DobaZeroController',
+            'walmart' => 'WalmartZeroController',
+            'shein' => 'SheinZeroController',
+            'bestbuyusa' => 'BestbuyUSAZeroController',
+            'aliexpress' => 'AliexpressZeroController',
+            // Add more mappings as needed
+        ];
+
         foreach ($channels as $channel) {
             $livePending = null;
             $zeroView = null;
 
-            // Build controller class name dynamically (e.g., "Amazon" => AmazonZeroController)
-            $baseName = str_replace([' ', '&', '-', '/'], '', ucwords(strtolower(trim($channel->channel_name))));
-            $controllerClass = "App\\Http\\Controllers\\MarketPlace\\{$baseName}ZeroController";
+            // Check if channel has special mapping
+            $key = strtolower(str_replace([' ', '&', '-', '/'], '', trim($channel->channel_name)));
+            if (isset($controllerMap[$key])) {
+                $controllerName = $controllerMap[$key];
+                if ($controllerName === 'EbayZeroController') {
+                    $controllerClass = "App\\Http\\Controllers\\MarketPlace\\{$controllerName}";
+                } else {
+                    $controllerClass = "App\\Http\\Controllers\\MarketPlace\\ZeroViewMarketPlace\\{$controllerName}";
+                }
+            } else {
+                // Build controller class name dynamically (e.g., "Amazon" => AmazonZeroController)
+                $baseName = str_replace([' ', '&', '-', '/'], '', ucwords(strtolower(trim($channel->channel_name))));
+                $controllerClass = "App\\Http\\Controllers\\MarketPlace\\{$baseName}ZeroController";
+            }
 
             if (class_exists($controllerClass)) {
                 $controller = app($controllerClass);
@@ -218,12 +246,15 @@ class ZeroVisibilityMasterController extends Controller
 
         // Mapping for special channel/controller names
         $controllerMap = [
+            'ebay' => 'EbayZeroController',
             'ebaythree' => 'Ebay3ZeroController',
-            'ebaytwo'   => 'Ebay2ZeroController',
+            'ebaytwo' => 'Ebay2ZeroController',
+            'ebay2' => 'Ebay2ZeroController',
+            'ebayvariation' => 'EbayVariationZeroController',
             'tiktokshop' => 'TiktokShopZeroController',
-            'doba'      => 'DobaZeroController',
-            'walmart'      => 'WalmartZeroController',
-            'shein'      => 'SheinZeroController',
+            'doba' => 'DobaZeroController',
+            'walmart' => 'WalmartZeroController',
+            'shein' => 'SheinZeroController',
             'bestbuyusa' => 'BestbuyUSAZeroController',
             'aliexpress' => 'AliexpressZeroController',
             // Add more mappings as needed
@@ -235,7 +266,12 @@ class ZeroVisibilityMasterController extends Controller
 
             $key = strtolower(str_replace([' ', '-', '&', '/'], '', trim($channel)));
             if (isset($controllerMap[$key])) {
-                $controllerClass = "App\\Http\\Controllers\\MarketPlace\\ZeroViewMarketPlace\\" . $controllerMap[$key];
+                $controllerName = $controllerMap[$key];
+                if ($controllerName === 'EbayZeroController') {
+                    $controllerClass = "App\\Http\\Controllers\\MarketPlace\\{$controllerName}";
+                } else {
+                    $controllerClass = "App\\Http\\Controllers\\MarketPlace\\ZeroViewMarketPlace\\{$controllerName}";
+                }
             } else {
                 $controllerClass = "App\\Http\\Controllers\\MarketPlace\\" . ucfirst($channel) . "ZeroController";
             }

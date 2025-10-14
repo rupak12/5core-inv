@@ -93,7 +93,7 @@ class EbayZeroController extends Controller
                 'eBay L60' => 0,
                 'eBay Price' => 0,
                 'OV CLICKS L30' => 0,
-                'views' => 0,
+                'views' => $ebayMetric->views ?? 0,
                 'image' => $imagePath,
                 'A_Z_Reason' => '',
                 'A_Z_ActionRequired' => '',
