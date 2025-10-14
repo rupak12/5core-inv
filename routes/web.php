@@ -1970,6 +1970,7 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
         Route::get('fba-view-page' ,'fbaPageView');
         Route::get('fba-data-json', 'fbaDataJson');
         Route::get('fba-monthly-sales/{sku}', 'getFbaMonthlySales');
+        Route::post('update-fba-manual-data', 'updateFbaManualData');
 
     });
 

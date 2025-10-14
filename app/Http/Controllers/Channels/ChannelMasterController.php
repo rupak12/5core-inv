@@ -332,11 +332,11 @@ class ChannelMasterController extends Controller
 
         $query = EbayMetric::where('sku', 'not like', '%Parent%');
 
-        $l30Orders = $query->sum('ebay_data_l30');
-        $l60Orders = $query->sum('ebay_data_l60');
+        $l30Orders = $query->sum('ebay_l30');
+        $l60Orders = $query->sum('ebay_l60');
 
-        $l30Sales  = (clone $query)->selectRaw('SUM(ebay_data_l30 * ebay_data_price) as total')->value('total') ?? 0;
-        $l60Sales  = (clone $query)->selectRaw('SUM(ebay_data_l60 * ebay_data_price) as total')->value('total') ?? 0;
+        $l30Sales  = (clone $query)->selectRaw('SUM(ebay_l30 * ebay_price) as total')->value('total') ?? 0;
+        $l60Sales  = (clone $query)->selectRaw('SUM(ebay_l60 * ebay_price) as total')->value('total') ?? 0;
 
         $growth = $l30Sales > 0 ? (($l30Sales - $l60Sales) / $l30Sales) * 100 : 0;
 
@@ -350,7 +350,7 @@ class ChannelMasterController extends Controller
         });
 
         // Calculate total profit
-        $ebayRows     = $query->get(['sku', 'ebay_data_price', 'ebay_data_l30','ebay_data_l60']);
+        $ebayRows     = $query->get(['sku', 'ebay_price', 'ebay_l30','ebay_l60']);
         $totalProfit  = 0;
         $totalProfitL60  = 0;
         $totalCogs       = 0;
@@ -358,9 +358,9 @@ class ChannelMasterController extends Controller
 
         foreach ($ebayRows as $row) {
             $sku       = strtoupper($row->sku);
-            $price     = (float) $row->ebay_data_price;
-            $unitsL30  = (int) $row->ebay_data_l30;
-            $unitsL60  = (int) $row->ebay_data_l60;
+            $price     = (float) $row->ebay_price;
+            $unitsL30  = (int) $row->ebay_l30;
+            $unitsL60  = (int) $row->ebay_l60;
 
             $soldAmount = $unitsL30 * $price;
             if ($soldAmount <= 0) {

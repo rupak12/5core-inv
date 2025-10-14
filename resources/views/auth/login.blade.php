@@ -43,7 +43,7 @@
                                                 @endforeach
                                             @endif
 
-                                            {{-- <div class="mb-3">
+                                             <div class="mb-3">
                                                 <label for="emailaddress" class="form-label">Email address</label>
                                                 <input class="form-control" type="email" name="email"
                                                     id="emailaddress" placeholder="Enter your email" value="">
@@ -61,7 +61,7 @@
                                                         me</label>
                                                 </div>
                                              </div>
-                                              --}}
+                                          
                                             <div class="mb-0 text-start">
                                                 <button class="btn btn-soft-primary w-100" type="submit"><i
                                                         class="ri-login-circle-fill me-1"></i> <span class="fw-bold">Log
