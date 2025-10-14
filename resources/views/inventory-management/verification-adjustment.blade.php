@@ -3044,7 +3044,7 @@
 
                                 totalLossGain += lossGainValue;
 
-                                const formattedLossGain = lossGainValue !== 0 ? `${lossGainValue.toFixed(2)}` : '-';
+                                const formattedLossGain = lossGainValue !== 0 ? `${Math.trunc(lossGainValue)}` : '-';
 
                                 tableBody.append(`
                                     <tr>

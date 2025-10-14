@@ -46,6 +46,7 @@ class SyncWalmartSheet extends Command
                     'l30'       => $this->toIntOrNull($row->{'WL30'} ?? null),
                     'dil'       => $this->toDecimalOrNull($row->{'Dil%'} ?? null),
                     'buy_link'  => trim($row->{'Buyer Link'} ?? ''),
+                    'views'     =>$this->toDecimalOrNull($row->{'Clicks'} ?? null),
                 ]
             );
         }
