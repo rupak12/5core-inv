@@ -26,188 +26,272 @@ class SyncWayfairSheet extends Command
      *
      * @var string
      */
-    protected $description = 'Sync Wayfair Product Sheet'; 
+    protected $description = 'Sync Wayfair Product Sheet';
 
     /**
      * Execute the console command.
-    */
+     */
   
 
-    // protected $apiUrl;
-    // protected $apiKey;
-    // protected $password;
+    protected $apiUrl;
+    protected $apiKey;
+    protected $password;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->apiUrl    = "https://" . env('SHOPIFY_5CORE_DOMAIN') . "/admin/api/2024-10";
+        $this->apiKey    = env('SHOPIFY_5CORE_API_KEY');
+        $this->password  = env('SHOPIFY_5CORE_PASSWORD');
+    }
+
+    public function handle()
+    {
+        $this->info("Fetching Wayfair data from Shopify…");
+
+        $now = Carbon::now();
+
+        $l30Start = $now->copy()->subDays(30);
+        $l30End   = $now->copy()->subDay(); // yesterday
+
+        // L60 = 30 days before that
+        $l60Start = $now->copy()->subDays(60);
+        $l60End   = $now->copy()->subDays(31);
+
+        $this->info("L30 window: {$l30Start->toDateString()} → {$l30End->toDateString()}");
+        $this->info("L60 window: {$l60Start->toDateString()} → {$l60End->toDateString()}");
+
+        $endpoint = "{$this->apiUrl}/orders.json?status=any&limit=250"
+            . "&created_at_min={$l60Start->toIso8601String()}"
+            . "&created_at_max={$l30End->toIso8601String()}";
+
+        $groupedData = [];
+
+        while ($endpoint) {
+            $response = Http::withBasicAuth($this->apiKey, $this->password)->get($endpoint);
+
+            if (!$response->successful()) {
+                $this->error("Failed to fetch Shopify orders");
+                $this->error("Status: " . $response->status());
+                $this->error("Body: " . $response->body());
+                return; 
+            }
+
+            $orders = $response->json('orders') ?? [];
+            $this->info("Fetched " . count($orders) . " orders…");
+
+            // filter Wayfair orders
+            $wayfairOrders = collect($orders)->filter(function ($order) {
+                $tags = strtolower($order['tags'] ?? '');
+                if (str_contains($tags, 'wayfair')) {
+                    return true;
+                }
+
+                if (!empty($order['note_attributes'])) {
+                    foreach ($order['note_attributes'] as $attr) {
+                        if (
+                            strtolower($attr['name'] ?? '') === 'channel' &&
+                            strtolower($attr['value'] ?? '') === 'wayfair'
+                        ) {
+                            return true;
+                        }
+                    }
+                }
+
+                $source = strtolower($order['source_name'] ?? '');
+                return str_contains($source, 'wayfair');
+            });
+
+            // group SKUs
+            foreach ($wayfairOrders as $order) {
+                $date = Carbon::parse($order['created_at']);
+
+                foreach ($order['line_items'] as $item) {
+                    $sku = $item['sku'];
+                    $qty = (int) $item['quantity'];
+                    $price = $item['price'];
+
+                    if (!isset($groupedData[$sku])) {
+                        $groupedData[$sku] = [
+                            'l30' => 0,
+                            'l60' => 0,
+                            'price' => $price,
+                        ];
+                    }
+
+                    if ($date->between($l30Start, $l30End)) {
+                        $groupedData[$sku]['l30'] += $qty;
+                    }
+
+                    if ($date->between($l60Start, $l60End)) {
+                        $groupedData[$sku]['l60'] += $qty;
+                    }
+
+                    // update latest price
+                    $groupedData[$sku]['price'] = $price;
+                }
+            }
+
+            // get next page from Link header
+            $linkHeader = $response->header('Link');
+            if ($linkHeader && preg_match('/<([^>]+)>; rel="next"/', $linkHeader, $matches)) {
+                $endpoint = $matches[1];
+            } else {
+                $endpoint = null;
+            }
+        }
+
+        $this->info("Updating database…");
+
+        foreach ($groupedData as $sku => $values) {
+            WaifairProductSheet::updateOrCreate(
+                ['sku' => $sku],
+                [
+                    'l30'   => $values['l30'],
+                    'l60'   => $values['l60'],
+                    'price' => $values['price'],
+                ]
+            );
+        }
+
+        $this->info("Wayfair L30/L60/Price updated successfully (" . count($groupedData) . " SKUs)");
+    }
+
+
+
+
+
+    // protected $authUrl = 'https://sso.auth.wayfair.com/oauth/token';
+    // protected $graphqlUrl = 'https://api.wayfair.com/v1/graphql';
+    // protected $clientId;
+    // protected $clientSecret;
+    // protected $audience;
+    // protected $grantType = 'client_credentials';
 
     // public function __construct()
     // {
     //     parent::__construct();
-    //     $this->apiUrl    = "https://" . env('SHOPIFY_5CORE_DOMAIN') . "/admin/api/2024-10";
-    //     $this->apiKey    = env('SHOPIFY_5CORE_API_KEY');
-    //     $this->password  = env('SHOPIFY_5CORE_PASSWORD');
+    //     $this->clientId     = config('services.wayfair.client_id');
+    //     $this->clientSecret = config('services.wayfair.client_secret');
+    //     $this->audience     = config('services.wayfair.audience');
     // }
 
     // public function handle()
     // {
-    //     $this->info("Fetching Wayfair data from Shopify…");
+    //     $this->info("Fetching Wayfair access token...");
+    //     $token = $this->getAccessToken();
+    //     if (!$token) {
+    //         $this->error("Failed to retrieve access token.");
+    //         return;
+    //     }
+
+    //     $this->info("Fetching Wayfair purchase orders...");
+    //     $orders = $this->fetchDropshipOrders($token);
+
+    //     if (empty($orders)) {
+    //         $this->warn("No orders found.");
+    //         return;
+    //     }
 
     //     $now = Carbon::now();
+    //     // $l30Start = $now->copy()->subMonthNoOverflow()->startOfMonth();
+    //     // $l30End   = $now->copy()->subMonthNoOverflow()->endOfMonth();
+    //     // $l60Start = $now->copy()->subMonthsNoOverflow(2)->startOfMonth();
+    //     // $l60End   = $now->copy()->subMonthsNoOverflow(2)->endOfMonth();
 
-    //     $l30Start = $now->copy()->subDays(30);
-    //     $l30End   = $now->copy()->subDay(); // yesterday
+    //     $l30Start = $now->copy()->subDays(30)->startOfDay();
+    //     $l30End   = $now->copy()->endOfDay();
 
-    //     // L60 = 30 days before that
-    //     $l60Start = $now->copy()->subDays(60);
-    //     $l60End   = $now->copy()->subDays(31);
+    //     $l60Start = $now->copy()->subDays(60)->startOfDay();
+    //     $l60End   = $now->copy()->subDays(31)->endOfDay();
 
-    //     $this->info("L30 window: {$l30Start->toDateString()} → {$l30End->toDateString()}");
-    //     $this->info("L60 window: {$l60Start->toDateString()} → {$l60End->toDateString()}");
+        
+    //     $skuData = [];
 
-    //     $endpoint = "{$this->apiUrl}/orders.json?status=any&limit=250"
-    //         . "&created_at_min={$l60Start->toIso8601String()}"
-    //         . "&created_at_max={$l30End->toIso8601String()}";
+    //     foreach ($orders as $order) {
+    //         $orderDate = isset($order['poDate']) ? Carbon::parse($order['poDate']) : null;
+    //         if (!$orderDate) continue;
 
-    //     $groupedData = [];
+    //         foreach ($order['products'] ?? [] as $product) {
+    //             $sku = $product['partNumber'] ?? null;
+    //             if (!$sku) continue;
 
-    //     while ($endpoint) {
-    //         $response = Http::withBasicAuth($this->apiKey, $this->password)->get($endpoint);
-
-    //         if (!$response->successful()) {
-    //             $this->error("Failed to fetch Shopify orders");
-    //             $this->error("Status: " . $response->status());
-    //             $this->error("Body: " . $response->body());
-    //             return; 
-    //         }
-
-    //         $orders = $response->json('orders') ?? [];
-    //         $this->info("Fetched " . count($orders) . " orders…");
-
-    //         // filter Wayfair orders
-    //         $wayfairOrders = collect($orders)->filter(function ($order) {
-    //             $tags = strtolower($order['tags'] ?? '');
-    //             if (str_contains($tags, 'wayfair')) {
-    //                 return true;
+    //             if (!isset($skuData[$sku])) {
+    //                 $skuData[$sku] = [
+    //                     'l30' => 0,
+    //                     'l60' => 0,
+    //                     'price' => $product['price'] ?? 0,
+    //                 ];
     //             }
 
-    //             if (!empty($order['note_attributes'])) {
-    //                 foreach ($order['note_attributes'] as $attr) {
-    //                     if (
-    //                         strtolower($attr['name'] ?? '') === 'channel' &&
-    //                         strtolower($attr['value'] ?? '') === 'wayfair'
-    //                     ) {
-    //                         return true;
-    //                     }
-    //                 }
+    //             // Count L30
+    //             if ($orderDate->between($l30Start, $l30End)) {
+    //                 $skuData[$sku]['l30'] += $product['quantity'] ?? 0;
     //             }
 
-    //             $source = strtolower($order['source_name'] ?? '');
-    //             return str_contains($source, 'wayfair');
-    //         });
-
-    //         // group SKUs
-    //         foreach ($wayfairOrders as $order) {
-    //             $date = Carbon::parse($order['created_at']);
-
-    //             foreach ($order['line_items'] as $item) {
-    //                 $sku = $item['sku'];
-    //                 $qty = (int) $item['quantity'];
-    //                 $price = $item['price'];
-
-    //                 if (!isset($groupedData[$sku])) {
-    //                     $groupedData[$sku] = [
-    //                         'l30' => 0,
-    //                         'l60' => 0,
-    //                         'price' => $price,
-    //                     ];
-    //                 }
-
-    //                 if ($date->between($l30Start, $l30End)) {
-    //                     $groupedData[$sku]['l30'] += $qty;
-    //                 }
-
-    //                 if ($date->between($l60Start, $l60End)) {
-    //                     $groupedData[$sku]['l60'] += $qty;
-    //                 }
-
-    //                 // update latest price
-    //                 $groupedData[$sku]['price'] = $price;
+    //             // Count L60
+    //             if ($orderDate->between($l60Start, $l60End)) {
+    //                 $skuData[$sku]['l60'] += $product['quantity'] ?? 0;
     //             }
-    //         }
 
-    //         // get next page from Link header
-    //         $linkHeader = $response->header('Link');
-    //         if ($linkHeader && preg_match('/<([^>]+)>; rel="next"/', $linkHeader, $matches)) {
-    //             $endpoint = $matches[1];
-    //         } else {
-    //             $endpoint = null;
+    //             // Always update price with latest
+    //             $skuData[$sku]['price'] = $product['price'] ?? $skuData[$sku]['price'];
     //         }
     //     }
 
-    //     $this->info("Updating database…");
-
-    //     foreach ($groupedData as $sku => $values) {
+    //     foreach ($skuData as $sku => $data) {
     //         WaifairProductSheet::updateOrCreate(
     //             ['sku' => $sku],
     //             [
-    //                 'l30'   => $values['l30'],
-    //                 'l60'   => $values['l60'],
-    //                 'price' => $values['price'],
+    //                 'l30' => $data['l30'],
+    //                 'l60' => $data['l60'],
+    //                 'price' => $data['price'],
+    //                 'updated_at' => now(),
     //             ]
     //         );
+
+    //         $this->info("SKU {$sku} | L30={$data['l30']} | L60={$data['l60']} | Price={$data['price']}");
     //     }
 
-    //     $this->info("Wayfair L30/L60/Price updated successfully (" . count($groupedData) . " SKUs)");
-    // }    
+    //     $this->info("Completed Wayfair Data Sheet sync.");
+    // }
 
-    public function handle()
-    {
-        $url = 'https://script.google.com/macros/s/AKfycbxkkmo4L0EbqNK6WaOqM73yUuvC4mwAJMDJcfebxNnzwZ_LuL_9SIOtP09moPFHjV27/exec';
+    // private function getAccessToken()
+    // {
+    //     $response = Http::withHeaders(['Content-Type' => 'application/json'])
+    //         ->post($this->authUrl, [
+    //             'grant_type'    => $this->grantType,
+    //             'audience'      => $this->audience,
+    //             'client_id'     => $this->clientId,
+    //             'client_secret' => $this->clientSecret,
+    //         ]);
 
-        $this->info('Starting wayfair sheet sync...');
+    //     return $response->successful() ? $response->json()['access_token'] ?? null : null;
+    // }
 
-        try {
-            $response = Http::get($url);
+    // private function fetchDropshipOrders($token)
+    // {
+    //     $query = <<<'GRAPHQL'
+    //     query getDropshipPurchaseOrders {
+    //       getDropshipPurchaseOrders(
+    //         limit: 100
+    //         sortOrder: DESC
+    //       ) {
+    //         poNumber
+    //         poDate
+    //         products {
+    //           partNumber
+    //           name
+    //           quantity
+    //           price
+    //         }
+    //       }
+    //     }
+    //     GRAPHQL;
 
-            if ($response->failed()) {
-                $this->error('Failed to fetch data from Google Sheet.');
-                return;
-            }
+    //     $response = Http::withToken($token)->post($this->graphqlUrl, ['query' => $query]);
+    //     Log::info('Wayfair Dropship API Response', $response->json());
 
-            $payload = $response->json();
-
-            //  Auto-detect structure (either {data: [...]} or [...])
-            $data = isset($payload['data']) ? $payload['data'] : $payload;
-
-            if (!is_array($data) || empty($data)) {
-                $this->warn('No valid data found.');
-                return;
-            }
-
-            $savedCount = 0;
-
-            foreach ($data as $item) {
-                $sku = $item['sku'] ?? null;
-                if (empty($sku)) {
-                    $this->warn("Skipped a row with missing SKU.");
-                    continue;
-                }
-
-                WaifairProductSheet::updateOrCreate(
-                    ['sku' => trim($sku)],
-                    [
-                        'l30'  => $item['l30'] ?? null,
-                        'l60'  => $item['l60'] ?? null,
-                        'price'  => isset($item['price']) && $item['price'] !== '' ? $item['price'] : null,
-                        'views'  => isset($item['views']) && $item['views'] !== '' ? (int)$item['views'] : null,
-                    ]
-                );
-
-                $savedCount++;
-            }
-
-            $this->info("wayfair Sheet data synced successfully! Total records saved/updated: {$savedCount}");
-        } catch (\Exception $e) {
-            Log::error('Error syncing wayfair sheet: ' . $e->getMessage());
-            $this->error('Error: ' . $e->getMessage());
-        }
-    }
-
+    //     return $response->successful() ? $response->json()['data']['getDropshipPurchaseOrders'] ?? [] : [];
+    // }
 }

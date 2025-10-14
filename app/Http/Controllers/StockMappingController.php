@@ -20,27 +20,26 @@ use App\Models\ShopifyInventory;
 
 use App\Models\AmazonDataView;
 use App\Models\AmazonListingStatus;
-use App\Services\AmazonSpApiService;
 use App\Models\ProductStockMapping;
 
+
+use App\Services\ShopifyApiService;
+use App\Services\AmazonSpApiService;
+use App\Services\EbayApiService;
+use App\Services\WalmartApiService;
+use App\Services\ReverbApiService;
+use App\Services\TemuApiService;
+use App\Services\SheinApiService;
+use App\Services\DobaApiService;
+use App\Services\WayfairApiService;
+use App\Services\MacysApiService;
+use App\Services\BestbuyusaApiService;
 class StockMappingController extends Controller
 {
 
     protected $shopifyDomain;
     protected $shopifyApiKey;
     protected $shopifyPassword;
-
-    protected $apiController;
-
-    public function __construct(ApiController $apiController)
-    {
-        $this->apiController = $apiController;
-        $this->shopifyApiKey = config('services.shopify.api_key');
-        $this->shopifyPassword = config('services.shopify.password');
-        $this->shopifyStoreUrl = str_replace(['https://', 'http://'],'',config('services.shopify.store_url'));
-        $this->shopifyStoreUrlName = env('SHOPIFY_STORE');
-        $this->shopifyAccessToken = env('SHOPIFY_PASSWORD');
-    }
 
 
     /**
@@ -54,193 +53,258 @@ class StockMappingController extends Controller
      
    public function getShopifyAmazonInventoryStock(Request $request)
 {
+  ini_set('max_execution_time', 300);
+     
     // Check if data is older than 1 day
     $latestRecord = ProductStockMapping::orderBy('updated_at', 'desc')->first();
-    if ($latestRecord && $latestRecord->updated_at > now()->subDay()) {
+    if ($latestRecord) {
+    // if ($latestRecord && $latestRecord->updated_at > now()->subDay()) {
         // Return cached data from DB
         $data = ProductStockMapping::all();
+        $datainfo=$this->getDataInfo($data);
         return response()->json([
             'message' => 'Data fetched successfully',
             'data' => $data,
+                'datainfo'=>$datainfo,
             'status' => 200
         ]);
     }
     
     $freshData=$this->fetchFreshData();   
+    $datainfo=$this->getDataInfo($freshData);
 
     return response()->json([
         'message' => 'Data fetched successfully',
         'data' => $freshData,
+        'datainfo'=>$datainfo,
         'status' => 200
     ]);
 }
 
 protected function fetchFreshData(){
+    ini_set('max_execution_time', 1000);
+     
+    //   $result = (new BestbuyusaApiService())->getChannels();
+    //   dd($result);
+    //  $result = (new WayfairApiService())->getInventory();    
+    
+    // $macyInventory = (new MacysApiService())->getInventory();
+    // die();
+
     // Fetch fresh data from APIs
-    $shopifyInventoryData = $this->getAllInventoryData();
-    $amazonInventoryData = $this->getAllInventoryDataAmazon();
-
-    // Index Amazon data by SKU
-    $amazonIndex = [];
-    foreach ($amazonInventoryData as $item) {
-        if (!empty($item['sku'])) {
-            $amazonIndex[$item['sku']] = $item;
-        }
-    }
-
-    $mergedInventory = [];
-
-    foreach ($shopifyInventoryData as $shopifyItem) {
-        $sku = $shopifyItem['sku'] ?? null;
-        if (!$sku) continue;
-
-        $amazonItem = $amazonIndex[$sku] ?? null;
-        $product_title = $shopifyItem['product_title'] ?? '';
-        $inventoryShopify = $shopifyItem['inventory'] ?? 0;
-
-        $inventoryAmazon = 'Not Listed';
-        if ($amazonItem !== null && array_key_exists('quantity', $amazonItem)) {
-            $qty = (int) $amazonItem['quantity'];
-            $inventoryAmazon = ($qty === 0) ? 0 : $qty;
-        }
-
-        $mergedInventory[] = [
-            'sku' => $sku,
-            'product_title' => $product_title,
-            'inventory_shopify' => $inventoryShopify,
-            'inventory_amazon' => $inventoryAmazon,
-        ];
-
-        $insertData = [
-            'sku' => $sku,
-            'title' => $product_title,
-            'inventory_shopify' => $inventoryShopify,
-            'inventory_shopify_product' => json_encode($shopifyItem),
-            'inventory_amazon' => $inventoryAmazon,
-            'inventory_amazon_product' => json_encode($amazonItem),
-        ];
-
-        ProductStockMapping::updateOrCreate(
-            ['sku' => $sku],
-            $insertData
-        );
-    }
-    return $mergedInventory;
+    $delete=ProductStockMapping::truncate();
+    $shopifyInventoryData = (new ShopifyApiService())->getinventory();        
+    $parentskuList=$this->filterParentSKU($shopifyInventoryData);
+    $amazonInventoryData = (new AmazonSpApiService())->getinventory();
+    $walmartInventory=(new WalmartApiService())->getinventory();
+    $reverbInventory=(new ReverbApiService())->getInventory();
+    $sheinInventory = (new SheinApiService())->listAllProducts();
+    $dobaInventory = (new DobaApiService())->getinventory();
+    $temuInventory = (new TemuApiService())->getInventory();
+    $macyInventory = (new MacysApiService())->getInventory();
+    $ebay1Inventory = (new EbayApiService())->getEbayInventory();
+    $ebay2Inventory = (new Ebay2ApiService())->getEbayInventory();
+    $ebay3Inventory = (new Ebay3ApiService())->getEbayInventory();
+      $data = ProductStockMapping::all();
+    return $data;
 }
 
- 
-    protected function getAllInventoryData(): array
-    {
-        $inventoryData = [];
-        $pageInfo = null;
-        $hasMore = true;
-        $pageCount = 0;
-        $totalProducts = 0;
-        $totalVariants = 0;
 
-        Log::info("Starting Shopify inventory fetch...");
+protected function getDataInfo($data){
+    $info = [
+        'shopify' => [
+            'listed' => 0,
+            'notlisted' => 0,
+            'matching' => 0,
+            'mismatching' => 0,
+        ],
+        'amazon' => [
+            'listed' => 0,
+            'notlisted' => 0,
+            'matching' => 0,
+            'mismatching' => 0,
+        ],
+         'walmart' => [
+            'listed' => 0,
+            'notlisted' => 0,
+            'matching' => 0,
+            'mismatching' => 0,
+        ],
+        'reverb' => [
+            'listed' => 0,
+            'notlisted' => 0,
+            'matching' => 0,
+            'mismatching' => 0,
+        ],
+        'shein' => [
+            'listed' => 0,
+            'notlisted' => 0,
+            'matching' => 0,
+            'mismatching' => 0,
+        ],
+        'doba' => [
+            'listed' => 0,
+            'notlisted' => 0,
+            'matching' => 0,
+            'mismatching' => 0,
+        ],
+        'temu' => [
+            'listed' => 0,
+            'notlisted' => 0,
+            'matching' => 0,
+            'mismatching' => 0,
+        ],
 
-        while ($hasMore) {
-            $pageCount++;
-            $queryParams = ['limit' => 250, 'fields' => 'id,title,variants,image,images'];
-            if ($pageInfo) {$queryParams['page_info'] = $pageInfo;}
-             $request = Http::withHeaders([
-                'X-Shopify-Access-Token' => $this->shopifyAccessToken,
-                'Content-Type' => 'application/json'
-            ]);
+        'macy' => [
+            'listed' => 0,
+            'notlisted' => 0,
+            'matching' => 0,
+            'mismatching' => 0,
+        ],
+        'ebay1' => [
+            'listed' => 0,
+            'notlisted' => 0,
+            'matching' => 0,
+            'mismatching' => 0,
+        ],
+        'ebay2' => [
+            'listed' => 0,
+            'notlisted' => 0,
+            'matching' => 0,
+            'mismatching' => 0,
+        ],
+        'ebay3' => [
+            'listed' => 0,
+            'notlisted' => 0,
+            'matching' => 0,
+            'mismatching' => 0,
+        ],
+    ];
 
-            if (env('FILESYSTEM_DRIVER') === 'local') {
-                $request = $request->withoutVerifying();
-            }
+    foreach ($data as $item) {
+        $shopifyQty = $item['inventory_shopify'] ?? null;
+        $amazonQty = $item['inventory_amazon'] ?? null;
+        $walmartQty = $item['inventory_walmart'] ?? null;
+        $reverbQty = $item['inventory_reverb'] ?? null;
+        $sheinQty = $item['inventory_shein'] ?? null;
+        $dobaQty = $item['inventory_doba'] ?? null;
+        $temuQty = $item['inventory_temu'] ?? null;
+        $macyQty = $item['inventory_macy'] ?? null;
+        $ebay1Qty = $item['inventory_ebay1'] ?? null;
+        $ebay2Qty = $item['inventory_ebay2'] ?? null;
+        $ebay3Qty = $item['inventory_ebay3'] ?? null;
 
-            $response = $request
-                ->timeout(120)
-                ->retry(3, 500)
-                ->get("https://{$this->shopifyStoreUrl}/admin/api/2025-01/products.json", $queryParams);
+        $isShopifyListed = is_numeric($shopifyQty);
+        $isAmazonListed = is_numeric($amazonQty);
+        $isWalmartListed = is_numeric($walmartQty);
+        $isReverbListed = is_numeric($reverbQty);
+        $isSheinListed = is_numeric($sheinQty);
+        $isDobaListed = is_numeric($dobaQty);
+        $isTemuListed = is_numeric($temuQty);
+        $isMacyListed = is_numeric($macyQty);
+        $isEbay1Listed = is_numeric($ebay1Qty);
+        $isEbay2Listed = is_numeric($ebay2Qty);
+        $isEbay3Listed = is_numeric($ebay3Qty);
 
+        // Channel-specific listing status
+        $info['shopify'][$isShopifyListed ? 'listed' : 'notlisted']++;
+        $info['amazon'][$isAmazonListed ? 'listed' : 'notlisted']++;
+        $info['walmart'][$isWalmartListed ? 'listed' : 'notlisted']++;
+        $info['reverb'][$isReverbListed ? 'listed' : 'notlisted']++;
+        $info['shein'][$isSheinListed ? 'listed' : 'notlisted']++;
+        $info['doba'][$isDobaListed ? 'listed' : 'notlisted']++;
+        $info['temu'][$isTemuListed ? 'listed' : 'notlisted']++;
+        $info['macy'][$isMacyListed ? 'listed' : 'notlisted']++;
+        $info['ebay1'][$isEbay1Listed ? 'listed' : 'notlisted']++;
+        $info['ebay2'][$isEbay2Listed ? 'listed' : 'notlisted']++;
+        $info['ebay3'][$isEbay3Listed ? 'listed' : 'notlisted']++;
+        
 
-            if (!$response->successful()) {
-                Log::error("Failed to fetch products (Page {$pageCount}): " . $response->body());
-                break;
-            }
-
-            $products = $response->json()['products'] ?? [];
-            $productCount = count($products);
-            $totalProducts += $productCount;
-
-            Log::info("Page {$pageCount} fetched successfully. Products: {$productCount}");
-
-            foreach ($products as $product) {
-                foreach ($product['variants'] as $variant) {
-                    $totalVariants++;
-                  
-                    if (!empty($variant['sku'])) {
-                        $inventoryData[$variant['sku']] = [
-                            'variant_id'        => $variant['id'],
-                            'inventory'         => $variant['inventory_quantity'] ?? 0,
-                            'product_title'     => $product['title'] ?? '',
-                            'sku'               => $variant['sku'] ?? '',
-                            'variant_title'     => $variant['title'] ?? '',
-                            'inventory_item_id' => $variant['inventory_item_id'],
-                            'on_hand'           => $variant['old_inventory_quantity'] ?? 0,   // OnHand
-                            'available_to_sell' => $variant['inventory_quantity'] ?? 0,       // AvailableToSell
-                            'price'             => $variant['price'],                           
-                        ];
-
-                        // Log first 3 SKUs + images per page (to avoid huge logs)
-                        if ($totalVariants <= 3 || $totalVariants % 500 === 0) {
-                            Log::info("Variant preview", [
-                                'product_title' => $product['title'] ?? '',
-                                'sku'           => $variant['sku'],
-                            ]);
-                        }
-                    } else {
-                        Log::warning('Variant without SKU', [
-                            'product_id' => $product['id'],
-                            'variant_id' => $variant['id'],
-                            'on_hand'    => $variant['old_inventory_quantity'] ?? 0,
-                            'available_to_sell' => $variant['inventory_quantity'] ?? 0,
-                        ]);
-                    }
-                }
-            }
-
-            // Pagination handling
-            $pageInfo = $this->getNextPageInfo($response);
-            $hasMore = (bool) $pageInfo;
-
-            // Avoid rate limiting
-            if ($hasMore) {
-                Log::info(" Waiting 0.5s before next page...");
-                usleep(500000); // 0.5s delay
+        // Channel-specific matching/mismatching
+        if ($isShopifyListed && $isAmazonListed) {
+            if ((int)$shopifyQty === (int)$amazonQty) {
+                $info['shopify']['matching']++;
+                $info['amazon']['matching']++;
+                $info['walmart']['matching']++;
+                $info['reverb']['matching']++;
+                $info['shein']['matching']++;
+                $info['doba']['matching']++;
+                $info['temu']['matching']++;
+                $info['macy']['matching']++;
+                $info['ebay1']['matching']++;
+                $info['ebay2']['matching']++;
+                $info['ebay3']['matching']++;
+            } else {
+                $info['shopify']['mismatching']++;
+                $info['amazon']['mismatching']++;
+                $info['walmart']['mismatching']++;
+                $info['reverb']['mismatching']++;
+                $info['shein']['mismatching']++;
+                $info['doba']['mismatching']++;
+                $info['temu']['mismatching']++;
+                $info['macy']['mismatching']++;
+                $info['ebay1']['mismatching']++;
+                $info['ebay2']['mismatching']++;
+                $info['ebay3']['mismatching']++;
             }
         }
-
-        Log::info("Finished fetching Shopify inventory. Pages: {$pageCount}, Products: {$totalProducts}, Variants: {$totalVariants}");
-
-        return $inventoryData;
     }
 
-      protected function getNextPageInfo($response): ?string
-    {
-        if ($response->hasHeader('Link') && str_contains($response->header('Link'), 'rel="next"')) {
-            $links = explode(',', $response->header('Link'));
-            foreach ($links as $link) {
-                if (str_contains($link, 'rel="next"')) {
-                    preg_match('/<(.*)>; rel="next"/', $link, $matches);
-                    parse_str(parse_url($matches[1], PHP_URL_QUERY), $query);
-                    return $query['page_info'] ?? null;
-                }
-            }
-        }
-        return null;
-
-    }
+    return $info;
+}
 
 
-    protected function getAllInventoryDataAmazon(){
-        return $result = (new AmazonSpApiService())->getAmazonInventory();
+protected function filterParentSKU(array $data): array
+{
+    // Extract SKUs from input array
+    $filteredSkus = array_values(array_filter(array_map(function ($item) {
+        return $item['sku'] ?? null;
+    }, $data)));
+
+    // Query ProductMaster for matching SKUs
+    $parentRecords = ProductMaster::whereIn('sku', $filteredSkus)->get();
+
+    // Return associative array: [sku => parent]
+    return $parentRecords->pluck('parent', 'sku')->toArray();
+}
+
+
+    
+
+    protected function getAllInventoryDataebay(){
+        return $result = (new EbayApiService())->getEbayInventory();
     }
     
-}
+    public function WalmartInventoryData(){
+        return $result = (new WalmartService())->getAllInventoryData();
+    }
 
+    public function getReverbInventoryData(){
+        return $result = (new ReverbApiService())->getInventory();
+    }
+
+    protected function updateNotRequired(Request $request)
+    {
+       $not_required = $request->input('notrequired');
+           foreach ($not_required as $entry) {
+        [$sku, $id] = explode('___', $entry);
+
+        ProductStockMapping::where('sku', $sku)
+            ->where('id', $id)
+            ->update(['not_required' => 1]); // or true, or any value you need
+    }
+        return response()->json(['status' => 'success']);
+    }
+
+    public function refetchLiveData(){
+        $freshData=$this->fetchFreshData();   
+        if($freshData){
+            return response()->json(['status' => 'success']);
+        }
+    }
+
+    
+
+    }
+
+    

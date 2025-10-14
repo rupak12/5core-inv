@@ -1124,7 +1124,7 @@
                         </div>
                         <div class="form-inline">
                             <button id="updatenotrequired" class="btn btn-primary btn-sm">Update Not Required</button>
-                            <button id="reFetchliveData" class="btn btn-primary btn-sm">Refech Live Data</button>
+                            <button id="reFetchliveData" class="btn btn-primary btn-sm">Refetch Live Data</button>
                         </div>
                     </div>
                     <div class="row">

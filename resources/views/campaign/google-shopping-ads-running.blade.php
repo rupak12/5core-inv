@@ -176,8 +176,8 @@
                                     </div>
                                     <select id="status-filter" class="form-select form-select-md" style="width: 140px;">
                                         <option value="">All Status</option>
-                                        <option value="ENABLED">Enabled</option>
-                                        <option value="PAUSED">Paused</option>
+                                        <option value="RUNNING">RUNNING</option>
+                                        <option value="PAUSED">PAUSED</option>
                                     </select>
                                 </div>
                             </div>
@@ -319,7 +319,7 @@
                                         data-field="status"
                                         style="width: 100px;">
                                     <option value="" selected></option>
-                                    <option value="ENABLED" ${value === 'ENABLED' ? 'selected' : ''}>RUNNING</option>
+                                    <option value="RUNNING" ${value === 'RUNNING' ? 'selected' : ''}>RUNNING</option>
                                     <option value="PAUSED" ${value === 'PAUSED' ? 'selected' : ''}>PAUSED</option>
                                 </select>
                             `;

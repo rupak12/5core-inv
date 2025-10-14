@@ -750,8 +750,6 @@
                 { label: "Bestbuy", prefix: "bestbuy" },
                 { label: "Tiktok", prefix: "tiktok" },
                 { label: "Tiendamia", prefix: "tiendamia" },
-                { label: "Aliexpress", prefix: "aliexpress" }
-
             ];
 
             const labels = [];
@@ -905,8 +903,7 @@
                 (parseFloat(data.shein_l30) || 0) +
                 (parseFloat(data.bestbuy_l30) || 0) +
                 (parseFloat(data.tiktok_l30) || 0) +
-                (parseFloat(data.tiendamia_l30) || 0) +
-                (parseFloat(data.aliexpress_l30) || 0);
+                (parseFloat(data.tiendamia_l30) || 0);
 
             const SHIP = parseFloat(data.SHIP) || 0;
             const temuship = parseFloat(data.temu_ship) || 0;
@@ -942,11 +939,9 @@
 
             const tiktokProfit = data.tiktok_price ? ((parseFloat(data.tiktok_price) * 0.64) - LP - SHIP) * (parseFloat(data
                 .tiktok_l30) || 0) : 0;
-            const aliexpressProfit = data.aliexpress_price ? ((parseFloat(data.aliexpress_price) * 0.89) - LP - SHIP) * (parseFloat(data
-                .aliexpress_l30) || 0) : 0;
 
             const totalProfit = amzProfit + ebayProfit + shopifyProfit + macyProfit + reverbProfit +
-                dobaProfit + temuProfit  + ebay3Profit + ebay2Profit + walmartProfit + sheinProfit + bestbuyProfit + tiendamiaProfit + tiktokProfit + aliexpressProfit;
+                dobaProfit + temuProfit  + ebay3Profit + ebay2Profit + walmartProfit + sheinProfit + bestbuyProfit + tiendamiaProfit + tiktokProfit;
 
             return totalL30 > 0 ? (totalProfit / totalL30) / LP * 100 : 0;
         }
@@ -972,8 +967,7 @@
                 { name: "shein", price: data.shein_price, l30: data.shein_l30, percent: 0.89 },
                 { name: "tiendamia", price: data.tiendamia_price, l30: data.tiendamia_l30, percent: 0.83 },
                 { name: "bestbuy", price: data.bestbuy_price, l30: data.bestbuy_l30, percent: 0.80 },
-                { name: "tiktok", price: data.tiktok_price, l30: data.tiktok_l30, percent: 0.64 },
-                { name: "aliexpress", price: data.aliexpress_price, l30: data.aliexpress_l30, percent: 0.89 }
+                { name: "tiktok", price: data.tiktok_price, l30: data.tiktok_l30, percent: 0.64 }
             ];
 
             let totalProfit = 0;
@@ -1072,26 +1066,14 @@
                 } else if (value === "all") {
                     table.clearFilter("avgCvr");
                 } else if (value === "high") {
-                    table.setFilter(function(data) {
-                        const cvr = parseFloat(data.avgCvr) || 0;
-                        const inv = parseFloat(data.INV) || 0;
-                        const sku = (data.SKU || "").toUpperCase();
-                        return cvr > 5 && inv > 0 && !sku.includes("PARENT");
-                    });
+                    table.setFilter("avgCvr", ">", 5);
                 } else if (value === "medium") {
                     table.setFilter(function(data) {
                         const cvr = parseFloat(data.avgCvr) || 0;
-                        const inv = parseFloat(data.INV) || 0;
-                        const sku = (data.SKU || "").toUpperCase();
-                        return cvr >= 3 && cvr <= 5 && inv > 0 && !sku.includes("PARENT");
+                        return cvr >= 3 && cvr <= 5;
                     });
                 } else if (value === "low") {
-                    table.setFilter(function(data) {
-                        const cvr = parseFloat(data.avgCvr) || 0;
-                        const inv = parseFloat(data.INV) || 0;
-                        const sku = (data.SKU || "").toUpperCase();
-                        return cvr < 3 && inv > 0 && !sku.includes("PARENT");
-                    });
+                    table.setFilter("avgCvr", "<", 3);
                 }
             });
         });
@@ -1120,29 +1102,37 @@
         // Filter by Dilution radio buttons for dil
         document.querySelectorAll("input[name='dilFilter']").forEach(input => {
             input.addEventListener("change", function() {
-            const dilFilter = document.querySelector("input[name='dilFilter']:checked")?.value;
-            // Always sort Dil% lowest to highest
-            table.setSort([{ column: "Dil%", dir: "asc" }]);
-            if (dilFilter === "clear") {
-                table.clearFilter("Dil%");
-            } else if (dilFilter === "10") {
-                table.setFilter(function(data) {
-                const dil = parseFloat(data["Dil%"]) || 0;
-                return dil <= 10;
-                });
-            } else if (dilFilter === "50") {
-                table.setFilter(function(data) {
-                const dil = parseFloat(data["Dil%"]) || 0;
-                return dil < 50;
-                });
-            }
+                let value = this.value;
+
+                if (value === "clear") {
+                    table.clearFilter("Dil%");
+                } else if (value === "all") {
+                    table.clearFilter("Dil%");
+                } else if (value === "verylow") {
+                    table.setFilter("Dil%", "<=", 10);
+                } else if (value === "low") {
+                    table.setFilter(function(data) {
+                        const dil = parseFloat(data["Dil%"]) || 0;
+                        return dil >= 11 && dil <= 15;
+                    });
+                } else if (value === "medium") {
+                    table.setFilter(function(data) {
+                        const dil = parseFloat(data["Dil%"]) || 0;
+                        return dil >= 16 && dil <= 20;
+                    });
+                } else if (value === "high") {
+                    table.setFilter(function(data) {
+                        const dil = parseFloat(data["Dil%"]) || 0;
+                        return dil >= 21 && dil <= 40;
+                    });
+                } else if (value === "veryhigh") {
+                    table.setFilter("Dil%", ">", 40);
+                }
             });
         });
+        
+        
 
-        // Filter by Margin radio buttons
-        document.querySelectorAll("input[name='marginFilter']").forEach(input => {
-            input.addEventListener("change", function() {
-                let value = this.value;
 
                 if (value === "clear") {
                     table.clearFilter();
@@ -2023,8 +2013,7 @@
                 { label: "Shein", prefix: "shein", logo: "{{ asset('uploads/Shein.jpg') }}" },
                 { label: "Bestbuy", prefix: "bestbuy", logo: "{{ asset('uploads/bestbuy.jpeg') }}" },
                 { label: "Tiendamia", prefix: "tiendamia", logo: "{{ asset('uploads/ten.jpg') }}" },
-                { label: "TikTok", prefix: "tiktok", logo: "{{ asset('uploads/tiktok.png') }}" },
-                { label: "AliExpress", prefix: "aliexpress", logo: "{{ asset('uploads/aliexpress.png') }}" }
+                { label: "TikTok", prefix: "tiktok", logo: "{{ asset('uploads/tiktok.png') }}" }
             ];
 
 
@@ -2153,10 +2142,6 @@
                                     ${data.tiktok_seller_link ? `<div><strong>SL:</strong> <a href="${data.tiktok_seller_link}" target="_blank" class="text-info">Seller Link</a></div>` : ''}
                                     ${data.tiktok_buyer_link ? `<div><strong>BL:</strong> <a href="${data.tiktok_buyer_link}" target="_blank" class="text-success">Buyer Link</a></div>` : ''}
                                 ` : ''}
-                                ${r.prefix === 'aliexpress' ? `
-                                    ${data.aliexpress_seller_link ? `<div><strong>SL:</strong> <a href="${data.aliexpress_seller_link}" target="_blank" class="text-info">Seller Link</a></div>` : ''}
-                                    ${data.aliexpress_buyer_link ? `<div><strong>BL:</strong> <a href="${data.aliexpress_buyer_link}" target="_blank" class="text-success">Buyer Link</a></div>` : ''}
-                                ` : ''}
 
                             </div>
                         </div>
@@ -2202,7 +2187,6 @@
                                 : r.prefix === 'reverb' ? (data.reverb_views ?? "-")
                                 : r.prefix === 'temu' ? (data.temu_views ?? "-")
                                 : r.prefix === 'tiktok' ? (data.tiktok_views ?? "-")
-                                : r.prefix === 'aliexpress' ? (data.aliexpress_views ?? "-")
                                 : "-" }
                         </div>
                     </td>
@@ -2226,9 +2210,6 @@
                                 else if (r.prefix === 'tiktok' && cvr) {
                                     return `<span style="color: ${cvr.color}">${Math.round(cvr.value)}%</span>`;
                                 }
-                                else if (r.prefix === 'aliexpress' && cvr) {
-                                    return `<span style="color: ${cvr.color}">${Math.round(cvr.value)}%</span>`;
-                                }
 
                                 return "N/A";
                             })()} 
@@ -2245,8 +2226,7 @@
                             r.prefix === 'temu' ? Math.round(data.temu_req_view) ?? "-" :
                             r.prefix === 'bestbuy' ? Math.round(data.bestbuy_req_view) ?? "-" :
                             r.prefix === 'tiendamia' ? Math.round(data.tiendamia_req_view) ?? "-" :
-                            r.prefix === 'tiktok' ? Math.round(data.tiktok_req_view) ?? "-" :
-                            r.prefix === 'aliexpress' ? Math.round(data.aliexpress_req_view) ?? "-" : "-"}
+                            r.prefix === 'tiktok' ? Math.round(data.tiktok_req_view) ?? "-" : "-"}
                         </div>
                     </td>
 
@@ -2257,7 +2237,6 @@
                                 : r.prefix === 'ebay' ? fmtMoney(data.ebay_price_lmpa) 
                                 : r.prefix === 'shein' ? fmtMoney(data.lmp) 
                                 : r.prefix === 'tiktok' ? fmtMoney(data.tiktok_price_lmpa) 
-                                : r.prefix === 'aliexpress' ? fmtMoney(data.aliexpress_price_lmpa) 
                                 : '-'}
                         </div>
                     </td>
@@ -2284,7 +2263,6 @@
                                 : r.prefix === 'bestbuy' ? (data.bestbuy_sprice || '')
                                 : r.prefix === 'tiendamia' ? (data.tiendamia_sprice || '')
                                 : r.prefix === 'tiktok' ? (data.tiktok_sprice || '')
-                                : r.prefix === 'aliexpress' ? (data.aliexpress_sprice || '')
                             
                                 : ''
                             }"
@@ -2344,9 +2322,6 @@
                             } else if (r.prefix === 'tiktok' && data.tiktok_spft) {
                                 value = Math.round(data.tiktok_spft);
                             }
-                            else if (r.prefix === 'aliexpress' && data.aliexpress_spft) {
-                                value = Math.round(data.aliexpress_spft);
-                            }
 
 
                             if (value !== undefined) {
@@ -2402,9 +2377,6 @@
                                 value = Math.round(data.tiendamia_sroi);
                             } else if (r.prefix === 'tiktok' && data.tiktok_sroi) {
                                 value = Math.round(data.tiktok_sroi);
-                            }
-                            else if (r.prefix === 'aliexpress' && data.aliexpress_sroi) {
-                                value = Math.round(data.aliexpress_sroi);
                             }
 
 

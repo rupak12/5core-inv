@@ -234,8 +234,6 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
 
-            document.body.style.zoom = "75%";
-
             const invFilter  = document.querySelector("#inv-filter");
             const nrlFilter  = document.querySelector("#nrl-filter");
             const nraFilter  = document.querySelector("#nra-filter");
@@ -457,10 +455,6 @@
                             }
                         }
                     },
-                    {
-                        title: "AD STATUS",
-                        field: "status",
-                    }
                 ],
                 initialSort: [
                     { column: "spend_L7", dir: "desc" }
@@ -506,6 +500,32 @@
                 }
             });
 
+            // document.addEventListener("change", function(e){
+            //     if(e.target.classList.contains("editable-select")){
+            //         let sku   = e.target.getAttribute("data-sku");
+            //         let field = e.target.getAttribute("data-field");
+            //         let value = e.target.value;
+
+            //         fetch('/update-amazon-nr-nrl-fba', {
+            //             method: 'POST',
+            //             headers: {
+            //                 'Content-Type': 'application/json',
+            //                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            //             },
+            //             body: JSON.stringify({
+            //                 sku: sku,
+            //                 field: field,
+            //                 value: value
+            //             })
+            //         })
+            //         .then(res => res.json())
+            //         .then(data => {
+            //             console.log(data);
+            //         })
+            //         .catch(err => console.error(err));
+            //     }
+            // });
+
 
             table.on("tableBuilt", function () {
 
@@ -529,12 +549,14 @@
                     }
 
                     let statusVal = $("#status-filter").val();
-                    if (statusVal && data.status !== statusVal) {
+                    if (statusVal && data.campaignStatus !== statusVal) {
                         return false;
                     }
 
                     let invFilterVal = $("#inv-filter").val();
-                    if (invFilterVal === "INV_0") {
+                    if (invFilterVal === "ALL") {
+                        // if (parseFloat(data.INV) === 0) return false;
+                    } else if (invFilterVal === "INV_0") {
                         if (parseFloat(data.INV) !== 0) return false;
                     } else if (invFilterVal === "OTHERS") {
                         if (parseFloat(data.INV) === 0) return false;
@@ -557,11 +579,8 @@
                     let filtered = table.getDataCount("active");      
                     let percentage = total > 0 ? ((filtered / total) * 100).toFixed(0) : 0;
 
-                    const totalEl = document.getElementById("total-campaigns");
-                    const percentageEl = document.getElementById("percentage-campaigns");
-
-                    if (totalEl) totalEl.innerText = filtered;
-                    if (percentageEl) percentageEl.innerText = percentage + "%";
+                    document.getElementById("total-campaigns").innerText = filtered;
+                    document.getElementById("percentage-campaigns").innerText = percentage + "%";
                 }
 
                 function refreshFilters() {
@@ -723,6 +742,8 @@
 
                 XLSX.writeFile(wb, "ebay_over_acos_pink.xlsx");
             });
+
+            document.body.style.zoom = "78%";
         });
     </script>
 @endsection
