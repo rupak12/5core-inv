@@ -43,25 +43,25 @@
                                                 @endforeach
                                             @endif
 
-                                            {{-- <div class="mb-3">
-                                                <label for="emailaddress" class="form-label">Email address</label>
-                                                <input class="form-control" type="email" name="email"
-                                                    id="emailaddress" placeholder="Enter your email" value="">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="password" class="form-label">Password</label>
-                                                <input class="form-control" type="password" name="password"
-                                                    id="password" placeholder="Enter your password" value="">
-                                            </div>
-                                            <div class="mb-3">
-                                                <div class="form-check">
-                                                    <input type="checkbox" class="form-check-input"
-                                                        id="checkbox-signin">
-                                                    <label class="form-check-label" for="checkbox-signin">Remember
-                                                        me</label>
+                                                <div class="mb-3">
+                                                    <label for="emailaddress" class="form-label">Email address</label>
+                                                    <input class="form-control" type="email" name="email"
+                                                        id="emailaddress" placeholder="Enter your email" value="">
                                                 </div>
-                                             </div>
-                                              --}}
+                                                <div class="mb-3">
+                                                    <label for="password" class="form-label">Password</label>
+                                                    <input class="form-control" type="password" name="password"
+                                                        id="password" placeholder="Enter your password" value="">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <div class="form-check">
+                                                        <input type="checkbox" class="form-check-input"
+                                                            id="checkbox-signin">
+                                                        <label class="form-check-label" for="checkbox-signin">Remember
+                                                            me</label>
+                                                    </div>
+                                                </div>
+                                                
                                             <div class="mb-0 text-start">
                                                 <button class="btn btn-soft-primary w-100" type="submit"><i
                                                         class="ri-login-circle-fill me-1"></i> <span class="fw-bold">Log

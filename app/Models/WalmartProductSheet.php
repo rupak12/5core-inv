@@ -9,7 +9,7 @@ class WalmartProductSheet extends Model
 {
     protected $table = 'walmart_product_sheet'; // Ensure the model uses the correct table name
     protected $fillable = [
-        'sku', 'price', 'pft', 'roi', 'l30', 'dil', 'buy_link'
+        'sku', 'price', 'pft', 'roi', 'l30', 'dil', 'buy_link', 'views'
     ];
     use HasFactory;
 }
