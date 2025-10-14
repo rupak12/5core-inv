@@ -1995,65 +1995,6 @@
         }
 
 
-        // function drawSalesTrendChart() {
-        //     fetch('/sales-trend-data')
-        //         .then(response => response.json())
-        //         .then(json => {
-        //             const chartDataFromAPI = json.chartData || [];
-        //             if (!chartDataFromAPI.length) return alert("No sales data found");
-
-        //             // Prepare chart data for Google Charts
-        //             const chartArray = [['Date', 'L30 Sales', 'L60 Sales', 'GProfit (%)']];
-        //             chartDataFromAPI.forEach(row => {
-        //                 chartArray.push([
-        //                     row.date,
-        //                     parseFloat(row.l30_sales) || 0,
-        //                     parseFloat(row.l60_sales) || 0,
-        //                     parseFloat(row.gprofit) || 0
-        //                 ]);
-        //             });
-
-        //             google.charts.load('current', { packages: ['corechart'] });
-        //             google.charts.setOnLoadCallback(() => {
-        //                 const data = google.visualization.arrayToDataTable(chartArray);
-
-        //                 const options = {
-        //                     title: '📈 Daily Sales Trend (L30 vs L60 vs GProfit %)',
-        //                     legend: { position: 'bottom', textStyle: { fontSize: 12 } },
-        //                     focusTarget: 'datum',
-        //                     tooltip: { trigger: 'focus' },
-        //                     hAxis: {
-        //                         title: 'Date',
-        //                         textStyle: { fontSize: 10 },
-        //                         slantedText: true,
-        //                         slantedTextAngle: 45
-        //                     },
-        //                     vAxes: {
-        //                         0: { title: 'Sales ($)', textStyle: { color: '#1E88E5' } },
-        //                         1: { title: 'GProfit (%)', textStyle: { color: '#43A047' } }
-        //                     },
-        //                     series: {
-        //                         0: { targetAxisIndex: 0, color: '#1E88E5', lineWidth: 3, pointSize: 8, pointShape: 'circle' },
-        //                         1: { targetAxisIndex: 0, color: '#FF7043', lineWidth: 3, pointSize: 8, pointShape: 'circle', lineDashStyle: [4, 4] },
-        //                         2: { targetAxisIndex: 1, color: '#43A047', lineWidth: 3, pointSize: 9, pointShape: 'circle' }
-        //                     },
-        //                     chartArea: { left: 70, top: 50, width: '85%', height: '65%' },
-        //                     backgroundColor: 'transparent'
-        //                 };
-
-
-        //                 const chartDiv = document.getElementById('salesTrendChart');
-        //                 chartDiv.style.display = 'block';
-
-        //                 const chart = new google.visualization.LineChart(chartDiv);
-        //                 chart.draw(data, options);
-
-        //                 window.addEventListener('resize', () => chart.draw(data, options));
-        //             });
-        //         })
-        //         .catch(err => console.error('Error fetching chart data:', err));
-        // }
-
         function drawSalesTrendChart() {
             fetch('/sales-trend-data')
                 .then(response => response.json())
@@ -2061,24 +2002,31 @@
                     const chartDataFromAPI = json.chartData || [];
                     if (!chartDataFromAPI.length) return alert("No sales data found");
 
-                    // Prepare chart data with HTML tooltips (rounded)
-                    const chartArray = [['Date', 'L30 Sales', 'L60 Sales', 'GProfit (%)', { role: 'tooltip', p: { html: true } }]];
+                    // Prepare chart data with separate tooltips for each series
+                    const chartArray = [
+                        [
+                            'Date', 
+                            'L30 Sales', { role: 'tooltip', p: { html: true } },
+                            'L60 Sales', { role: 'tooltip', p: { html: true } },
+                            'GProfit (%)', { role: 'tooltip', p: { html: true } }
+                        ]
+                    ];
 
                     chartDataFromAPI.forEach(row => {
                         const l30 = Math.round(row.l30_sales);
                         const l60 = Math.round(row.l60_sales);
                         const gprofit = Math.round(row.gprofit);
 
-                        const tooltip = `
-                            <div style="padding:5px">
-                                <strong>${row.date}</strong><br/>
-                                L30 Sales: ${l30}<br/>
-                                L60 Sales: ${l60}<br/>
-                                GProfit: ${gprofit}%
-                            </div>
-                        `;
+                        const tooltipL30 = `<div style="padding:5px"><strong>${row.date}</strong><br/>L30 Sales: ${l30}</div>`;
+                        const tooltipL60 = `<div style="padding:5px"><strong>${row.date}</strong><br/>L60 Sales: ${l60}</div>`;
+                        const tooltipGProfit = `<div style="padding:5px"><strong>${row.date}</strong><br/>GProfit: ${gprofit}%</div>`;
 
-                        chartArray.push([row.date, l30, l60, gprofit, tooltip]);
+                        chartArray.push([
+                            row.date,
+                            l30, tooltipL30,
+                            l60, tooltipL60,
+                            gprofit, tooltipGProfit
+                        ]);
                     });
 
                     google.charts.load('current', { packages: ['corechart'] });
@@ -2120,8 +2068,6 @@
                 })
                 .catch(err => console.error('Error fetching chart data:', err));
         }
-
-
 
 
         document.getElementById('showSalesGraph').addEventListener('click', function() {
