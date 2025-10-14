@@ -478,7 +478,7 @@
                         return `<div 
                         class="editable-qty" 
                         contenteditable="true" 
-                        data-field="order_given" 
+                        data-field="ORDER given" 
                         data-original='${value ?? ''}' 
                         data-sku='${sku}' 
                         data-parent='${parent}' 
@@ -704,6 +704,7 @@
 
         function setCombinedFilters() {
             const allData = table.getData();
+            console.log(allData);
             const groupedChildrenMap = {};
             const visibleParentKeys = new Set();
 
@@ -1068,11 +1069,11 @@
                 const parent = $cell.data('parent');
 
                 // Convert raw value to number safely
-                const newValue = ['Approved QTY', 'S-MSL', 'order_given'].includes(field) ?
+                const newValue = ['Approved QTY', 'S-MSL', 'ORDER given'].includes(field) ?
                     Number(newValueRaw) :
                     newValueRaw;
 
-                const original = ['Approved QTY', 'S-MSL', 'order_given'].includes(field) ?
+                const original = ['Approved QTY', 'S-MSL', 'ORDER given'].includes(field) ?
                     Number(originalValue) :
                     originalValue;
 
@@ -1080,7 +1081,7 @@
                 if (newValue === original) return;
 
                 // Numeric validation
-                if (['Approved QTY', 'S-MSL', 'order_given'].includes(field) && isNaN(newValue)) {
+                if (['Approved QTY', 'S-MSL', 'ORDER given'].includes(field) && isNaN(newValue)) {
                     alert('Please enter a valid number.');
                     $cell.text(originalValue); // revert
                     return;
@@ -1214,6 +1215,7 @@
 
                                 setCombinedFilters();
                             }
+                            console.log(`Saved ${field}: ${newValue}`);
                         },
                         function() {
                             if (isDate) {

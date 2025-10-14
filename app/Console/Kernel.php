@@ -98,7 +98,7 @@ class Kernel extends ConsoleKernel
         // Sync Newegg sheet command
         $schedule->command('sync:neweegg-sheet')->everyTenMinutes();
         // Sync Wayfair sheet command
-        $schedule->command('sync:wayfair-sheet')->everyTenMinutes();
+        $schedule->command('sync:-sheet')->everyTenMinutes();
 
         $schedule->command('sync:shein-sheet')->daily();
 
@@ -192,6 +192,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('sync:sync-temu-sip')->everyMinute();
         $schedule->command('sync:walmart-metrics-data')->everyMinute();
         $schedule->command('sync:tiktok-sheet-data')->everyMinute();
+<<<<<<< Updated upstream
         $schedule->command('app:aliexpress-sheet-sync')->everyMinute();
         $schedule->command('app:fetch-ebay-table-data')->dailyAt('00:00');
           $schedule->call(function () {
@@ -203,6 +204,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('sbid:update')
             ->dailyAt('00:01') 
             ->timezone('Asia/Kolkata');
+=======
+>>>>>>> Stashed changes
     }
 
     /**

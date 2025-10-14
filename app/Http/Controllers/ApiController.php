@@ -1013,7 +1013,7 @@ class ApiController extends Controller
 
 
 
-    public function fetchDataFromSheinMasterGoogleSheet()
+     public function fetchDataFromSheinMasterGoogleSheet()
     {
         // URL of the Google Apps Script web app
         $url = 'https://script.google.com/macros/s/AKfycbwNwG2rdvGOK49cRJQan7-3MSR2DQ2S-H0bP8iYx-olcfwWn_pswO-q7RS7hcZ152y5/exec';
@@ -1107,7 +1107,7 @@ class ApiController extends Controller
     }
 
 
-    // Fetch data from Faire master Apps Script
+    // Fetch data from Newegg B2C master Apps Script
     public function fetchDataFromFairMasterGoogleSheet()
     {
         // URL of the Google Apps Script web app
@@ -1153,6 +1153,10 @@ class ApiController extends Controller
             ], 500);
         }
     }
+
+
+
+
 
     // Fetch data from Ebay Apps Script
     public function fetchDobaListingData()
@@ -1396,7 +1400,7 @@ class ApiController extends Controller
         ];
 
         $url = 'https://script.google.com/macros/s/AKfycbxTfqbIQtcSpvxNsXnbkjH-xDwk4kPYX_aTjBP39mvIhHDtvrk8paUCC9BAT25byM9D/exec';
-
+        
 
         try {
             $response = Http::timeout(60)->post($url, $payload);
@@ -1419,7 +1423,7 @@ class ApiController extends Controller
 
 
 
-    public function fetchDataSheetListingDataSheet()
+     public function fetchDataSheetListingDataSheet()
     {
         $url = 'https://script.google.com/macros/s/AKfycbwVPMyz2x4Np4kyd3ejFHtPdkeaPRg2sJdOk9TMGbDqdn6puRVVtQ9tQrIsYb0hYZIV/exec';
 
@@ -1454,7 +1458,7 @@ class ApiController extends Controller
 
 
 
-    public function fetchDataFromTiktokDataSheet()
+     public function fetchDataFromTiktokDataSheet()
     {
         $url = 'https://script.google.com/macros/s/AKfycbyj1Z0xGDKHOWZvqj1fdnBi02abq67NzwBc7fj0XckA9O3zGbZOyHnLLDXuOPnTLC3E/exec';
 
@@ -1479,53 +1483,6 @@ class ApiController extends Controller
         } catch (\Exception $e) {
             Log::error('Exception while fetching data from Google Sheet:', ['error' => $e->getMessage()]);
 
-            return response()->json([
-                'message' => 'An error occurred while fetching data',
-                'error' => $e->getMessage(),
-                'status' => 500
-            ], 500);
-        }
-    }
-
-
-    public function fetchDataFromAliExpressGoogleSheet()
-    {
-        // URL of the AliExpress Google Apps Script web app
-        $url = 'https://script.google.com/macros/s/AKfycbzca4mNQmQi7qPV2FnUSxkloc8HK32TqnZMLd2Q8av_dNTUYHWb4cr7VuuXwDLZEs6gWA/exec';
-
-        try {
-            // Make a GET request to the Google Apps Script URL
-            $response = Http::timeout(120)->get($url);
-
-            // Check if the request was successful
-            if ($response->successful()) {
-                // Decode the JSON response
-                $data = $response->json();
-
-                // Optional: Log the data for debugging
-                // Log::info('Data fetched from AliExpress Google Sheet:', $data);
-
-                // Return the data as a JSON response
-                return response()->json([
-                    'message' => 'Data fetched successfully',
-                    'data' => $data,
-                    'status' => 200
-                ]);
-            } else {
-                // Log the error if the request failed
-                Log::error('Failed to fetch data from AliExpress Google Sheet. Response:', ['body' => $response->body()]);
-
-                // Return an error response
-                return response()->json([
-                    'message' => 'Failed to fetch data from AliExpress Google Sheet',
-                    'status' => $response->status()
-                ], $response->status());
-            }
-        } catch (\Exception $e) {
-            // Log the exception if something goes wrong
-            Log::error('Exception while fetching data from AliExpress Google Sheet:', ['error' => $e->getMessage()]);
-
-            // Return an error response
             return response()->json([
                 'message' => 'An error occurred while fetching data',
                 'error' => $e->getMessage(),

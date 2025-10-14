@@ -1785,8 +1785,7 @@
                                     'walmart': '/walmartAnalysis',
                                     'bestbuy usa': '/bestbuyusa-analytics',
                                     'shein': '/sheinAnalysis',
-                                    'tiktok shop': '/tiktokAnalysis',
-                                    'aliexpress': '/aliexpressAnalysis',
+                                    'tiktokshop': '/tiktokAnalysis',
                                 };
 
                                 const routeUrl = routeMap[channelName];
@@ -1858,35 +1857,14 @@
                         // { data: 'L60 Orders', render: v => `<span class="metric-value">${toNum(v).toLocaleString('en-US')}</span>` },
                         { data: 'L30 Orders', render: v => `<span class="metric-value">${toNum(v).toLocaleString('en-US')}</span>` },
 
-                        // {
-                        //     data: 'Gprofit%',
-                        //     render: function (v) {
-                        //         const n = pctFix(v);
-                        //         let bg = '', color = 'black';
-                        //         if (n < 25)            { bg = '#ff0000'; color = 'white'; }
-                        //         else if (n < 33)       { bg = '#00ff00'; }
-                        //         else                   { bg = '#ff00ff'; color = 'white'; }
-                        //         return `<span style="background:${bg};color:${color};padding:2px 6px;border-radius:4px;">${Math.round(n)}%</span>`;
-                        //     }
-                        // },
                         {
                             data: 'Gprofit%',
                             render: function (v) {
                                 const n = pctFix(v);
-                                let bg = '', color = 'white';
-
-                                if (n < 15) {
-                                    bg = '#ff0000'; // Red
-                                } else if (n >= 15 && n < 25) {
-                                    bg = '#ffff00'; // Yellow
-                                    color = 'black';
-                                } else if (n >= 25 && n < 40) {
-                                    bg = '#00ff00'; // Green
-                                    color = 'black';
-                                } else {
-                                    bg = '#8000ff'; // Purple
-                                }
-
+                                let bg = '', color = 'black';
+                                if (n < 25)            { bg = '#ff0000'; color = 'white'; }
+                                else if (n < 33)       { bg = '#00ff00'; }
+                                else                   { bg = '#ff00ff'; color = 'white'; }
                                 return `<span style="background:${bg};color:${color};padding:2px 6px;border-radius:4px;">${Math.round(n)}%</span>`;
                             }
                         },

@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('assembly_video_uploads')) {
         Schema::create('assembly_video_uploads', function (Blueprint $table) {
             $table->id();
             $table->string('sku')->unique();
             $table->json('value');
             $table->timestamps();
         });
+        }
     }
 
     /**

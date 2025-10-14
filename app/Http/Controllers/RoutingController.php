@@ -36,7 +36,6 @@ class RoutingController extends Controller
      */
     public function root(Request $request, $first)
     {
-
         $mode = $request->query('mode');
         $demo = $request->query('demo');
      

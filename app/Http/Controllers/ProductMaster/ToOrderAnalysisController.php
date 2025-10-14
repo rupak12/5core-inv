@@ -258,12 +258,13 @@ class ToOrderAnalysisController extends Controller
     public function getToOrderAnalysis()
     {
         try {
-            $toOrderRecords = DB::table('to_order_analysis')->whereNull('deleted_at')->get()->keyBy('sku');
+            // Fetch base data
+            $toOrderRecords = DB::table('to_order_analysis')->get()->keyBy('sku');
             $productData = DB::table('product_master')->get()->keyBy(fn($item) => strtoupper(trim($item->sku)));
             $forecastData = DB::table('forecast_analysis')->get()->keyBy(fn($row) => strtoupper(trim($row->sku)));
 
+            // ✅ Shopify image support
             $shopifySkus = ShopifySku::all()->keyBy(fn($item) => strtoupper(trim($item->sku)));
-            $allReviews = \App\Models\ToOrderReview::all()->keyBy(fn($r) => strtoupper(trim($r->sku)) . '|' . strtoupper(trim($r->parent)));
 
             $processedData = [];
 
@@ -276,6 +277,7 @@ class ToOrderAnalysisController extends Controller
                 $parent = $toOrder->parent ?? $product->parent ?? '';
                 $supplierName = '';
 
+                // ✅ Find supplier
                 $parentList = explode(',', $parent);
                 foreach ($parentList as $singleParent) {
                     $singleParent = trim($singleParent);
@@ -289,6 +291,7 @@ class ToOrderAnalysisController extends Controller
                     }
                 }
 
+                // ✅ Product Values
                 $cbm = 0;
                 $imagePath = null;
 
@@ -300,16 +303,13 @@ class ToOrderAnalysisController extends Controller
                     }
                 }
 
+                // ✅ Image preference
                 $shopifyImage = $shopifySkus[$sheetSku]->image_src ?? null;
                 $finalImage = $shopifyImage ?: $imagePath;
 
                 $approvedQty = (int)($toOrder->approved_qty ?? 0);
 
-                $reviewKey = strtoupper(trim($sheetSku)) . '|' . strtoupper(trim($parent));
-                $review = $allReviews->get($reviewKey);
-
                 $processedData[] = [
-                    'id'              => $toOrder->id,
                     'Parent'          => $parent,
                     'SKU'             => $sheetSku,
                     'approved_qty'    => $approvedQty,
@@ -327,15 +327,10 @@ class ToOrderAnalysisController extends Controller
                     'cbm'             => $cbm,
                     'total_cbm'       => $cbm * $approvedQty,
                     'Image'           => $finalImage,
-
-                    'has_review'      => $review ? true : false,
-                    'positive_review' => $review->positive_review ?? null,
-                    'negative_review' => $review->negative_review ?? null,
-                    'improvement'     => $review->improvement ?? null,
-                    'date_updated'    => $review->date_updated ?? null,
                 ];
             }
 
+            // ✅ Return JSON for Tabulator
             return response()->json([
                 "data" => $processedData
             ]);
@@ -438,15 +433,7 @@ class ToOrderAnalysisController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function deleteToOrderAnalysis(Request $request)
-    {
-        $ids = $request->input('ids', []);
-        if(!empty($ids)){
-            ToOrderAnalysis::whereIn('id', $ids)->delete();
-            return response()->json(['success' => true]);
-        }
-        return response()->json(['success' => false], 400);
-    }
+
     
 
 

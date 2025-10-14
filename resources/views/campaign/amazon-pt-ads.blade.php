@@ -5,7 +5,6 @@
 @section('css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
     <link rel="stylesheet" href="{{ asset('assets/css/styles.css') }}">
     <style>
         .tabulator .tabulator-header {
@@ -142,70 +141,6 @@
     ])
     <div class="row">
         <div class="col-12">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-                    <div class="mb-3">
-                        <button id="daterange-btn" class="btn btn-outline-dark">
-                            <span>Date range: Select</span> <i class="fa-solid fa-chevron-down ms-1"></i>
-                        </button>
-                    </div>
-                    <!-- Stats Row -->
-                    <div class="row text-center mb-4">
-                        <!-- Clicks -->
-                        <div class="col-md-3 mb-3 mb-md-0">
-                            <div class="p-3 border rounded bg-light h-100">
-                                <div class="text-muted small">Clicks</div>
-                                <div class="h3 mb-0 fw-bold text-primary card-clicks">{{ $clicks->sum() }}</div>
-                            </div>
-                        </div>
-
-                        <!-- Spend -->
-                        <div class="col-md-3 mb-3 mb-md-0">
-                            <div class="p-3 border rounded bg-light h-100">
-                                <div class="text-muted small">Spend</div>
-                                <div class="h3 mb-0 fw-bold text-success card-spend">
-                                    US${{ number_format($spend->sum(), 2) }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Orders -->
-                        <div class="col-md-3 mb-3 mb-md-0">
-                            <div class="p-3 border rounded bg-light h-100">
-                                <div class="text-muted small">Orders</div>
-                                <div class="h3 mb-0 fw-bold text-danger card-orders">{{ $orders->sum() }}</div>
-                            </div>
-                        </div>
-
-                        <!-- Sales -->
-                        <div class="col-md-3">
-                            <div class="p-3 border rounded bg-light h-100">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <div class="text-muted small">Sales</div>
-                                        <div class="h3 mb-0 fw-bold text-info card-sales">
-                                            US${{ number_format($sales->sum(), 2) }}
-                                        </div>
-                                    </div>
-                                    <!-- Arrow button -->
-                                    <button id="toggleChartBtn" class="btn btn-sm btn-info ms-2">
-                                        <i id="chartArrow" class="fa-solid fa-chevron-down"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Chart (hidden by default) -->
-                    <div id="chartContainer" style="display: none;">
-                        <canvas id="campaignChart" height="120"></canvas>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12">
             <div class="card shadow-sm">
                 <div class="card-body py-3">
                     <div class="mb-4">
@@ -290,10 +225,13 @@
 
 @section('script')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<<<<<<< Updated upstream
     <!-- Moment.js (daterangepicker dependency) -->
     <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <!-- Daterangepicker -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+=======
+>>>>>>> Stashed changes
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
     <!-- SheetJS for Excel Export -->
@@ -1361,201 +1299,6 @@
             document.body.style.zoom = "78%";
         });
     </script>
-    <script>
-        const ctx = document.getElementById('campaignChart').getContext('2d');
 
-        const chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: {!! json_encode($dates) !!},
-                datasets: [
-                    {
-                        label: 'Clicks',
-                        data: {!! json_encode($clicks) !!},
-                        borderColor: 'purple',
-                        backgroundColor: 'rgba(128, 0, 128, 0.1)',
-                        yAxisID: 'y1',
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        fill: false,
-                    },
-                    {
-                        label: 'Spend (USD)',
-                        data: {!! json_encode($spend) !!},
-                        borderColor: 'teal',
-                        backgroundColor: 'rgba(0, 128, 128, 0.1)',
-                        yAxisID: 'y2',
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        fill: false,
-                    },
-                    {
-                        label: 'Orders',
-                        data: {!! json_encode($orders) !!},
-                        borderColor: 'magenta',
-                        backgroundColor: 'rgba(255, 0, 255, 0.1)',
-                        yAxisID: 'y1',
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        fill: false,
-                    },
-                    {
-                        label: 'Sales (USD)',
-                        data: {!! json_encode($sales) !!},
-                        borderColor: 'blue',
-                        backgroundColor: 'rgba(0, 0, 255, 0.1)',
-                        yAxisID: 'y2',
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        fill: false,
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false
-                },
-                plugins: {
-                    tooltip: {
-                        backgroundColor: "#fff",
-                        titleColor: "#111",
-                        bodyColor: "#333",
-                        borderColor: "#ddd",
-                        borderWidth: 1,
-                        padding: 12,
-                        titleFont: { size: 14, weight: 'bold' },
-                        bodyFont: { size: 13 },
-                        usePointStyle: true,
-                        callbacks: {
-                            label: function(context) {
-                                let value = context.raw;
-                                if (context.dataset.label.includes("Spend") || context.dataset.label.includes("Sales")) {
-                                    return `${context.dataset.label}: $${Number(value).toFixed(2)}`;
-                                }
-                                return `${context.dataset.label}: ${value}`;
-                            }
-                        }
-                    },
-                    legend: {
-                        labels: {
-                            usePointStyle: true,
-                            boxWidth: 10,
-                            padding: 20
-                        },
-                        onClick: (e, legendItem, legend) => {
-                            const index = legendItem.datasetIndex;
-                            const ci = legend.chart;
-                            const meta = ci.getDatasetMeta(index);
-                            meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : null;
-                            ci.update();
-                        }
-                    }
-                },
-                scales: {
-                    y1: {
-                        type: 'linear',
-                        position: 'left',
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Clicks / Orders'
-                        }
-                    },
-                    y2: {
-                        type: 'linear',
-                        position: 'right',
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Spend / Sales (USD)'
-                        },
-                        grid: {
-                            drawOnChartArea: false
-                        }
-                    }
-                }
-            }
-        });
-
-        document.addEventListener("DOMContentLoaded", function() {
-            const toggleBtn = document.getElementById("toggleChartBtn");
-            const chartContainer = document.getElementById("chartContainer");
-            const arrowIcon = document.getElementById("chartArrow");
-
-            toggleBtn.addEventListener("click", function() {
-                if (chartContainer.style.display === "none") {
-                    chartContainer.style.display = "block";
-                    arrowIcon.classList.remove("fa-chevron-down");
-                    arrowIcon.classList.add("fa-chevron-up");
-                } else {
-                    chartContainer.style.display = "none";
-                    arrowIcon.classList.remove("fa-chevron-up");
-                    arrowIcon.classList.add("fa-chevron-down");
-                }
-            });
-        });
-
-        $(function() {
-            let picker = $('#daterange-btn').daterangepicker({
-                opens: 'right',
-                autoUpdateInput: false,
-                alwaysShowCalendars: true,
-                locale: {
-                    format: "D MMM YYYY",
-                    cancelLabel: 'Clear'
-                },
-                ranges: {
-                    'Today': [moment(), moment()],
-                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-                    'This Month': [moment().startOf('month'), moment().endOf('month')],
-                    'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-                }
-            }, function(start, end) {
-                const startDate = start.format("YYYY-MM-DD");
-                const endDate   = end.format("YYYY-MM-DD");
-
-                $('#daterange-btn span').html("Date range: " + startDate + " - " + endDate);
-                fetchChartData(startDate, endDate);
-            });
-
-            // Reset on cancel
-            $('#daterange-btn').on('cancel.daterangepicker', function(ev, picker) {
-                $(this).find('span').html("Date range: Select");
-                fetchChartData(); 
-            });
-
-        });
-
-        function fetchChartData(startDate, endDate) {
-            $.ajax({
-                url: "{{ route('amazonPtAds.filter') }}",
-                type: "GET",
-                data: { startDate, endDate },
-                success: function(response) {
-                    const formattedDates = response.dates.map(d => moment(d).format('MMM DD'));
-                    chart.data.labels = formattedDates;
-                    chart.data.datasets[0].data = response.clicks;
-                    chart.data.datasets[1].data = response.spend;
-                    chart.data.datasets[2].data = response.orders;
-                    chart.data.datasets[3].data = response.sales;
-                    chart.update();
-
-                    $('.card-clicks').text(response.totals.clicks);
-                    $('.card-spend').text('$' + Number(response.totals.spend).toFixed(2));
-                    $('.card-orders').text(response.totals.orders);
-                    $('.card-sales').text('$' + Number(response.totals.sales).toFixed(2));
-                }
-            });
-        }
-    </script>
 @endsection
 

@@ -43,7 +43,6 @@ use App\Http\Controllers\MarketPlace\ListingMarketPlace\ListingWayfairController
 use App\Http\Controllers\MarketPlace\ListingMarketPlace\ListingYamibuyController;
 use App\Http\Controllers\MarketPlace\ListingMarketPlace\ListingZendropController;
 use App\Http\Controllers\MarketPlace\OverallAmazonController;
-use App\Models\AliExpressSheetData;
 use App\Models\AmazonDatasheet;
 use App\Models\AmazonDataView;
 use App\Models\ApiCentralWalmartApiData;
@@ -57,13 +56,14 @@ use App\Models\Ebay2Metric;
 use App\Models\Ebay3Metric;
 use App\Models\EbayMetric;
 use App\Models\FaireProductSheet;
+<<<<<<< Updated upstream
 use App\Models\FbMarketplaceSheetdata;
 use App\Models\FbShopSheetdata;
 use App\Models\InstagramShopSheetdata;
+=======
+>>>>>>> Stashed changes
 use App\Models\MacyProduct;
 use App\Models\MarketplacePercentage;
-use App\Models\MercariWoShipSheetdata;
-use App\Models\MercariWShipSheetdata;
 use App\Models\PLSProduct;
 use App\Models\ProductMaster;
 use App\Models\ReverbProduct;
@@ -145,6 +145,7 @@ class ChannelMasterController extends Controller
             'faire'     => 'getFaireChannelData',
             'shein'     => 'getSheinChannelData',
             'tiktokshop'=> 'getTiktokChannelData',
+<<<<<<< Updated upstream
             'instagramshop' => 'getInstagramChannelData',
             'aliexpress' => 'getAliexpressChannelData',
             'mercariwship' => 'getMercariWShipChannelData',
@@ -153,6 +154,8 @@ class ChannelMasterController extends Controller
             'fbshop'    => 'getFbShopChannelData',
             'business5core'    => 'getBusiness5CoreChannelData',
             'topdawg'    => 'getTopDawgChannelData',
+=======
+>>>>>>> Stashed changes
             // 'walmart' => 'getWalmartChannelData',
             // 'shopify' => 'getShopifyChannelData',
         ];
@@ -2100,6 +2103,7 @@ class ChannelMasterController extends Controller
         ]);
     }
 
+<<<<<<< Updated upstream
     public function getInstagramChannelData(Request $request)
     {
         $result = [];
@@ -3045,6 +3049,8 @@ class ChannelMasterController extends Controller
     }
     
 
+=======
+>>>>>>> Stashed changes
 
     /**
      * Store a newly created channel in storage.

@@ -127,6 +127,7 @@ class AliexpressZeroController extends Controller
 
         return $zeroViewCount;
     }
+<<<<<<< Updated upstream
 
 
     public function getLivePendingAndZeroViewCounts()
@@ -194,4 +195,6 @@ class AliexpressZeroController extends Controller
     }
 
     
+=======
+>>>>>>> Stashed changes
 }

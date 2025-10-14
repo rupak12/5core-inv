@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\ProductMaster;
 use App\Models\ShopifySku;
 use App\Models\SheinDataView;
-use App\Models\SheinListingStatus;
-use App\Models\SheinSheetData;
 use Illuminate\Http\Request;
 
 class SheinZeroController extends Controller
@@ -127,6 +125,7 @@ class SheinZeroController extends Controller
 
         return $zeroViewCount;
     }
+<<<<<<< Updated upstream
 
     public function getLivePendingAndZeroViewCounts()
     {
@@ -192,4 +191,6 @@ class SheinZeroController extends Controller
             'zero_view' => $zeroViewCount,
         ];
     }
+=======
+>>>>>>> Stashed changes
 }

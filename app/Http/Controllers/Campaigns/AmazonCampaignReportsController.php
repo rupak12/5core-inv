@@ -84,47 +84,6 @@ class AmazonCampaignReportsController extends Controller
                 SUM(sales1d) as sales
             ')
             ->whereBetween('report_date_range', [$start, $end])
-            ->where(function($query) {
-                $query->whereRaw("campaignName NOT LIKE '%PT'")
-                    ->whereRaw("campaignName NOT LIKE '%PT.'");
-            })
-            ->groupBy('report_date_range')
-            ->orderBy('report_date_range', 'asc')
-            ->get();
-
-        return response()->json([
-            'dates'  => $data->pluck('report_date_range'),
-            'clicks' => $data->pluck('clicks')->map(fn($v) => (int) $v),
-            'spend'  => $data->pluck('spend')->map(fn($v) => (float) $v),
-            'orders' => $data->pluck('orders')->map(fn($v) => (int) $v),
-            'sales'  => $data->pluck('sales')->map(fn($v) => (float) $v),
-            'totals' => [
-                'clicks' => $data->sum('clicks'),
-                'spend'  => $data->sum('spend'),
-                'orders' => $data->sum('orders'),
-                'sales'  => $data->sum('sales'),
-            ]
-        ]);
-    }
-
-    public function filterPtAds(Request $request)
-    {
-        $start = $request->startDate;
-        $end   = $request->endDate;  
-
-        $data = DB::connection('apicentral')->table('amazon_sp_campaign_reports')
-            ->selectRaw('
-                report_date_range,
-                SUM(clicks) as clicks,
-                SUM(spend) as spend,
-                SUM(purchases1d) as orders,
-                SUM(sales1d) as sales
-            ')
-            ->whereBetween('report_date_range', [$start, $end])
-            ->where(function($query) {
-                $query->whereRaw("campaignName LIKE '%PT'")
-                    ->whereRaw("campaignName LIKE '%PT.'");
-            })
             ->groupBy('report_date_range')
             ->orderBy('report_date_range', 'asc')
             ->get();
@@ -312,32 +271,7 @@ class AmazonCampaignReportsController extends Controller
     }
 
     public function amazonPtAdsView(){
-        $thirtyDaysAgo = \Carbon\Carbon::now()->subDays(30)->format('Y-m-d');
-
-        $data = DB::connection('apicentral')->table('amazon_sp_campaign_reports')
-            ->selectRaw('
-                report_date_range,
-                SUM(clicks) as clicks, 
-                SUM(spend) as spend, 
-                SUM(purchases1d) as orders, 
-                SUM(sales1d) as sales
-            ')
-            ->whereDate('report_date_range', '>=', $thirtyDaysAgo)
-            ->where(function($query) {
-                $query->whereRaw("campaignName LIKE '%PT'")
-                    ->orWhereRaw("campaignName LIKE '%PT.'");
-            })
-            ->groupBy('report_date_range')
-            ->orderBy('report_date_range', 'asc')
-            ->get();
-
-        $dates  = $data->pluck('report_date_range')->map(fn($d) => \Carbon\Carbon::parse($d)->format('Y-m-d'));
-        $clicks = $data->pluck('clicks')->map(fn($v) => (int) $v);
-        $spend  = $data->pluck('spend')->map(fn($v) => (float) $v);
-        $orders = $data->pluck('orders')->map(fn($v) => (int) $v);
-        $sales  = $data->pluck('sales')->map(fn($v) => (float) $v);
-        
-        return view('campaign.amazon-pt-ads', compact('dates', 'clicks', 'spend', 'orders', 'sales'));
+        return view('campaign.amazon-pt-ads');
     }
 
     public function getAmazonPtAdsData(){

@@ -719,7 +719,6 @@
                 { label: "Bestbuy", prefix: "bestbuy" },
                 { label: "Tiktok", prefix: "tiktok" },
                 { label: "Tiendamia", prefix: "tiendamia" },
-                { label: "Aliexpress", prefix: "aliexpress" }
             ];
 
             const labels = [];
@@ -873,8 +872,7 @@
                 (parseFloat(data.shein_l30) || 0) +
                 (parseFloat(data.bestbuy_l30) || 0) +
                 (parseFloat(data.tiktok_l30) || 0) +
-                (parseFloat(data.tiendamia_l30) || 0) +
-                (parseFloat(data.aliexpress_l30) || 0);
+                (parseFloat(data.tiendamia_l30) || 0);
 
             const SHIP = parseFloat(data.SHIP) || 0;
             const temuship = parseFloat(data.temu_ship) || 0;
@@ -911,11 +909,8 @@
             const tiktokProfit = data.tiktok_price ? ((parseFloat(data.tiktok_price) * 0.64) - LP - SHIP) * (parseFloat(data
                 .tiktok_l30) || 0) : 0;
 
-            const aliexpressProfit = data.aliexpress_price ? ((parseFloat(data.aliexpress_price) * 0.89) - LP - SHIP) * (parseFloat(data
-                .aliexpress_l30) || 0) : 0;
-
             const totalProfit = amzProfit + ebayProfit + shopifyProfit + macyProfit + reverbProfit +
-                dobaProfit + temuProfit  + ebay3Profit + ebay2Profit + walmartProfit + sheinProfit + bestbuyProfit + tiendamiaProfit + tiktokProfit + aliexpressProfit;
+                dobaProfit + temuProfit  + ebay3Profit + ebay2Profit + walmartProfit + sheinProfit + bestbuyProfit + tiendamiaProfit + tiktokProfit;
 
             return totalL30 > 0 ? (totalProfit / totalL30) / LP * 100 : 0;
         }
@@ -941,8 +936,7 @@
                 { name: "shein", price: data.shein_price, l30: data.shein_l30, percent: 0.89 },
                 { name: "tiendamia", price: data.tiendamia_price, l30: data.tiendamia_l30, percent: 0.83 },
                 { name: "bestbuy", price: data.bestbuy_price, l30: data.bestbuy_l30, percent: 0.80 },
-                { name: "tiktok", price: data.tiktok_price, l30: data.tiktok_l30, percent: 0.64 },
-                { name: "aliexpress", price: data.aliexpress_price, l30: data.aliexpress_l30, percent: 0.89 }
+                { name: "tiktok", price: data.tiktok_price, l30: data.tiktok_l30, percent: 0.64 }
             ];
 
             let totalProfit = 0;
@@ -1324,12 +1318,7 @@
                                 {
                                     price: data.tiktok_price,
                                     l30: data.tiktok_l30
-                                },
-                                {
-                                    price: data.aliexpress_price,
-                                    l30: data.aliexpress_l30
                                 }
-
                             ];
 
                             let totalWeightedPrice = 0;
@@ -1446,7 +1435,6 @@
                         const bestbuyPrice = parseFloat(data.bestbuy_price) || 0;
                         const tiendamiaPrice = parseFloat(data.tiendamia_price) || 0;
                         const tiktokPrice = parseFloat(data.tiktok_price) || 0;
-                        const aliexpressPrice = parseFloat(data.aliexpress_price) || 0;
 
                         const amzL30 = parseFloat(data.amz_l30) || 0;
                         const ebayL30 = parseFloat(data.ebay_l30) || 0;
@@ -1462,7 +1450,6 @@
                         const bestbuyL30 = parseFloat(data.bestbuy_l30) || 0;
                         const tiendamiaL30 = parseFloat(data.tiendamia_l30) || 0;
                         const tiktokL30 = parseFloat(data.tiktok_l30) || 0;
-                        const aliexpressL30 = parseFloat(data.aliexpress_l30) || 0;
 
                         // Calculate profit for each marketplace
                         const amzProfit = ((amzPrice * 0.70) - LP - SHIP)  ;
@@ -1479,7 +1466,6 @@
                         const bestbuyProfit = ((bestbuyPrice * 0.80) - LP - SHIP) ;
                         const tiendamiaProfit = ((tiendamiaPrice * 0.83) - LP - SHIP) ;
                         const tiktokProfit = ((tiktokPrice * 0.64) - LP - SHIP) ;
-                        const aliexpressProfit = ((aliexpressPrice * 0.89) - LP - SHIP) ;
 
  
 
@@ -1488,7 +1474,7 @@
                             reverbProfit * reverbL30 + dobaProfit * dobaL30 + temuProfit * temuL30 +
                             ebay3Profit * ebay3L30 + ebay2Profit * ebay2L30 + walmartProfit * walmartL30 +
                             sheinProfit * sheinL30 + bestbuyProfit * bestbuyL30 + tiendamiaProfit * tiendamiaL30 +
-                            tiktokProfit * tiktokL30 + aliexpressProfit * aliexpressL30;
+                            tiktokProfit * tiktokL30;
 
                         // Calculate total revenue
                         const totalRevenue =
@@ -1505,8 +1491,7 @@
                             (sheinPrice * sheinL30) +
                             (bestbuyPrice * bestbuyL30) +
                             (tiendamiaPrice * tiendamiaL30) +
-                            (tiktokPrice * tiktokL30) +
-                            (aliexpressPrice * aliexpressL30);
+                            (tiktokPrice * tiktokL30);
 
                         // Calculate average profit percentage and round to nearest integer
                         let avgPftPercent = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
@@ -1619,10 +1604,9 @@
                             const bestbuyL30  = parseFloat(data.bestbuy_l30) || 0;
                             const tiendamiaL30 = parseFloat(data.tiendamia_l30) || 0;
                             const tiktokL30   = parseFloat(data.tiktok_l30) || 0;
-                            const aliexpressL30 = parseFloat(data.aliexpress_l30) || 0; 
 
                             // Total L30 across marketplaces
-                            const totalL30 = amzL30 + ebayL30 + shopifyL30 + macyL30 + reverbL30 + dobaL30 + temuL30  + ebay3L30 + ebay2L30 + walmartL30 + sheinL30 + bestbuyL30 + tiendamiaL30 + tiktokL30 + aliexpressL30;
+                            const totalL30 = amzL30 + ebayL30 + shopifyL30 + macyL30 + reverbL30 + dobaL30 + temuL30  + ebay3L30 + ebay2L30 + walmartL30 + sheinL30 + bestbuyL30 + tiendamiaL30 + tiktokL30;
 
                             // Profit calculations (use parsed *_L30 variables)
                             const amzProfit     = data.amz_price        ? ((parseFloat(data.amz_price) * 0.70) - LP - SHIP) * amzL30 : 0;
@@ -1639,11 +1623,11 @@
                             const bestbuyProfit  = data.bestbuy_price    ? ((parseFloat(data.bestbuy_price) * 0.80) - LP - SHIP) * bestbuyL30 : 0;
                             const tiendamiaProfit = data.tiendamia_price ? ((parseFloat(data.tiendamia_price) * 0.83) - LP - SHIP) * tiendamiaL30 : 0;
                             const tiktokProfit    = data.tiktok_price    ? ((parseFloat(data.tiktok_price) * 0.64) - LP - SHIP) * tiktokL30 : 0;
-                            const aliexpressProfit = data.aliexpress_price ? ((parseFloat(data.aliexpress_price) * 0.89) - LP - SHIP) * aliexpressL30 : 0;
+
                             // Total profit
                             const totalProfit = amzProfit + ebayProfit + shopifyProfit + macyProfit +
                                                 reverbProfit + dobaProfit + temuProfit  +
-                                                ebay3Profit + ebay2Profit + walmartProfit + sheinProfit + bestbuyProfit + tiendamiaProfit + tiktokProfit + aliexpressProfit;
+                                                ebay3Profit + ebay2Profit + walmartProfit + sheinProfit + bestbuyProfit + tiendamiaProfit + tiktokProfit;
 
 
                             
@@ -1876,7 +1860,7 @@
             });
 
             // Marketplaces for l30 sum and price weighted average
-            const mps = ['amz', 'ebay', 'macy', 'reverb', 'doba', 'temu', 'ebay3', 'ebay2', 'walmart', 'shein', 'shopifyb2c', 'aliexpress', 'tiktok', 'bestbuy' ,'tiendamia'];
+            const mps = ['amz', 'ebay', 'macy', 'reverb', 'doba', 'temu', 'ebay3', 'ebay2', 'walmart', 'shein', 'shopifyb2c'];
             mps.forEach(mp => {
                 const l30Field = (mp === 'shopifyb2c' ? 'shopifyb2c_l30' : `${mp}_l30`);
                 const priceField = (mp === 'shopifyb2c' ? 'shopifyb2c_price' : `${mp}_price`);
@@ -1919,13 +1903,7 @@
                 { price: parent.ebay3_price, l30: parent.ebay3_l30, factor: 0.71 },
                 { price: parent.ebay2_price, l30: parent.ebay2_l30, factor: 0.80 },
                 { price: parent.walmart_price, l30: parent.walmart_l30, factor: 0.80 },
-                { price: parent.shein_price, l30: parent.shein_l30, factor: 0.89 },
-                { price: parent.aliexpress_price, l30: parent.aliexpress_l30, factor: 0.89 },
-                { price: parent.tiktok_price, l30: parent.tiktok_price, factor: 0.64 },
-                { price: parent.bestbuy_price, l30: parent.bestbuy_price, factor: 0.80 },
-                { price: parent.tiendamia_price, l30: parent.tiendamia_price, factor: 0.83 },
-                { price: parent.aliexpress_price, l30: parent.aliexpress_price, factor: 0.89 }
-
+                { price: parent.shein_price, l30: parent.shein_l30, factor: 0.89 }
             ];
 
             let totalProfit = 0;
@@ -2126,8 +2104,7 @@
                 { label: "Shein", prefix: "shein", logo: "{{ asset('uploads/Shein.jpg') }}" },
                 { label: "Bestbuy", prefix: "bestbuy", logo: "{{ asset('uploads/bestbuy.jpeg') }}" },
                 { label: "Tiendamia", prefix: "tiendamia", logo: "{{ asset('uploads/ten.jpg') }}" },
-                { label: "TikTok", prefix: "tiktok", logo: "{{ asset('uploads/tiktok.png') }}" },
-                { label: "AliExpress", prefix: "aliexpress", logo: "{{ asset('uploads/aliexpress.png') }}" }
+                { label: "TikTok", prefix: "tiktok", logo: "{{ asset('uploads/tiktok.png') }}" }
             ];
 
 
@@ -2256,10 +2233,6 @@
                                     ${data.tiktok_seller_link ? `<div><strong>SL:</strong> <a href="${data.tiktok_seller_link}" target="_blank" class="text-info">Seller Link</a></div>` : ''}
                                     ${data.tiktok_buyer_link ? `<div><strong>BL:</strong> <a href="${data.tiktok_buyer_link}" target="_blank" class="text-success">Buyer Link</a></div>` : ''}
                                 ` : ''}
-                                 ${r.prefix === 'aliexpress' ? `
-                                    ${data.aliexpress_seller_link ? `<div><strong>SL:</strong> <a href="${data.aliexpress_seller_link}" target="_blank" class="text-info">Seller Link</a></div>` : ''}
-                                    ${data.aliexpress_buyer_link ? `<div><strong>BL:</strong> <a href="${data.aliexpress_buyer_link}" target="_blank" class="text-success">Buyer Link</a></div>` : ''}
-                                ` : ''}
 
                             </div>
                         </div>
@@ -2305,7 +2278,6 @@
                                 : r.prefix === 'reverb' ? (data.reverb_views ?? "-")
                                 : r.prefix === 'temu' ? (data.temu_views ?? "-")
                                 : r.prefix === 'tiktok' ? (data.tiktok_views ?? "-")
-                                : r.prefix === 'aliexpress' ? (data.aliexpress_views ?? "-")
                                 : "-" }
                         </div>
                     </td>
@@ -2329,15 +2301,12 @@
                                 else if (r.prefix === 'tiktok' && cvr) {
                                     return `<span style="color: ${cvr.color}">${Math.round(cvr.value)}%</span>`;
                                 }
-                                else if (r.prefix === 'aliexpress' && cvr) {
-                                    return `<span style="color: ${cvr.color}">${Math.round(cvr.value)}%</span>`;
-                                }
 
                                 return "N/A";
                             })()} 
                         </div>
                     </td>
-                      <td>
+                     <td>
                         <div class="value-indicator">
                         ${r.prefix === 'amz' ? Math.round(data.amz_req_view) ?? "-" : 
                             r.prefix === 'ebay' ? Math.round(data.ebay_req_view) ?? "-" :
@@ -2348,10 +2317,10 @@
                             r.prefix === 'temu' ? Math.round(data.temu_req_view) ?? "-" :
                             r.prefix === 'bestbuy' ? Math.round(data.bestbuy_req_view) ?? "-" :
                             r.prefix === 'tiendamia' ? Math.round(data.tiendamia_req_view) ?? "-" :
-                            r.prefix === 'tiktok' ? Math.round(data.tiktok_req_view) ?? "-" :
-                            r.prefix === 'aliexpress' ? Math.round(data.aliexpress_req_view) ?? "-" : "-"}
+                            r.prefix === 'tiktok' ? Math.round(data.tiktok_req_view) ?? "-" : "-"}
                         </div>
                     </td>
+
 
                     <td>
                         <div class="value-indicator">
@@ -2359,7 +2328,6 @@
                                 : r.prefix === 'ebay' ? fmtMoney(data.ebay_price_lmpa) 
                                 : r.prefix === 'shein' ? fmtMoney(data.lmp) 
                                 : r.prefix === 'tiktok' ? fmtMoney(data.tiktok_price_lmpa) 
-                                : r.prefix === 'aliexpress' ? fmtMoney(data.aliexpress_price_lmpa) 
                                 : '-'}
                         </div>
                     </td>
@@ -2386,7 +2354,6 @@
                                 : r.prefix === 'bestbuy' ? (data.bestbuy_sprice || '')
                                 : r.prefix === 'tiendamia' ? (data.tiendamia_sprice || '')
                                 : r.prefix === 'tiktok' ? (data.tiktok_sprice || '')
-                                : r.prefix === 'aliexpress' ? (data.aliexpress_sprice || '')
                             
                                 : ''
                             }"
@@ -2446,9 +2413,7 @@
                             } else if (r.prefix === 'tiktok' && data.tiktok_spft) {
                                 value = Math.round(data.tiktok_spft);
                             }
-                            else if (r.prefix === 'aliexpress' && data.aliexpress_spft) {
-                                value = Math.round(data.aliexpress_spft);
-                            }
+
 
                             if (value !== undefined) {
                                 if (value < 11) {
@@ -2503,10 +2468,7 @@
                                 value = Math.round(data.tiendamia_sroi);
                             } else if (r.prefix === 'tiktok' && data.tiktok_sroi) {
                                 value = Math.round(data.tiktok_sroi);
-                            } else if (r.prefix === 'aliexpress' && data.aliexpress_sroi) {
-                                value = Math.round(data.aliexpress_sroi);
                             }
-
 
 
                             if (value !== undefined) {

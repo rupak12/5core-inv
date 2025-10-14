@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('negative_reviews')) {
         Schema::create('negative_reviews', function (Blueprint $table) {
             $table->id();
             $table->date('review_date');
@@ -26,7 +27,7 @@ return new class extends Migration
             $table->date('action_date')->nullable();
             $table->timestamps();
         });
-
+    }
     }
 
     /**
