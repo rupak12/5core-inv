@@ -26,7 +26,7 @@ class SyncMercariWoShipSheet extends Command
     /**
      * Execute the console command.
      */
-     public function handle()
+    public function handle()
     {
         $url = 'https://script.google.com/macros/s/AKfycbxgFKe5EDpwA7alZ93xpY-_vacBxEI-gVmECWo6y5HSgFmnKdMzru5neq47dRvUPH7q9Q/exec';
 

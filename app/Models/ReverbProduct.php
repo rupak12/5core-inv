@@ -17,5 +17,6 @@ class ReverbProduct extends Model
         'r_l60',
         'price',
         'views',        
+        'status',
     ];
 }

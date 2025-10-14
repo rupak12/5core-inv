@@ -70,10 +70,10 @@
     <div class="col-12">
         <div class="card shadow-sm">
             <div class="card-body">
-                <div class="d-flex flex-wrap justify-content-end align-items-center mb-3 gap-2 d-none">
+                <div class="d-flex flex-wrap justify-content-end align-items-center mb-3 gap-2">
                     <div class="d-flex flex-wrap gap-2">
-                        <button id="add-new-row" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#createRFQFormModal">
-                            <i class="fas fa-plus-circle me-1"></i> Create RFQ Form
+                        <button id="export-btn" class="btn btn-sm btn-success">
+                            <i class="fas fa-file-excel"></i> Export Excel
                         </button>
                     </div>
                 </div>
@@ -86,6 +86,8 @@
 @endsection
 @section('script')
 <script src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
+<!-- SheetJS for Excel Export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
 
@@ -207,6 +209,23 @@
             }
         });
 
+        document.getElementById("export-btn").addEventListener("click", function () {
+            let allData = table.getData("active"); 
+
+            if (allData.length === 0) {
+                alert("No data available to export!");
+                return;
+            }
+
+            let exportData = allData.map(row => ({ ...row }));
+            let formName = "{{ $form->name }}";
+
+            let ws = XLSX.utils.json_to_sheet(exportData);
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Campaigns");
+
+            XLSX.writeFile(wb, `${formName}_form_report.xlsx`);
+        });
 
 
     });

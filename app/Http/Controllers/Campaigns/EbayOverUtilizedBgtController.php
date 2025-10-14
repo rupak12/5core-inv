@@ -458,7 +458,7 @@ class EbayOverUtilizedBgtController extends Controller
         ]);
     }
 
-    public function ebayOverUtilized(){
+    public function ebayUnderUtilized(){
         return view('campaign.ebay-under-utilized');
     }
 
@@ -526,10 +526,6 @@ class EbayOverUtilizedBgtController extends Controller
             $matchedCampaignL30 = $ebayCampaignReportsL30->first(function ($item) use ($sku) {
                 return stripos($item->campaign_name, $sku) !== false;
             });
-
-            // if (!$matchedCampaignL7 && !$matchedCampaignL1) {
-            //     continue;
-            // }
 
             $row = [];
             $row['parent'] = $parent;

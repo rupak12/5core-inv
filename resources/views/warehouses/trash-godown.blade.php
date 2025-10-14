@@ -558,7 +558,7 @@
 
                     row.innerHTML = `
                         <td>${item.sku || '-'}</td>
-                        <td>${item.verified_stock || '-'}</td>
+                        <td>${item.verified_stock || item.quantity}</td>
                         <td>${item.warehouse.name  || '-'}</td>
                         <td>${item.approved_by || '-'}</td>
                         <td>${item.approved_at || '-'}</td>

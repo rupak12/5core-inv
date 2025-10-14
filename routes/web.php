@@ -189,6 +189,7 @@ use App\Http\Controllers\Channels\ReviewMaster\ReviewDashboardController;
 use App\Http\Controllers\Channels\SetupAccountChannelController;
 use App\Http\Controllers\Channels\ShippingMasterController;
 use App\Http\Controllers\Channels\TrafficMasterController;
+use App\Http\Controllers\FbaDataController;
 use App\Http\Controllers\InventoryManagement\AutoStockBalanceController;
 use App\Http\Controllers\InventoryManagement\StockBalanceController;
 use App\Http\Controllers\InventoryWarehouseController;
@@ -1865,6 +1866,8 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
         Route::get('/stock/mapping/inventory/data', 'getShopifyAmazonInventoryStock')->name('stock.mapping.inventory');
         Route::get('/stock/mapping/shopify/data', 'getShopifyStock')->name('stock.mapping.shopify');
         Route::get('/stock/mapping/amazon/data', 'getAmazonStock')->name('stock.mapping.amazon');
+        Route::post('/stock/mapping/inventory/update_not_required', 'updateNotRequired')->name('stock.mapping.update.notrequired');
+        Route::get('/stock/mapping/inventory/refetch_live_data', 'refetchLiveData')->name('stock.mapping.refetch_live_data');
         
     });
     // shopify amazon stock mapping
@@ -1879,7 +1882,13 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
         Route::get('/google/shopping/data', 'getGoogleShoppingAdsData');
     });
 
-    
+    Route::controller(FbaDataController::class)->group(function() {
+        Route::get('fba-view-page' ,'fbaPageView');
+        Route::get('fba-data-json', 'fbaDataJson');
+        Route::get('fba-monthly-sales/{sku}', 'getFbaMonthlySales');
+
+    });
+
     Route::post('/channel-promotion/store', [ChannelPromotionMasterController::class, 'storeOrUpdatePromotion']);
 
   

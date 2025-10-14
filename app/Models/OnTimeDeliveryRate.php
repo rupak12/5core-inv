@@ -12,6 +12,8 @@ class OnTimeDeliveryRate extends Model
     protected $fillable = [
         'channel_id',
         'report_date',
+        'current',
+        'allowed',
         'week_one',
         'week_two',
         'week_three',

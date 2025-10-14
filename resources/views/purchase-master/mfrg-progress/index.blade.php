@@ -335,7 +335,7 @@
                                         }
                                     @endphp
                                     <td data-column="10">
-                                        <input type="date" data-sku="{{ $item->sku }}" data-column="del_date" value="{{ !empty($item->created_at) ? \Carbon\Carbon::parse($item->created_at)->format('Y-m-d') : '' }}" 
+                                        <input type="date" data-sku="{{ $item->sku }}" data-column="created_at" value="{{ !empty($item->created_at) ? \Carbon\Carbon::parse($item->created_at)->format('Y-m-d') : '' }}" 
                                         class="form-control form-control-sm auto-save" style="width: 80px; font-size: 13px; {{ $bgColor }}">
                                         @if ($daysDiff !== null)
                                             <small style="font-size: 12px; color: rgb(72, 69, 69);">

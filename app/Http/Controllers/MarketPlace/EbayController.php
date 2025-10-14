@@ -22,6 +22,7 @@ use App\Models\EbayGeneralReports;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Exception;
 
 class EbayController extends Controller
 {
@@ -192,60 +193,20 @@ class EbayController extends Controller
 
         $nrValues = EbayDataView::whereIn("sku", $skus)->pluck("value", "sku");
 
-        // Mapping arrays
-        $itemIdToSku = $ebayMetrics->pluck('sku', 'item_id')->toArray();
-        $campaignIdToSku = $ebayMetrics->pluck('sku', 'campaign_id')->toArray();
-
-        // ✅ Fetch L30 Clicks from ebay_general_reports (listing_id → clicks)
-        $extraClicksData = EbayGeneralReport::whereIn('listing_id', array_keys($itemIdToSku))
-            ->where('report_range', 'L30')
-            ->pluck('clicks', 'listing_id')
-            ->toArray();
-
-        // 4a. Fetch General Reports (listing_id → sku)
-        $generalReports = EbayGeneralReport::whereIn('listing_id', array_keys($itemIdToSku))
-            ->whereIn('report_range', ['L60', 'L30', 'L7'])
-            ->get();
-
-        // 4b. Fetch Priority Reports (campaign_id → sku)
-        $priorityReports = EbayPriorityReport::whereIn('campaign_id', array_keys($campaignIdToSku))
-            ->whereIn('report_range', ['L60', 'L30', 'L7'])
-            ->get();
-
-        $adMetricsBySku = [];
-
-        // General Reports
-        foreach ($generalReports as $report) {
-            $sku = $itemIdToSku[$report->listing_id] ?? null;
-            if (!$sku) continue;
-
-            $range = strtoupper($report->report_range);
-
-            $adMetricsBySku[$sku][$range]['GENERAL_SPENT'] =
-                ($adMetricsBySku[$sku][$range]['GENERAL_SPENT'] ?? 0) + $this->extractNumber($report->ad_fees);
-
-            $adMetricsBySku[$sku][$range]['Imp'] =
-                ($adMetricsBySku[$sku][$range]['Imp'] ?? 0) + (int) $report->impressions;
-
-            $adMetricsBySku[$sku][$range]['Clk'] =
-                ($adMetricsBySku[$sku][$range]['Clk'] ?? 0) + (int) $report->clicks;
-
-            $adMetricsBySku[$sku][$range]['Ctr'] =
-                ($adMetricsBySku[$sku][$range]['Ctr'] ?? 0) + (float) $report->ctr;
-
-            $adMetricsBySku[$sku][$range]['Sls'] =
-                ($adMetricsBySku[$sku][$range]['Sls'] ?? 0) + (int) $report->sales;
-        }
-
-        // Priority Reports
-        foreach ($priorityReports as $report) {
-            $sku = $campaignIdToSku[$report->campaign_id] ?? null;
-            if (!$sku) continue;
-
-            $range = strtoupper($report->report_range);
-
-            $adMetricsBySku[$sku][$range]['PRIORITY_SPENT'] =
-                ($adMetricsBySku[$sku][$range]['PRIORITY_SPENT'] ?? 0) + $this->extractNumber($report->cpc_ad_fees_payout_currency);
+        // Fetch LMP data from 5core_repricer database for eBay - get lowest price per SKU (excluding 0 prices)
+        $lmpLookup = collect();
+        try {
+            $lmpLookup = DB::connection('repricer')
+                ->table('lmp_data')
+                ->select('sku', DB::raw('MIN(price) as lowest_price'))
+                ->where('price', '>', 0)
+                ->whereIn('sku', $skus)
+                ->groupBy('sku')
+                ->get()
+                ->keyBy('sku');
+        } catch (Exception $e) {
+            Log::warning('Could not fetch LMP data from repricer database: ' . $e->getMessage());
+            // Fallback to empty collection - will use eBay's price_lmpa instead
         }
 
         // 5. Marketplace percentage
@@ -282,25 +243,23 @@ class EbayController extends Controller
             $row["eBay Price"] = $ebayMetric->ebay_price ?? 0;
             $row['price_lmpa'] = $ebayMetric->price_lmpa ?? null;
             $row['eBay_item_id'] = $ebayMetric->item_id ?? null;
-            $row['ebay_views'] = $ebayMetric->views ?? 0;
+            $row['views'] = $ebayMetric->views ?? 0;
+
+            // LMP data from api_central with link
+            $lmpData = $lmpLookup[$pm->sku] ?? null;
+            $row['lmp_price'] = $lmpData ? $lmpData->lowest_price : null;
+            $row['lmp_link'] = $lmpData ? "https://example.com/lmp/" . $pm->sku : null;
 
             $row["E Dil%"] = ($row["eBay L30"] && $row["INV"] > 0)
                 ? round(($row["eBay L30"] / $row["INV"]), 2)
                 : 0;
 
-            // Ad Metrics
-            $pmtData = $adMetricsBySku[$sku] ?? [];
+            // Initialize ad metrics with zero values since we're using EbayMetric data
             foreach (['L60', 'L30', 'L7'] as $range) {
-                $metrics = $pmtData[$range] ?? [];
                 foreach (['Imp', 'Clk', 'Ctr', 'Sls', 'GENERAL_SPENT', 'PRIORITY_SPENT'] as $suffix) {
                     $key = "Pmt{$suffix}{$range}";
-                    $row[$key] = $metrics[$suffix] ?? 0;
+                    $row[$key] = 0;
                 }
-            }
-
-            // ✅ Merge Extra Clicks (L30 only)
-            if ($ebayMetric && isset($extraClicksData[$ebayMetric->item_id])) {
-                $row["PmtClkL30"] += (int) $extraClicksData[$ebayMetric->item_id];
             }
 
             // Values: LP & Ship
@@ -323,19 +282,8 @@ class EbayController extends Controller
 
             $units_ordered_l30 = floatval($row["eBay L30"] ?? 0);
 
-            // Set PmtClkL30 from adMetrics data
-            $row["PmtClkL30"] = $adMetricsBySku[$sku]['L30']['Clk'] ?? 0;
-
-            // Add extra clicks from general reports if available
-            if ($ebayMetric && isset($extraClicksData[$ebayMetric->item_id])) {
-                $row["PmtClkL30"] += (int) $extraClicksData[$ebayMetric->item_id];
-            }
-
-            // New Tacos Formula
-            $generalSpent = $adMetricsBySku[$sku]['L30']['GENERAL_SPENT'] ?? 0;
-            $prioritySpent = $adMetricsBySku[$sku]['L30']['PRIORITY_SPENT'] ?? 0;
-            $denominator = ($price * $units_ordered_l30);
-            $row["TacosL30"] = $denominator > 0 ? round((($generalSpent + $prioritySpent) / $denominator), 4) : 0;
+            // Simplified Tacos Formula (no ad spend since using EbayMetric)
+            $row["TacosL30"] = 0;
 
             // Profit/Sales
             $row["Total_pft"] = round(($price * $percentage - $lp - $ship) * $units_ordered_l30, 2);

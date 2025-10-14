@@ -480,9 +480,7 @@ class AmazonACOSController extends Controller
         $amazonSpCampaignReportsL30 = AmazonSpCampaignReport::where('ad_type', 'SPONSORED_PRODUCTS')
             ->where('report_date_range', 'L30')
             ->where(function ($q) use ($skus) {
-                foreach ($skus as $sku) {
-                    $q->orWhere('campaignName', 'LIKE', '%' . $sku . '%');
-                }
+                foreach ($skus as $sku) $q->orWhere('campaignName', 'LIKE', '%' . $sku . '%');
             })
             ->where('campaignName', 'NOT LIKE', '%PT')
             ->where('campaignName', 'NOT LIKE', '%PT.')
@@ -491,9 +489,7 @@ class AmazonACOSController extends Controller
         $amazonSpCampaignReportsL7 = AmazonSpCampaignReport::where('ad_type', 'SPONSORED_PRODUCTS')
             ->where('report_date_range', 'L7')
             ->where(function ($q) use ($skus) {
-                foreach ($skus as $sku) {
-                    $q->orWhere('campaignName', 'LIKE', '%' . $sku . '%');
-                }
+                foreach ($skus as $sku) $q->orWhere('campaignName', 'LIKE', '%' . $sku . '%');
             })
             ->where('campaignName', 'NOT LIKE', '%PT')
             ->where('campaignName', 'NOT LIKE', '%PT.')
@@ -509,11 +505,15 @@ class AmazonACOSController extends Controller
             $shopify = $shopifyData[$pm->sku] ?? null;
 
             $matchedCampaignL30 = $amazonSpCampaignReportsL30->first(function ($item) use ($sku) {
-                return strcasecmp(trim($item->campaignName), $sku) === 0;
+                $campaignName = strtoupper(trim(rtrim($item->campaignName, '.')));
+                $cleanSku = strtoupper(trim(rtrim($sku, '.')));
+                return $campaignName === $cleanSku;
             });
 
             $matchedCampaignL7 = $amazonSpCampaignReportsL7->first(function ($item) use ($sku) {
-                return strcasecmp(trim($item->campaignName), $sku) === 0;
+                $campaignName = strtoupper(trim(rtrim($item->campaignName, '.')));
+                $cleanSku = strtoupper(trim(rtrim($sku, '.')));
+                return $campaignName === $cleanSku;
             });
 
             $row = [];
@@ -649,6 +649,8 @@ class AmazonACOSController extends Controller
                 : null;
 
             $row['clicks_L30'] = $matchedCampaignL30->clicks ?? 0;
+            $row['spend_l30']       = $matchedCampaignL30->spend ?? 0;
+            $row['ad_sales_l30']    = $matchedCampaignL30->sales30d ?? 0;
 
             $row['NRL']  = '';
             $row['NRA'] = '';
